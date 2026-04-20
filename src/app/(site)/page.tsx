@@ -42,7 +42,7 @@ const servicesRow2 = [
 		icon: Truck,
 		title: "Load-in & load-out",
 		description:
-			"Labelled rail systems, detailed packing lists and careful transport between venues. Organised down to the last hanger.",
+			"We help build up and break down — from the first hanger on the rail to the last one packed in the truck.",
 	},
 	{
 		icon: ClipboardList,
