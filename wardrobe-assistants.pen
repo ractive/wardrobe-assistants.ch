@@ -16,9 +16,9 @@
         "#1A1816",
         {
           "type": "image",
-          "opacity": 0.15,
+          "opacity": 0.35,
           "enabled": true,
-          "url": "public/steam.jpg",
+          "url": "public/background.png",
           "mode": "fit"
         }
       ],
@@ -325,7 +325,7 @@
                               "id": "zKgvo",
                               "name": "Button",
                               "fill": "$--primary-foreground",
-                              "content": "Book the crew",
+                              "content": "Book the squad",
                               "lineHeight": 1.5555555555555556,
                               "textAlign": "center",
                               "textAlignVertical": "middle",
@@ -1203,7 +1203,7 @@
                   "fill": "$--foreground",
                   "textGrowth": "fixed-width",
                   "width": 900,
-                  "content": "We dress the show. You take the bow.",
+                  "content": "Ready when the curtain calls.",
                   "lineHeight": 1.1,
                   "textAlign": "center",
                   "fontFamily": "JetBrains Mono",

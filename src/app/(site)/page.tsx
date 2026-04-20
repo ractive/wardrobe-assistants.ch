@@ -114,7 +114,7 @@ export default function Home() {
 				<div className="flex flex-col items-center gap-6 lg:gap-7">
 					<EyebrowBadge label="READY WHEN YOU ARE" size="md" />
 					<h2 className="max-w-[900px] text-center font-primary text-[32px] font-medium leading-[1.1] text-[var(--foreground)] md:text-[42px] lg:text-[56px]">
-						We dress the show. You take the bow.
+						Ready when the curtain calls.
 					</h2>
 					<p className="max-w-[680px] text-center font-secondary text-[16px] leading-[1.55] text-[var(--muted-foreground)] lg:text-[17px]">
 						Tell us about your tour — dates, cast size, venues — and
