@@ -429,7 +429,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "images/steam.jpeg",
+                    "url": "images/steam.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": 24,
@@ -1189,7 +1189,7 @@
                   "fill": "$--foreground",
                   "textGrowth": "fixed-width",
                   "width": 900,
-                  "content": "Cue the curtain. We’ll handle the rest.",
+                  "content": "We dress the show. You take the bow.",
                   "lineHeight": 1.1,
                   "textAlign": "center",
                   "fontFamily": "JetBrains Mono",
@@ -1204,6 +1204,20 @@
                   "textGrowth": "fixed-width",
                   "width": 680,
                   "content": "Tell us about your tour — dates, cast size, venues — and we’ll send a quote within 24 hours.",
+                  "lineHeight": 1.55,
+                  "textAlign": "center",
+                  "fontFamily": "Geist",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "SFrq9",
+                  "name": "expPara",
+                  "fill": "$--muted-foreground",
+                  "textGrowth": "fixed-width",
+                  "width": 680,
+                  "content": "With over 20 years backstage and many productions under our belts, our crew brings the calm confidence that only real experience can. From intimate theatre runs to arena-scale touring — we’ve seen it all and dressed it all.",
                   "lineHeight": 1.55,
                   "textAlign": "center",
                   "fontFamily": "Geist",

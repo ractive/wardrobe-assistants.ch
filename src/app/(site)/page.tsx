@@ -107,7 +107,7 @@ export default function Home() {
 					<p className="max-w-[720px] text-center font-secondary text-[16px] leading-[1.6] text-[var(--muted-foreground)]">
 						Pre-show prep, quick changes, laundry, repairs, load-in, and
 						load-out. We stay with the show so the spotlight stays on the stage
-						— not on missing hooks or stuck zips.
+						- not on missing hooks or stuck zips.
 					</p>
 				</div>
 
@@ -132,13 +132,19 @@ export default function Home() {
 				className="flex flex-col items-center justify-center bg-[var(--muted)] px-[120px] py-24"
 			>
 				<div className="flex flex-col items-center gap-7">
-					<EyebrowBadge label="READY WHEN YOU ARE" />
+					<EyebrowBadge label="READY WHEN YOU ARE" size="md" />
 					<h2 className="max-w-[900px] text-center font-primary text-[56px] font-medium leading-[1.1] text-[var(--foreground)]">
-						Cue the curtain. We&apos;ll handle the rest.
+						We dress the show. You take the bow.
 					</h2>
 					<p className="max-w-[680px] text-center font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
 						Tell us about your tour — dates, cast size, venues — and
 						we&apos;ll send a quote within 24 hours.
+					</p>
+					<p className="max-w-[680px] text-center font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
+						With over 20 years backstage and many productions under our belts,
+						our crew brings the calm confidence that only real experience can.
+						From intimate theatre runs to arena-scale touring — we&apos;ve seen
+						it all and dressed it all.
 					</p>
 					<div className="pt-3">
 						<Button href="mailto:hello@wardrobe-assistants.ch">

@@ -1,4 +1,7 @@
-export function EyebrowBadge({ label }: { label: string }) {
+export function EyebrowBadge({
+	label,
+	size = "sm",
+}: { label: string; size?: "sm" | "md" }) {
 	return (
 		<span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--card)] px-2 py-2">
 			<svg
@@ -14,7 +17,13 @@ export function EyebrowBadge({ label }: { label: string }) {
 					transform="translate(1.876, 1.896) scale(0.75)"
 				/>
 			</svg>
-			<span className="font-primary text-[12px] font-medium tracking-[1.5px] text-[var(--primary)]">
+			<span
+				className={`font-primary tracking-[1.5px] text-[var(--primary)] ${
+					size === "md"
+						? "text-[14px] font-normal"
+						: "text-[12px] font-medium"
+				}`}
+			>
 				{label}
 			</span>
 		</span>
