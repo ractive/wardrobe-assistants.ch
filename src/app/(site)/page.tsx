@@ -73,7 +73,7 @@ export default function Home() {
 					changes from call to curtain.
 				</p>
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<Button href="#contact">Book the crew</Button>
+					<Button href="#contact">Book the squad</Button>
 					<Button variant="outline" href="#services">
 						See services
 					</Button>

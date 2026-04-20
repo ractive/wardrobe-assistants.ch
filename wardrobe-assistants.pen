@@ -93,16 +93,6 @@
                     },
                     {
                       "type": "text",
-                      "id": "YVoPV",
-                      "name": "link2",
-                      "fill": "$--muted-foreground",
-                      "content": "Testimonials",
-                      "fontFamily": "$--font-secondary",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
                       "id": "IlAkz",
                       "name": "link4",
                       "fill": "$--muted-foreground",
