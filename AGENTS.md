@@ -1,3 +1,6 @@
+# mdget to fetch webpages
+If fetching webpages, use the mdget CLI utility instead of "curl" or other tools. It fetches and converts the webpage to markdown, saving tokens.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
