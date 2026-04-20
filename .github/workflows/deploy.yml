@@ -37,5 +37,5 @@ jobs:
         with:
           app_id: ${{ vars.APP_ID }}
           api_key: ${{ secrets.BUNNYNET_API_KEY }}
-          container: app
+          container: wardrobe-assistants.ch
           image_tag: "${{ github.sha }}"
