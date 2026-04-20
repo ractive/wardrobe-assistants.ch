@@ -1,26 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #1A1816;
+  --foreground: #EDEAE4;
+  --card: #26231F;
+  --card-foreground: #EDEAE4;
+  --popover: #26231F;
+  --popover-foreground: #EDEAE4;
+  --primary: #B5564F;
+  --primary-foreground: #EDEAE4;
+  --secondary: #2E2B28;
+  --secondary-foreground: #EDEAE4;
+  --muted: #1F1D1B;
+  --muted-foreground: #B8B3AC;
+  --accent: #2A2724;
+  --accent-foreground: #EDEAE4;
+  --destructive: #E53E3E;
+  --border: #3A3734;
+  --input: #3A3734;
+  --ring: #B5564F;
+  --sidebar: #161412;
+  --sidebar-foreground: #EDEAE4;
+  --sidebar-primary: #B5564F;
+  --sidebar-primary-foreground: #EDEAE4;
+  --sidebar-border: #2E2B28;
+  --sidebar-accent: #2E2B28;
+  --sidebar-accent-foreground: #EDEAE4;
+  --sidebar-ring: #B5564F;
+  --color-success: #222924;
+  --color-success-foreground: #B6FFCE;
+  --color-warning: #291C0F;
+  --color-warning-foreground: #FF8400;
+  --color-error: #24100B;
+  --color-error-foreground: #FF5C33;
+  --color-info: #222229;
+  --color-info-foreground: #B2B2FF;
+  --radius-m: 16px;
+  --radius-pill: 999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  .font-primary {
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  .font-secondary {
+    font-family: "Geist", sans-serif;
+  }
+
+  .font-body {
+    font-family: "Inter", sans-serif;
+  }
 }

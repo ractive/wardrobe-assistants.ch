@@ -1,0 +1,152 @@
+import {
+	Shirt,
+	Droplets,
+	Scissors,
+	Crown,
+	Truck,
+	ClipboardList,
+} from "lucide-react";
+import { EyebrowBadge } from "@/components/EyebrowBadge";
+import { Button } from "@/components/Button";
+import { ServiceCard } from "@/components/ServiceCard";
+
+const servicesRow1 = [
+	{
+		icon: Shirt,
+		title: "Quick changes",
+		description:
+			"Rehearsed dressers stationed at every wing, running timed transitions so performers make their marks without missing a beat.",
+	},
+	{
+		icon: Droplets,
+		title: "Ironing & steam",
+		description:
+			"Wrinkle-free costumes at every call. We iron, press and steam on-site so everything looks sharp under the lights.",
+	},
+	{
+		icon: Scissors,
+		title: "Repairs & alterations",
+		description:
+			"Zips, seams, hems and fittings — handled on-site with a full sewing kit and a steady hand, even minutes before curtain.",
+	},
+];
+
+const servicesRow2 = [
+	{
+		icon: Crown,
+		title: "Wigs & accessories",
+		description:
+			"Styled, pinned and tracked by scene. Hats, gloves, jewellery and props accounted for from first rehearsal to final bow.",
+	},
+	{
+		icon: Truck,
+		title: "Load-in & load-out",
+		description:
+			"Labelled rail systems, detailed packing lists and careful transport between venues. Organised down to the last hanger.",
+	},
+	{
+		icon: ClipboardList,
+		title: "Laundry",
+		description:
+			"Machine wash, hand wash and stain removal — handled with care so costumes stay fresh and stage-ready night after night.",
+	},
+];
+
+export default function Home() {
+	return (
+		<>
+			{/* Hero Section */}
+			<section className="flex gap-12 bg-[var(--background)] px-14 pt-[72px] pb-24">
+				{/* Hero Left */}
+				<div className="flex flex-1 flex-col gap-7">
+					<EyebrowBadge label="BACKSTAGE" />
+					<h1 className="font-primary text-[48px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)]">
+						Wardrobe Assistants
+					</h1>
+					<h2 className="font-primary text-[30px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)]">
+						Steam &amp; Stitch Squad
+					</h2>
+					<p className="font-primary text-[30px] font-bold leading-[1.05] text-[var(--foreground)]">
+						Behind every great show, a flawless wardrobe.
+					</p>
+					<p className="max-w-[520px] font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
+						We are Switzerland&apos;s professional tour wardrobe assistants —
+						serving theatres, concerts and festivals with calm hands and fast
+						changes from call to curtain.
+					</p>
+					<div className="flex items-center gap-3">
+						<Button href="#contact">Book the crew</Button>
+						<Button variant="outline" href="#services">
+							See services
+						</Button>
+					</div>
+				</div>
+
+				{/* Hero Right — Image */}
+				<div className="relative h-[580px] w-[600px] shrink-0 overflow-hidden rounded-3xl border border-[var(--secondary)] shadow-[0_16px_32px_rgba(0,0,0,0.25)]">
+					<img
+						src="/steam.jpg"
+						alt="Wardrobe assistant steaming costumes backstage"
+						className="h-full w-full object-cover"
+					/>
+					<div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1A181699]" />
+				</div>
+			</section>
+
+			{/* Services Section */}
+			<section
+				id="services"
+				className="flex flex-col items-center gap-14 bg-[var(--muted)] px-14 pt-24 pb-[120px]"
+			>
+				{/* Services Header */}
+				<div className="flex flex-col items-center gap-5">
+					<EyebrowBadge label="SERVICES" />
+					<h2 className="max-w-[900px] text-center font-primary text-[48px] font-bold leading-[1.1] tracking-[-1px] text-[var(--foreground)]">
+						Everything you need from call to curtain.
+					</h2>
+					<p className="max-w-[720px] text-center font-secondary text-[16px] leading-[1.6] text-[var(--muted-foreground)]">
+						Pre-show prep, quick changes, laundry, repairs, load-in, and
+						load-out. We stay with the show so the spotlight stays on the stage
+						— not on missing hooks or stuck zips.
+					</p>
+				</div>
+
+				{/* Services Grid */}
+				<div className="flex w-full flex-col gap-5">
+					<div className="flex w-full gap-5">
+						{servicesRow1.map((service) => (
+							<ServiceCard key={service.title} {...service} />
+						))}
+					</div>
+					<div className="flex w-full gap-5">
+						{servicesRow2.map((service) => (
+							<ServiceCard key={service.title} {...service} />
+						))}
+					</div>
+				</div>
+			</section>
+
+			{/* CTA Section */}
+			<section
+				id="contact"
+				className="flex flex-col items-center justify-center bg-[var(--muted)] px-[120px] py-24"
+			>
+				<div className="flex flex-col items-center gap-7">
+					<EyebrowBadge label="READY WHEN YOU ARE" />
+					<h2 className="max-w-[900px] text-center font-primary text-[56px] font-medium leading-[1.1] text-[var(--foreground)]">
+						Cue the curtain. We&apos;ll handle the rest.
+					</h2>
+					<p className="max-w-[680px] text-center font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
+						Tell us about your tour — dates, cast size, venues — and
+						we&apos;ll send a quote within 24 hours.
+					</p>
+					<div className="pt-3">
+						<Button href="mailto:hello@wardrobe-assistants.ch">
+							Request a quote
+						</Button>
+					</div>
+				</div>
+			</section>
+		</>
+	);
+}

@@ -1,0 +1,2006 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "ymXFk",
+      "x": 7581,
+      "y": -2855,
+      "name": "Wardrobe Assistants Landing",
+      "theme": {
+        "Mode": "Dark"
+      },
+      "clip": true,
+      "width": 1440,
+      "fill": "$--background",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ZLAnl",
+          "name": "Hero Section",
+          "theme": {
+            "Mode": "Dark"
+          },
+          "width": "fill_container",
+          "fill": "$--background",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "RfKDk",
+              "name": "Nav",
+              "width": "fill_container",
+              "fill": {
+                "type": "color",
+                "color": "#0E0A1A",
+                "enabled": false
+              },
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "bottom": 1
+                },
+                "fill": "$--secondary"
+              },
+              "padding": [
+                20,
+                56
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QttNk",
+                  "name": "brand",
+                  "fill": "$--foreground",
+                  "content": "WARDROBE ASSISTANTS",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 14,
+                  "fontWeight": "700",
+                  "letterSpacing": 2
+                },
+                {
+                  "type": "frame",
+                  "id": "f9xWK",
+                  "name": "Nav Links",
+                  "gap": 32,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "G5NkG",
+                      "name": "link1",
+                      "fill": "$--muted-foreground",
+                      "content": "Services",
+                      "fontFamily": "$--font-secondary",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YVoPV",
+                      "name": "link2",
+                      "fill": "$--muted-foreground",
+                      "content": "Testimonials",
+                      "fontFamily": "$--font-secondary",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "sgREO",
+                      "name": "link3",
+                      "fill": "$--muted-foreground",
+                      "content": "About",
+                      "fontFamily": "$--font-secondary",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IlAkz",
+                      "name": "link4",
+                      "fill": "$--muted-foreground",
+                      "content": "Contact",
+                      "fontFamily": "$--font-secondary",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "F6npC",
+              "name": "Hero",
+              "width": "fill_container",
+              "fill": {
+                "type": "color",
+                "color": "#0E0A1A",
+                "enabled": false
+              },
+              "gap": 48,
+              "padding": [
+                72,
+                56,
+                96,
+                56
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "U1iBd",
+                  "name": "Hero Left",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 28,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zViH3",
+                      "name": "eyebrow",
+                      "fill": "$--card",
+                      "cornerRadius": "$--radius-pill",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "gap": 4,
+                      "padding": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cVmpi",
+                          "x": 8,
+                          "y": 8,
+                          "name": "icon-Star-2",
+                          "enabled": false,
+                          "clip": true,
+                          "width": 16,
+                          "height": 16,
+                          "fill": {
+                            "type": "color",
+                            "color": "#ffffffff",
+                            "enabled": false
+                          },
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1
+                          },
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "6uj3S",
+                              "x": 1.8756510019302368,
+                              "y": 1.89599609375,
+                              "name": "Vector 2134",
+                              "geometry": "M9.187 0l-2.81 6.376-6.377 2.811 6.377 2.811 2.81 6.378 2.812-6.377 6.376-2.811-6.376-2.811-2.812-6.377z",
+                              "width": 12.25,
+                              "height": 12.250665664672852,
+                              "stroke": {
+                                "align": "center",
+                                "thickness": 1,
+                                "fill": "$--color-info-foreground"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Mplxl",
+                          "name": "Text",
+                          "fill": "$--primary",
+                          "content": "BACKSTAGE",
+                          "lineHeight": 1.1428571428571428,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 12,
+                          "fontWeight": "500",
+                          "letterSpacing": 1.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "p8lGB",
+                      "name": "headline",
+                      "fill": "$--foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Wardrobe Assistants",
+                      "lineHeight": 1.05,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 48,
+                      "fontWeight": "700",
+                      "letterSpacing": -1
+                    },
+                    {
+                      "type": "text",
+                      "id": "FoXH6",
+                      "name": "headline",
+                      "fill": "$--foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Steam & Stitch Squad",
+                      "lineHeight": 1.05,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 30,
+                      "fontWeight": "700",
+                      "letterSpacing": -1
+                    },
+                    {
+                      "type": "text",
+                      "id": "9hjV5",
+                      "name": "headline",
+                      "fill": "$--foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Behind every great show, a flawless wardrobe.",
+                      "lineHeight": 1.05,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 30,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FEs9v",
+                      "name": "subtitle",
+                      "fill": "$--muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 520,
+                      "content": "We are Switzerland's professional tour wardrobe assistants — serving theatres, concerts and festivals with calm hands and fast changes from call to curtain.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Geist",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fALNw",
+                      "name": "CTA Row",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lzRdd",
+                          "name": "btnPrimary",
+                          "height": 48,
+                          "fill": "$--primary",
+                          "cornerRadius": "$--radius-pill",
+                          "gap": 6,
+                          "padding": [
+                            12,
+                            24
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "g1J1L",
+                              "x": 24,
+                              "y": 12,
+                              "name": "plus",
+                              "enabled": false,
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1
+                              },
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "T4Hdu",
+                                  "x": 6,
+                                  "y": 6,
+                                  "name": "Vector",
+                                  "geometry": "M7.07104 3.53555l-3.53552 0-3.53552 0m3.53552-3.53555l0 3.53555 0 3.53549",
+                                  "width": 12,
+                                  "height": 12,
+                                  "stroke": {
+                                    "align": "center",
+                                    "thickness": 1.5,
+                                    "join": "round",
+                                    "cap": "round",
+                                    "fill": "$--primary-foreground"
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "zKgvo",
+                              "name": "Button",
+                              "fill": "$--primary-foreground",
+                              "content": "Book the crew",
+                              "lineHeight": 1.5555555555555556,
+                              "textAlign": "center",
+                              "textAlignVertical": "middle",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sPGi7",
+                          "name": "btnOutline",
+                          "height": 48,
+                          "fill": {
+                            "type": "color",
+                            "color": "#14060A",
+                            "enabled": false
+                          },
+                          "cornerRadius": "$--radius-pill",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#0000000d",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 1.75
+                          },
+                          "gap": 6,
+                          "padding": [
+                            12,
+                            24
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ve8aP",
+                              "x": 24,
+                              "y": 12,
+                              "name": "plus",
+                              "enabled": false,
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1
+                              },
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "KnADz",
+                                  "x": 6,
+                                  "y": 6,
+                                  "name": "Vector",
+                                  "geometry": "M7.07104 3.53555l-3.53552 0-3.53552 0m3.53552-3.53555l0 3.53555 0 3.53549",
+                                  "width": 12,
+                                  "height": 12,
+                                  "stroke": {
+                                    "align": "center",
+                                    "thickness": 1.5,
+                                    "join": "round",
+                                    "cap": "round",
+                                    "fill": "$--foreground"
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "SEU3x",
+                              "name": "Button",
+                              "fill": "$--muted-foreground",
+                              "content": "See services",
+                              "lineHeight": 1.4285714285714286,
+                              "textAlign": "center",
+                              "textAlignVertical": "middle",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "5cVc5",
+                  "name": "Hero Right",
+                  "clip": true,
+                  "width": 600,
+                  "height": 580,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "images/steam.jpeg",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 24,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--secondary"
+                  },
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000040",
+                    "offset": {
+                      "x": 0,
+                      "y": 16
+                    },
+                    "blur": 32
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "Wv93q",
+                      "name": "overlay",
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 0,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#1A181600",
+                            "position": 0
+                          },
+                          {
+                            "color": "#1A181699",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": "fill_container",
+                      "height": "fill_container"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MkAr3",
+          "name": "Services Section",
+          "theme": {
+            "Mode": "Dark"
+          },
+          "width": "fill_container",
+          "fill": "$--muted",
+          "layout": "vertical",
+          "gap": 56,
+          "padding": [
+            96,
+            56,
+            120,
+            56
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "MPNFa",
+              "name": "Services Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BeFc1",
+                  "name": "sEyebrow",
+                  "fill": "$--card",
+                  "cornerRadius": "$--radius-pill",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border"
+                  },
+                  "gap": 4,
+                  "padding": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LIs7M",
+                      "x": 8,
+                      "y": 8,
+                      "name": "icon-Star-2",
+                      "enabled": false,
+                      "clip": true,
+                      "width": 16,
+                      "height": 16,
+                      "fill": {
+                        "type": "color",
+                        "color": "#ffffffff",
+                        "enabled": false
+                      },
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "UMukc",
+                          "x": 1.8756510019302368,
+                          "y": 1.89599609375,
+                          "name": "Vector 2134",
+                          "geometry": "M9.187 0l-2.81 6.376-6.377 2.811 6.377 2.811 2.81 6.378 2.812-6.377 6.376-2.811-6.376-2.811-2.812-6.377z",
+                          "width": 12.25,
+                          "height": 12.250665664672852,
+                          "stroke": {
+                            "align": "center",
+                            "thickness": 1,
+                            "fill": "$--color-info-foreground"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "FIRTV",
+                      "name": "Text",
+                      "fill": "$--primary",
+                      "content": "SERVICES",
+                      "lineHeight": 1.1428571428571428,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "letterSpacing": 1.5
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "fHYXd",
+                  "name": "sHead",
+                  "fill": "$--foreground",
+                  "textGrowth": "fixed-width",
+                  "width": 900,
+                  "content": "Everything you need from call to curtain.",
+                  "lineHeight": 1.1,
+                  "textAlign": "center",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 48,
+                  "fontWeight": "700",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "nvFJE",
+                  "name": "sIntro",
+                  "fill": "$--muted-foreground",
+                  "textGrowth": "fixed-width",
+                  "width": 720,
+                  "content": "Pre-show prep, quick changes, laundry, repairs, load-in, and load-out.  We stay with the show so the spotlight stays on the stage - not on missing hooks or stuck zips.",
+                  "lineHeight": 1.6,
+                  "textAlign": "center",
+                  "fontFamily": "Geist",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bUS1Z",
+              "name": "Services Grid",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "z7ktT",
+                  "name": "Row 1",
+                  "width": "fill_container",
+                  "gap": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NwGSI",
+                      "name": "Service Card",
+                      "reusable": true,
+                      "width": "fill_container",
+                      "fill": "$--accent",
+                      "cornerRadius": 20,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#000000"
+                      },
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "POIOO",
+                          "name": "c1Icon",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$--secondary",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "1xIHt",
+                              "width": 22,
+                              "height": 22,
+                              "iconFontName": "shirt",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B8B3AC"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "wfhaU",
+                          "fill": "$--foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Quick changes",
+                          "lineHeight": 1.2,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "r8GB4",
+                          "fill": "$--muted-foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Rehearsed dressers stationed at every wing, running timed transitions so performers make their marks without missing a beat.",
+                          "lineHeight": 1.55,
+                          "fontFamily": "Geist",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LjPTe",
+                      "name": "Service Card 2",
+                      "width": "fill_container",
+                      "fill": "$--accent",
+                      "cornerRadius": 20,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#000000"
+                      },
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Uf7yP",
+                          "name": "c2Icon",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$--secondary",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "NyTea",
+                              "width": 22,
+                              "height": 22,
+                              "iconFontName": "droplets",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B8B3AC"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "3u5mn",
+                          "fill": "$--foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Ironing & steam",
+                          "lineHeight": 1.2,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "nlEoV",
+                          "fill": "$--muted-foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Wrinkle-free costumes at every call. We iron, press and steam on-site so everything looks sharp under the lights.",
+                          "lineHeight": 1.55,
+                          "fontFamily": "Geist",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vzLM1",
+                      "name": "Service Card 3",
+                      "width": "fill_container",
+                      "fill": "$--accent",
+                      "cornerRadius": 20,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#000000"
+                      },
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "3uCnJ",
+                          "name": "c3Icon",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$--secondary",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "azcRT",
+                              "width": 22,
+                              "height": 22,
+                              "iconFontName": "scissors",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B8B3AC"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "7KfXp",
+                          "fill": "$--foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Repairs & alterations",
+                          "lineHeight": 1.2,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "5M6JE",
+                          "fill": "$--muted-foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Zips, seams, hems and fittings — handled on-site with a full sewing kit and a steady hand, even minutes before curtain.",
+                          "lineHeight": 1.55,
+                          "fontFamily": "Geist",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SqHNc",
+                  "name": "Row 2",
+                  "width": "fill_container",
+                  "gap": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "uY7he",
+                      "name": "Service Card 4",
+                      "width": "fill_container",
+                      "fill": "$--accent",
+                      "cornerRadius": 20,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#000000"
+                      },
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "IbfUl",
+                          "name": "c4Icon",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$--secondary",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "wS8O9",
+                              "width": 22,
+                              "height": 22,
+                              "iconFontName": "crown",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B8B3AC"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "BRPw7",
+                          "fill": "$--foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Wigs & accessories",
+                          "lineHeight": 1.2,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TItXU",
+                          "fill": "$--muted-foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Styled, pinned and tracked by scene. Hats, gloves, jewellery and props accounted for from first rehearsal to final bow.",
+                          "lineHeight": 1.55,
+                          "fontFamily": "Geist",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6uCeX",
+                      "name": "Service Card 5",
+                      "width": "fill_container",
+                      "fill": "$--accent",
+                      "cornerRadius": 20,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#000000"
+                      },
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "0y8Ct",
+                          "name": "c5Icon",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$--secondary",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Jgwo1",
+                              "width": 22,
+                              "height": 22,
+                              "iconFontName": "truck",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B8B3AC"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "qAvk3",
+                          "fill": "$--foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Load-in & load-out",
+                          "lineHeight": 1.2,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "R74xW",
+                          "fill": "$--muted-foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Labelled rail systems, detailed packing lists and careful transport between venues. Organised down to the last hanger.",
+                          "lineHeight": 1.55,
+                          "fontFamily": "Geist",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "U28wp",
+                      "name": "Service Card 6",
+                      "width": "fill_container",
+                      "fill": "$--accent",
+                      "cornerRadius": 20,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#000000"
+                      },
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zlTSP",
+                          "name": "c6Icon",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$--secondary",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Bvn4b",
+                              "width": 22,
+                              "height": 22,
+                              "iconFontName": "clipboard-list",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B8B3AC"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "qUPSr",
+                          "fill": "$--foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Laundry",
+                          "lineHeight": 1.2,
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xApWq",
+                          "fill": "$--muted-foreground",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Machine wash, hand wash and stain removal — handled with care so costumes stay fresh and stage-ready night after night.",
+                          "lineHeight": 1.55,
+                          "fontFamily": "Geist",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cS5Df",
+          "name": "CTA Section",
+          "theme": {
+            "Mode": "Dark"
+          },
+          "width": "fill_container",
+          "fill": "$--muted",
+          "layout": "vertical",
+          "padding": [
+            96,
+            120
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "2J0wr",
+              "name": "CTA Inner",
+              "layout": "vertical",
+              "gap": 28,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "P3WQO",
+                  "name": "ctaTag",
+                  "fill": "$--card",
+                  "cornerRadius": "$--radius-pill",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border"
+                  },
+                  "gap": 4,
+                  "padding": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "e2UZt",
+                      "x": 8,
+                      "y": 8,
+                      "name": "icon-Star-2",
+                      "enabled": false,
+                      "clip": true,
+                      "width": 16,
+                      "height": 16,
+                      "fill": {
+                        "type": "color",
+                        "color": "#ffffffff",
+                        "enabled": false
+                      },
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "bz7D3",
+                          "x": 1.8756510019302368,
+                          "y": 1.89599609375,
+                          "name": "Vector 2134",
+                          "geometry": "M9.187 0l-2.81 6.376-6.377 2.811 6.377 2.811 2.81 6.378 2.812-6.377 6.376-2.811-6.376-2.811-2.812-6.377z",
+                          "width": 12.25,
+                          "height": 12.250665664672852,
+                          "stroke": {
+                            "align": "center",
+                            "thickness": 1,
+                            "fill": "$--color-info-foreground"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "JbxMv",
+                      "name": "Text",
+                      "fill": "$--primary",
+                      "content": "READY WHEN YOU ARE",
+                      "lineHeight": 1.1428571428571428,
+                      "fontFamily": "$--font-primary",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "CxwPl",
+                  "name": "ctaTitle",
+                  "fill": "$--foreground",
+                  "textGrowth": "fixed-width",
+                  "width": 900,
+                  "content": "Cue the curtain. We’ll handle the rest.",
+                  "lineHeight": 1.1,
+                  "textAlign": "center",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 56,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "PGEWC",
+                  "name": "ctaSub",
+                  "fill": "$--muted-foreground",
+                  "textGrowth": "fixed-width",
+                  "width": 680,
+                  "content": "Tell us about your tour — dates, cast size, venues — and we’ll send a quote within 24 hours.",
+                  "lineHeight": 1.55,
+                  "textAlign": "center",
+                  "fontFamily": "Geist",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "hwh8p",
+                  "name": "CTA Buttons",
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "9rqB7",
+                      "name": "ctaPrimary",
+                      "height": 48,
+                      "fill": "$--primary",
+                      "cornerRadius": "$--radius-pill",
+                      "gap": 6,
+                      "padding": [
+                        12,
+                        24
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vMy1s",
+                          "x": 24,
+                          "y": 12,
+                          "name": "plus",
+                          "enabled": false,
+                          "width": 24,
+                          "height": 24,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1
+                          },
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "WgNAh",
+                              "x": 6,
+                              "y": 6,
+                              "name": "Vector",
+                              "geometry": "M7.07104 3.53555l-3.53552 0-3.53552 0m3.53552-3.53555l0 3.53555 0 3.53549",
+                              "width": 12,
+                              "height": 12,
+                              "stroke": {
+                                "align": "center",
+                                "thickness": 1.5,
+                                "join": "round",
+                                "cap": "round",
+                                "fill": "$--primary-foreground"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "PsDo8",
+                          "name": "Button",
+                          "fill": "$--primary-foreground",
+                          "content": "Request a quote",
+                          "lineHeight": 1.5555555555555556,
+                          "textAlign": "center",
+                          "textAlignVertical": "middle",
+                          "fontFamily": "$--font-primary",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "muGmq",
+          "name": "Footer Section",
+          "theme": {
+            "Mode": "Dark"
+          },
+          "width": "fill_container",
+          "fill": "$--sidebar",
+          "layout": "vertical",
+          "gap": 40,
+          "padding": [
+            56,
+            120,
+            32,
+            120
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Wbq9T",
+              "name": "Footer Top",
+              "width": "fill_container",
+              "gap": 64,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NexWx",
+                  "name": "fBrand",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "SYTKG",
+                      "name": "fLogoRow",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "G89vM",
+                          "name": "fLogoDot",
+                          "fill": "#B5564F",
+                          "width": 10,
+                          "height": 10
+                        },
+                        {
+                          "type": "text",
+                          "id": "GaL1B",
+                          "name": "fLogo",
+                          "fill": "#EDEAE4",
+                          "content": "WARDROBE ASSISTANTS",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 14,
+                          "fontWeight": "500",
+                          "letterSpacing": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "CuJyv",
+                      "name": "fTagline",
+                      "fill": "#8F8A83",
+                      "textGrowth": "fixed-width",
+                      "width": 320,
+                      "content": "Backstage wardrobe crews for theatres, concerts and festivals across Switzerland.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EDjMF",
+                  "name": "fCol1",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "DWa5K",
+                      "name": "fCol1H",
+                      "fill": "$--muted-foreground",
+                      "content": "Services",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "letterSpacing": 1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "D6Xn2",
+                      "name": "fC1l1",
+                      "fill": "$--muted-foreground",
+                      "content": "Quick changes",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KaI55",
+                      "name": "fC1l2",
+                      "fill": "$--muted-foreground",
+                      "content": "Laundry & steam",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fsxG3",
+                      "name": "fC1l3",
+                      "fill": "$--muted-foreground",
+                      "content": "Repairs on tour",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "zOGdN",
+                      "name": "fC1l4",
+                      "fill": "$--muted-foreground",
+                      "content": "Tour management",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "6xVCx",
+                  "name": "fCol2",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rwTYQ",
+                      "name": "fCol2H",
+                      "fill": "$--muted-foreground",
+                      "content": "Company",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "letterSpacing": 1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "X24gH",
+                      "name": "fC2l1",
+                      "fill": "$--muted-foreground",
+                      "content": "About",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "7d8Yr",
+                      "name": "fC2l2",
+                      "fill": "$--muted-foreground",
+                      "content": "The crew",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x8VS3",
+                  "name": "fCol3",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "f58vm",
+                      "name": "fCol3H",
+                      "fill": "$--muted-foreground",
+                      "content": "Contact",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "letterSpacing": 1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "BL6XV",
+                      "name": "fC3l1",
+                      "fill": "$--muted-foreground",
+                      "content": "hello@wardrobe-assistants.ch",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ApbBn",
+                      "name": "fC3l2",
+                      "fill": "$--muted-foreground",
+                      "content": "+41 44 123 45 67",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eqanK",
+                      "name": "fC3l3",
+                      "fill": "$--muted-foreground",
+                      "content": "Zürich · Basel · Genève",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "bcQfO",
+              "name": "fDivider",
+              "fill": "$--secondary",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "ljOuB",
+              "name": "Footer Bottom",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "AhYaD",
+                  "name": "fCopy",
+                  "fill": "#6E6962",
+                  "content": "© 2026 wardrobe-assistants.ch",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "XPhUW",
+                  "name": "fLegal",
+                  "gap": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Wu1CE",
+                      "name": "fL1",
+                      "fill": "#8F8A83",
+                      "content": "Privacy",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "C8iqh",
+                      "name": "fL2",
+                      "fill": "#8F8A83",
+                      "content": "Terms",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "2JRuG",
+                      "name": "fL3",
+                      "fill": "#8F8A83",
+                      "content": "Imprint",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "themes": {
+    "Mode": [
+      "Dark"
+    ]
+  },
+  "variables": {
+    "--sidebar": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#161412",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-primary": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B5564F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-primary-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-border": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#2E2B28",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-accent": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#2E2B28",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-accent-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-ring": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B5564F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--background": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#1A1816",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--card": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#26231F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--card-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--popover": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#26231F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--popover-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--primary": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B5564F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--primary-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--secondary": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#2E2B28",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--secondary-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--muted": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#1F1D1B",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--muted-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B8B3AC",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--accent": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#2A2724",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--accent-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#EDEAE4",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--destructive": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#E53E3E",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--border": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#3A3734",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--input": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#3A3734",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--ring": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B5564F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--white": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "--black": {
+      "type": "color",
+      "value": "#000000"
+    },
+    "--font-primary": {
+      "type": "string",
+      "value": "JetBrains Mono"
+    },
+    "--font-secondary": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "--radius-none": {
+      "type": "number",
+      "value": 0
+    },
+    "--radius-pill": {
+      "type": "number",
+      "value": 999
+    },
+    "--color-success": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#222924",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-success-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B6FFCE",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-warning": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#291C0F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-warning-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#FF8400",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-error": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#24100B",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-error-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#FF5C33",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-info": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#222229",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-info-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#B2B2FF",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--radius-m": {
+      "type": "number",
+      "value": 16
+    }
+  },
+  "imports": {
+    "Y": "pencil:shadcn.lib.pen",
+    "T": "pencil:lunaris.lib.pen"
+  }
+}
