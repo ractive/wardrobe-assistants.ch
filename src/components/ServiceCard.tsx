@@ -8,7 +8,7 @@ interface ServiceCardProps {
 
 export function ServiceCard({ icon: Icon, title, description }: ServiceCardProps) {
 	return (
-		<div className="flex flex-1 flex-col gap-5 rounded-[20px] border border-[var(--border)] bg-[var(--accent)] p-7">
+		<div className="flex flex-col gap-5 rounded-[20px] border border-[var(--border)] bg-[var(--accent)] p-7">
 			<div className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--secondary)]">
 				<Icon className="h-[22px] w-[22px] text-[#B8B3AC]" />
 			</div>

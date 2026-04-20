@@ -3,6 +3,12 @@ name: Build and Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "*.md"
+      - "*.pen"
+      - "kb/**"
+      - ".claude/**"
+      - ".hyalo.toml"
 
 env:
   REGISTRY: ghcr.io

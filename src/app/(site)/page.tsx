@@ -56,25 +56,25 @@ export default function Home() {
 	return (
 		<>
 			{/* Hero Section */}
-			<section className="flex gap-12 bg-[var(--background)] px-14 pt-[72px] pb-24">
+			<section className="flex flex-col items-center gap-10 bg-[var(--background)] px-6 pt-12 pb-16 md:px-10 lg:flex-row lg:items-center lg:gap-12 lg:px-14 lg:pt-[72px] lg:pb-24">
 				{/* Hero Left */}
-				<div className="flex flex-1 flex-col gap-7">
+				<div className="flex flex-1 flex-col gap-6 lg:gap-7">
 					<EyebrowBadge label="BACKSTAGE" />
-					<h1 className="font-primary text-[48px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)]">
+					<h1 className="font-primary text-[32px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)] md:text-[40px] lg:text-[48px]">
 						Wardrobe Assistants
 					</h1>
-					<h2 className="font-primary text-[30px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)]">
+					<h2 className="font-primary text-[22px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)] md:text-[26px] lg:text-[30px]">
 						Steam &amp; Stitch Squad
 					</h2>
-					<p className="font-primary text-[30px] font-bold leading-[1.05] text-[var(--foreground)]">
+					<p className="font-primary text-[22px] font-bold leading-[1.05] text-[var(--foreground)] md:text-[26px] lg:text-[30px]">
 						Behind every great show, a flawless wardrobe.
 					</p>
-					<p className="max-w-[520px] font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
+					<p className="max-w-[520px] font-secondary text-[16px] leading-[1.55] text-[var(--muted-foreground)] lg:text-[17px]">
 						We are Switzerland&apos;s professional tour wardrobe assistants —
 						serving theatres, concerts and festivals with calm hands and fast
 						changes from call to curtain.
 					</p>
-					<div className="flex items-center gap-3">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 						<Button href="#contact">Book the crew</Button>
 						<Button variant="outline" href="#services">
 							See services
@@ -83,7 +83,7 @@ export default function Home() {
 				</div>
 
 				{/* Hero Right — Image */}
-				<div className="relative h-[580px] w-[600px] shrink-0 overflow-hidden rounded-3xl border border-[var(--secondary)] shadow-[0_16px_32px_rgba(0,0,0,0.25)]">
+				<div className="relative w-full shrink-0 overflow-hidden rounded-3xl border border-[var(--secondary)] shadow-[0_16px_32px_rgba(0,0,0,0.25)] md:h-[400px] lg:h-[580px] lg:w-[600px]">
 					<img
 						src="/steam.jpg"
 						alt="Wardrobe assistant steaming costumes backstage"
@@ -96,15 +96,15 @@ export default function Home() {
 			{/* Services Section */}
 			<section
 				id="services"
-				className="flex flex-col items-center gap-14 bg-[var(--muted)] px-14 pt-24 pb-[120px]"
+				className="flex flex-col items-center gap-10 bg-[var(--muted)] px-6 pt-16 pb-20 md:px-10 lg:gap-14 lg:px-14 lg:pt-24 lg:pb-[120px]"
 			>
 				{/* Services Header */}
 				<div className="flex flex-col items-center gap-5">
 					<EyebrowBadge label="SERVICES" />
-					<h2 className="max-w-[900px] text-center font-primary text-[48px] font-bold leading-[1.1] tracking-[-1px] text-[var(--foreground)]">
+					<h2 className="max-w-[900px] text-center font-primary text-[28px] font-bold leading-[1.1] tracking-[-1px] text-[var(--foreground)] md:text-[36px] lg:text-[48px]">
 						Everything you need from call to curtain.
 					</h2>
-					<p className="max-w-[720px] text-center font-secondary text-[16px] leading-[1.6] text-[var(--muted-foreground)]">
+					<p className="max-w-[720px] text-center font-secondary text-[15px] leading-[1.6] text-[var(--muted-foreground)] lg:text-[16px]">
 						Pre-show prep, quick changes, laundry, repairs, load-in, and
 						load-out. We stay with the show so the spotlight stays on the stage
 						- not on missing hooks or stuck zips.
@@ -112,35 +112,28 @@ export default function Home() {
 				</div>
 
 				{/* Services Grid */}
-				<div className="flex w-full flex-col gap-5">
-					<div className="flex w-full gap-5">
-						{servicesRow1.map((service) => (
-							<ServiceCard key={service.title} {...service} />
-						))}
-					</div>
-					<div className="flex w-full gap-5">
-						{servicesRow2.map((service) => (
-							<ServiceCard key={service.title} {...service} />
-						))}
-					</div>
+				<div className="grid w-full gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+					{[...servicesRow1, ...servicesRow2].map((service) => (
+						<ServiceCard key={service.title} {...service} />
+					))}
 				</div>
 			</section>
 
 			{/* CTA Section */}
 			<section
 				id="contact"
-				className="flex flex-col items-center justify-center bg-[var(--muted)] px-[120px] py-24"
+				className="flex flex-col items-center justify-center bg-[var(--muted)] px-6 py-16 md:px-10 lg:px-[120px] lg:py-24"
 			>
-				<div className="flex flex-col items-center gap-7">
+				<div className="flex flex-col items-center gap-6 lg:gap-7">
 					<EyebrowBadge label="READY WHEN YOU ARE" size="md" />
-					<h2 className="max-w-[900px] text-center font-primary text-[56px] font-medium leading-[1.1] text-[var(--foreground)]">
+					<h2 className="max-w-[900px] text-center font-primary text-[32px] font-medium leading-[1.1] text-[var(--foreground)] md:text-[42px] lg:text-[56px]">
 						We dress the show. You take the bow.
 					</h2>
-					<p className="max-w-[680px] text-center font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
+					<p className="max-w-[680px] text-center font-secondary text-[16px] leading-[1.55] text-[var(--muted-foreground)] lg:text-[17px]">
 						Tell us about your tour — dates, cast size, venues — and
 						we&apos;ll send a quote within 24 hours.
 					</p>
-					<p className="max-w-[680px] text-center font-secondary text-[17px] leading-[1.55] text-[var(--muted-foreground)]">
+					<p className="max-w-[680px] text-center font-secondary text-[16px] leading-[1.55] text-[var(--muted-foreground)] lg:text-[17px]">
 						With over 20 years backstage and many productions under our belts,
 						our crew brings the calm confidence that only real experience can.
 						From intimate theatre runs to arena-scale touring — we&apos;ve seen
