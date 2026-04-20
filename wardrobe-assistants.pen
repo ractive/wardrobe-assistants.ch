@@ -12,7 +12,16 @@
       },
       "clip": true,
       "width": 1440,
-      "fill": "$--background",
+      "fill": [
+        "#1A1816",
+        {
+          "type": "image",
+          "opacity": 0.15,
+          "enabled": true,
+          "url": "public/steam.jpg",
+          "mode": "fit"
+        }
+      ],
       "layout": "vertical",
       "children": [
         {
@@ -23,7 +32,11 @@
             "Mode": "Dark"
           },
           "width": "fill_container",
-          "fill": "$--background",
+          "fill": {
+            "type": "color",
+            "color": "#1A1816",
+            "enabled": false
+          },
           "layout": "vertical",
           "children": [
             {
@@ -84,16 +97,6 @@
                       "name": "link2",
                       "fill": "$--muted-foreground",
                       "content": "Testimonials",
-                      "fontFamily": "$--font-secondary",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "sgREO",
-                      "name": "link3",
-                      "fill": "$--muted-foreground",
-                      "content": "About",
                       "fontFamily": "$--font-secondary",
                       "fontSize": 14,
                       "fontWeight": "normal"
@@ -422,14 +425,17 @@
                 {
                   "type": "frame",
                   "id": "5cVc5",
+                  "x": 784,
+                  "y": 72,
                   "name": "Hero Right",
+                  "enabled": false,
                   "clip": true,
                   "width": 600,
                   "height": 580,
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "images/steam.jpg",
+                    "url": "public/steam.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": 24,
@@ -490,7 +496,11 @@
             "Mode": "Dark"
           },
           "width": "fill_container",
-          "fill": "$--muted",
+          "fill": {
+            "type": "color",
+            "color": "#1F1D1B",
+            "enabled": false
+          },
           "layout": "vertical",
           "gap": 56,
           "padding": [
@@ -1098,7 +1108,11 @@
             "Mode": "Dark"
           },
           "width": "fill_container",
-          "fill": "$--muted",
+          "fill": {
+            "type": "color",
+            "color": "#1F1D1B",
+            "enabled": false
+          },
           "layout": "vertical",
           "padding": [
             96,
@@ -1314,7 +1328,11 @@
             "Mode": "Dark"
           },
           "width": "fill_container",
-          "fill": "$--sidebar",
+          "fill": {
+            "type": "color",
+            "color": "#161412",
+            "enabled": false
+          },
           "layout": "vertical",
           "gap": 40,
           "padding": [
@@ -1330,6 +1348,7 @@
               "name": "Footer Top",
               "width": "fill_container",
               "gap": 64,
+              "justifyContent": "space_between",
               "children": [
                 {
                   "type": "frame",
@@ -1373,108 +1392,8 @@
                       "fill": "#8F8A83",
                       "textGrowth": "fixed-width",
                       "width": 320,
-                      "content": "Backstage wardrobe crews for theatres, concerts and festivals across Switzerland.",
+                      "content": "Backstage wardrobe squad for theatres, concerts and festivals across Switzerland.",
                       "lineHeight": 1.6,
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "EDjMF",
-                  "name": "fCol1",
-                  "layout": "vertical",
-                  "gap": 14,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "DWa5K",
-                      "name": "fCol1H",
-                      "fill": "$--muted-foreground",
-                      "content": "Services",
-                      "fontFamily": "JetBrains Mono",
-                      "fontSize": 12,
-                      "fontWeight": "500",
-                      "letterSpacing": 1.5
-                    },
-                    {
-                      "type": "text",
-                      "id": "D6Xn2",
-                      "name": "fC1l1",
-                      "fill": "$--muted-foreground",
-                      "content": "Quick changes",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "KaI55",
-                      "name": "fC1l2",
-                      "fill": "$--muted-foreground",
-                      "content": "Laundry & steam",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "fsxG3",
-                      "name": "fC1l3",
-                      "fill": "$--muted-foreground",
-                      "content": "Repairs on tour",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "zOGdN",
-                      "name": "fC1l4",
-                      "fill": "$--muted-foreground",
-                      "content": "Tour management",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "6xVCx",
-                  "name": "fCol2",
-                  "layout": "vertical",
-                  "gap": 14,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "rwTYQ",
-                      "name": "fCol2H",
-                      "fill": "$--muted-foreground",
-                      "content": "Company",
-                      "fontFamily": "JetBrains Mono",
-                      "fontSize": 12,
-                      "fontWeight": "500",
-                      "letterSpacing": 1.5
-                    },
-                    {
-                      "type": "text",
-                      "id": "X24gH",
-                      "name": "fC2l1",
-                      "fill": "$--muted-foreground",
-                      "content": "About",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "7d8Yr",
-                      "name": "fC2l2",
-                      "fill": "$--muted-foreground",
-                      "content": "The crew",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -1511,20 +1430,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "ApbBn",
-                      "name": "fC3l2",
-                      "fill": "$--muted-foreground",
-                      "content": "+41 44 123 45 67",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
                       "id": "eqanK",
                       "name": "fC3l3",
                       "fill": "$--muted-foreground",
-                      "content": "Zürich · Basel · Genève",
+                      "content": "Zürich ",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -1558,44 +1467,6 @@
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "normal"
-                },
-                {
-                  "type": "frame",
-                  "id": "XPhUW",
-                  "name": "fLegal",
-                  "gap": 20,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "Wu1CE",
-                      "name": "fL1",
-                      "fill": "#8F8A83",
-                      "content": "Privacy",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "C8iqh",
-                      "name": "fL2",
-                      "fill": "#8F8A83",
-                      "content": "Terms",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "2JRuG",
-                      "name": "fL3",
-                      "fill": "#8F8A83",
-                      "content": "Imprint",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    }
-                  ]
                 }
               ]
             }

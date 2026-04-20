@@ -1,6 +1,6 @@
 export function Footer() {
 	return (
-		<footer className="flex flex-col gap-10 bg-[var(--sidebar)] px-6 pt-14 pb-8 md:px-10 lg:px-[120px]">
+		<footer className="flex flex-col gap-10 px-6 pt-14 pb-8 md:px-10 lg:px-[120px]">
 			<div className="flex w-full flex-col gap-10 md:flex-row md:items-start md:justify-between">
 				{/* Brand */}
 				<div className="flex flex-col gap-4">

@@ -56,47 +56,34 @@ export default function Home() {
 	return (
 		<>
 			{/* Hero Section */}
-			<section className="flex flex-col items-center gap-10 bg-[var(--background)] px-6 pt-12 pb-16 md:px-10 lg:flex-row lg:items-center lg:gap-12 lg:px-14 lg:pt-[72px] lg:pb-24">
-				{/* Hero Left */}
-				<div className="flex flex-1 flex-col gap-6 lg:gap-7">
-					<EyebrowBadge label="BACKSTAGE" />
-					<h1 className="font-primary text-[32px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)] md:text-[40px] lg:text-[48px]">
-						Wardrobe Assistants
-					</h1>
-					<h2 className="font-primary text-[22px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)] md:text-[26px] lg:text-[30px]">
-						Steam &amp; Stitch Squad
-					</h2>
-					<p className="font-primary text-[22px] font-bold leading-[1.05] text-[var(--foreground)] md:text-[26px] lg:text-[30px]">
-						Behind every great show, a flawless wardrobe.
-					</p>
-					<p className="max-w-[520px] font-secondary text-[16px] leading-[1.55] text-[var(--muted-foreground)] lg:text-[17px]">
-						We are Switzerland&apos;s professional tour wardrobe assistants —
-						serving theatres, concerts and festivals with calm hands and fast
-						changes from call to curtain.
-					</p>
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-						<Button href="#contact">Book the crew</Button>
-						<Button variant="outline" href="#services">
-							See services
-						</Button>
-					</div>
-				</div>
-
-				{/* Hero Right — Image */}
-				<div className="relative w-full shrink-0 overflow-hidden rounded-3xl border border-[var(--secondary)] shadow-[0_16px_32px_rgba(0,0,0,0.25)] md:h-[400px] lg:h-[580px] lg:w-[600px]">
-					<img
-						src="/steam.jpg"
-						alt="Wardrobe assistant steaming costumes backstage"
-						className="h-full w-full object-cover"
-					/>
-					<div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1A181699]" />
+			<section className="flex flex-col gap-6 px-6 pt-12 pb-16 md:px-10 lg:gap-7 lg:px-14 lg:pt-[72px] lg:pb-24">
+				<EyebrowBadge label="BACKSTAGE" />
+				<h1 className="font-primary text-[32px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)] md:text-[40px] lg:text-[48px]">
+					Wardrobe Assistants
+				</h1>
+				<h2 className="font-primary text-[22px] font-bold leading-[1.05] tracking-[-1px] text-[var(--foreground)] md:text-[26px] lg:text-[30px]">
+					Steam &amp; Stitch Squad
+				</h2>
+				<p className="font-primary text-[22px] font-bold leading-[1.05] text-[var(--foreground)] md:text-[26px] lg:text-[30px]">
+					Behind every great show, a flawless wardrobe.
+				</p>
+				<p className="max-w-[520px] font-secondary text-[16px] leading-[1.55] text-[var(--muted-foreground)] lg:text-[17px]">
+					We are Switzerland&apos;s professional tour wardrobe assistants —
+					serving theatres, concerts and festivals with calm hands and fast
+					changes from call to curtain.
+				</p>
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+					<Button href="#contact">Book the crew</Button>
+					<Button variant="outline" href="#services">
+						See services
+					</Button>
 				</div>
 			</section>
 
 			{/* Services Section */}
 			<section
 				id="services"
-				className="flex flex-col items-center gap-10 bg-[var(--muted)] px-6 pt-16 pb-20 md:px-10 lg:gap-14 lg:px-14 lg:pt-24 lg:pb-[120px]"
+				className="flex flex-col items-center gap-10 px-6 pt-16 pb-20 md:px-10 lg:gap-14 lg:px-14 lg:pt-24 lg:pb-[120px]"
 			>
 				{/* Services Header */}
 				<div className="flex flex-col items-center gap-5">
@@ -122,7 +109,7 @@ export default function Home() {
 			{/* CTA Section */}
 			<section
 				id="contact"
-				className="flex flex-col items-center justify-center bg-[var(--muted)] px-6 py-16 md:px-10 lg:px-[120px] lg:py-24"
+				className="flex flex-col items-center justify-center px-6 py-16 md:px-10 lg:px-[120px] lg:py-24"
 			>
 				<div className="flex flex-col items-center gap-6 lg:gap-7">
 					<EyebrowBadge label="READY WHEN YOU ARE" size="md" />
