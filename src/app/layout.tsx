@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
 };
 
-const localBusinessJsonLd = {
+const professionalServiceJsonLd = {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   name: siteName,
@@ -85,7 +85,7 @@ export default function RootLayout({
           type="application/ld+json"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD must be inlined as text
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(localBusinessJsonLd),
+            __html: JSON.stringify(professionalServiceJsonLd),
           }}
         />
       </head>

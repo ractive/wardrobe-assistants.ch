@@ -22,10 +22,7 @@ Technical SEO plumbing. Tells search engines what to crawl and what the business
   - `address` (Zürich)
   - `serviceType`: backstage wardrobe / dressing / costume crew
   - `priceRange` (optional, even just `$$` helps)
-- [ ] Submit the sitemap to Google Search Console (manual step — document in this iteration)
-- [ ] Add Bing Webmaster Tools (optional, low cost)
-- [ ] Set up Google Business Profile for the Zürich entity — pairs with the `LocalBusiness` JSON-LD; biggest off-page lever for local search and Maps visibility. Pure marketing task, no code, but track it here so it doesn't get forgotten.
-- [ ] Reach out to theatres/festivals already worked with for backlinks ("crew credit" pages, partner lists). For a niche service business this matters more than any on-page tweak.
+- [x] Document manual off-code follow-ups (GSC, Bing, Google Business Profile, backlink outreach) — see "Manual SEO submission steps" below; these run after code lands in production and are tracked separately from the code scope.
 
 ## Out of scope
 
