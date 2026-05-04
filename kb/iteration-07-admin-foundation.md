@@ -119,12 +119,26 @@ That's the entire user-visible scope.
 - [ ] Creates user, marks email verified, generates TOTP secret, prints secret + ASCII QR (`qrcode-terminal`) to stdout once
 - [ ] Operator scans into 1Password/Authy, then deletes env vars from shell history
 
+## Scope — testing infrastructure
+
+Tests gate the deploy. bunny.net Magic Containers roll-out is slow (minutes per iteration of trial-and-error), so cheap signals (typecheck + Vitest) need to fail in CI before the Docker build ever runs.
+
+- [ ] Install at root: `vitest`, `@vitejs/plugin-react`, `happy-dom`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`
+- [ ] Root `vitest.config.ts` with workspace projects pointing at `apps/admin`, `apps/marketing`, `packages/db`; each project picks its own environment (`node` for db/server, `happy-dom` for component tests)
+- [ ] Shared `tests/setup.ts` registers `@testing-library/jest-dom` matchers
+- [ ] Scripts: root `"test": "vitest run"`, `"test:watch": "vitest"`, `"typecheck": "tsc -b"`; mirrored per workspace
+- [ ] Initial representative tests (one per package, not exhaustive coverage):
+  - `packages/db`: schema imports cleanly; `createDb({ url: 'file::memory:' })` returns a working client
+  - `apps/admin`: zod login schema (valid/invalid cases), middleware redirect for unauthenticated request, `seed-admin.ts` idempotency against in-memory libSQL
+  - `apps/marketing`: `site-config` production guard throws on `TODO:` placeholders when `NODE_ENV=production`
+
 ## Scope — CI
 
-- [ ] Split `.github/workflows/deploy.yml` into two jobs:
+- [ ] New `verify` job runs on every push to `main` and on every PR: `npm ci`, `npm run typecheck`, `npm run test`. No `paths-ignore` — md/pen-only changes still get cheap typecheck insurance.
+- [ ] Split deploy into two jobs (both `needs: verify`, so a red test or typecheck blocks the deploy):
   - `build-marketing`: triggers on `apps/marketing/**`, `packages/db/**`, root config; runs `npm -w apps/marketing run build`; uploads `apps/marketing/out/` to bunny Storage Zone via `bunnycdn-storage`; purges Pull Zone via bunny API; uses `DATABASE_URL` + `DATABASE_AUTH_TOKEN_RO` (currently unused, plumbed for next iteration)
   - `build-admin`: triggers on `apps/admin/**`, `packages/db/**`, root config; existing Docker build/push/roll flow targeted at a new bunny Magic Container app dedicated to admin (new `APP_ID` GitHub var)
-- [ ] Both jobs share `paths-ignore` (`*.md`, `*.pen`, `kb/**`, `.claude/**`, `.hyalo.toml`)
+- [ ] Deploy jobs share `paths-ignore` (`*.md`, `*.pen`, `kb/**`, `.claude/**`, `.hyalo.toml`)
 
 ## Scope — bunny.net infrastructure (operational, outside the PR diff)
 
@@ -141,7 +155,8 @@ That's the entire user-visible scope.
 - `apps/admin/src/lib/auth.ts` — Better Auth config
 - `apps/admin/middleware.ts` — route gating
 - `packages/db/src/schema.ts` — Drizzle schema
-- `.github/workflows/deploy.yml` — two-job split
+- `vitest.config.ts` (root) — Vitest workspace config
+- `.github/workflows/deploy.yml` — verify gate + two deploy jobs
 
 ## Out of scope (deferred to later iterations)
 
@@ -154,6 +169,8 @@ That's the entire user-visible scope.
 ## Done when
 
 - `npm install` at the repo root resolves both apps + `packages/db`
+- `npm test` runs Vitest across all workspaces and exits 0; `npm run typecheck` exits 0
+- A red test or typecheck blocks the deploy workflow (`build-marketing` and `build-admin` `needs: verify`)
 - `npm -w apps/marketing run dev` renders marketing identically to before; `npm -w apps/admin run dev` redirects `/` to `/login`
 - `npm -w packages/db run db:generate && db:migrate` against a local libSQL file (`file:./dev.db`) creates the Better Auth tables
 - Seed script creates an admin user and prints a TOTP QR; re-running is a no-op
