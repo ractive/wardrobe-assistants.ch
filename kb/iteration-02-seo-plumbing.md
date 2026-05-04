@@ -17,7 +17,7 @@ Technical SEO plumbing. Tells search engines what to crawl and what the business
 - [ ] Create `src/app/robots.ts`
   - `allow: '/'`
   - Reference the sitemap URL
-- [ ] Add JSON-LD `LocalBusiness` (or `ProfessionalService`) in `src/app/(site)/layout.tsx`:
+- [ ] Add JSON-LD `LocalBusiness` (or `ProfessionalService`) in `src/app/layout.tsx` (reuse the `siteUrl`/`siteName`/`description` constants already defined there for Iter-1's metadata):
   - `name`, `description`, `url`, `email`, `areaServed: CH`
   - `address` (Zürich)
   - `serviceType`: backstage wardrobe / dressing / costume crew
