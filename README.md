@@ -1,14 +1,16 @@
 # wardrobe-assistants.ch
 
-Landing page for a Swiss wardrobe crew. Built with Next.js 16 (App Router) and Tailwind v4.
+Landing page for a Swiss wardrobe crew. Built with Next.js 16 (App Router) and Tailwind v4. Deployed as a fully static export to bunny.net Storage + Pull Zone.
 
 ## Stack
 
-- **Next.js 16** with React 19 and the React Compiler
+- **npm workspaces** monorepo (`apps/*`, `packages/*`)
+- **Next.js 16** (`output: "export"`) with React 19 and the React Compiler
 - **Tailwind CSS v4** via `@tailwindcss/postcss`
+- **Vitest** + Testing Library (happy-dom) — verify gate in CI
 - **Biome** for linting and formatting
 - **TypeScript**
-- Container deploy to **bunny.net Magic Containers** via GitHub Actions
+- Static deploy to **bunny.net Storage Zone** (origin) + **Pull Zone** (edge) via GitHub Actions
 
 ## Getting started
 
@@ -19,37 +21,46 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Scripts
+## Scripts (root)
 
-- `npm run dev` — start the dev server
-- `npm run build` — production build (`output: "standalone"`)
-- `npm run start` — run the built server
+- `npm run dev` — start the marketing dev server
+- `npm run build` — production build (static export to `apps/marketing/out/`)
+- `npm run typecheck` — workspace-wide TypeScript check
+- `npm test` — run Vitest across the workspace
+- `npm run test:watch` — Vitest in watch mode
 - `npm run lint` — `biome check`
 - `npm run format` — `biome format --write`
 
+Scripts are mirrored as workspace scripts in `apps/marketing/`; run them directly with `npm -w @wardrobe-assistants/marketing run <script>`.
+
 ## Project layout
 
-- `src/app/` — App Router routes (`/`, `/services`, `/impressum`, `/datenschutz`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
-- `src/components/` — shared React components
-- `public/` — static assets
+- `apps/marketing/` — Next.js marketing site (App Router), the only deployable in iter-7a
+  - `src/app/` — routes (`/`, `/services`, `/impressum`, `/datenschutz`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
+  - `src/components/` — shared React components
+  - `public/` — static assets
+- `packages/` — shared libraries (populated in iter-7b)
+- `tests/setup.ts` — Vitest shared setup (`@testing-library/jest-dom` matchers)
+- `vitest.config.ts` — root Vitest workspace config
 - `kb/` — internal knowledgebase (iteration plans, notes); markdown with YAML frontmatter, queryable via the `hyalo` CLI
 - `wardrobe-assistants.pen` — design source of truth (Pencil); see `AGENTS.md`
-- `Dockerfile` — multi-stage build on `node:22-alpine`, runs `node server.js` from the standalone output
-- `.github/workflows/deploy.yml` — builds the image, pushes to GHCR, rolls the bunny.net container
+- `.github/workflows/deploy.yml` — verify gate (typecheck + tests) followed by static deploy to bunny.net
 
 ## Deployment
 
-Pushes to `main` that touch app code build a Docker image, push it to `ghcr.io/<repo>:<sha>`, and update the bunny.net Magic Container. Markdown, design source, and `.claude/` changes are skipped via `paths-ignore`.
+Pushes to `main` first run `verify` (typecheck + Vitest). Only on green does `build-marketing` run: it builds the static export, uploads `apps/marketing/out/` to the bunny Storage Zone, and purges the Pull Zone. Markdown, design source, and `.claude/` changes are skipped from the build/deploy step (verify still runs).
 
-Required CI secrets/vars:
+Required CI secrets:
 
 - `secrets.GITHUB_TOKEN` — provided automatically
-- `secrets.BUNNYNET_API_KEY`
-- `vars.APP_ID` — bunny.net Magic Containers app id
+- `secrets.BUNNY_STORAGE_ZONE_NAME`
+- `secrets.BUNNY_STORAGE_PASSWORD`
+- `secrets.BUNNY_PULL_ZONE_ID`
+- `secrets.BUNNY_API_KEY`
 
 ## Legal pages
 
-`/impressum` and `/datenschutz` are required by Swiss law (UWG Art. 3(1)(s) and revFADP). The operator's legal name, address and registration details live in `src/app/site-config.ts` under the `operator` constant — placeholder strings prefixed with `TODO:` must be replaced with real values before going to production. See `kb/iteration-06-legal-compliance.md` for the legal context and `kb/no-tracking-note.md` for the consent state.
+`/impressum` and `/datenschutz` are required by Swiss law (UWG Art. 3(1)(s) and revFADP). The operator's legal name, address and registration details live in `apps/marketing/src/app/site-config.ts` under the `operator` constant — placeholder strings prefixed with `TODO:` must be replaced with real values before going to production. A Vitest unit test (`site-config.test.ts`) plus the `assertOperatorReady` production guard fail the build if any placeholder slips through. See `kb/iteration-06-legal-compliance.md` for the legal context and `kb/no-tracking-note.md` for the consent state.
 
 ## Working with this repo
 

@@ -10,7 +10,7 @@ export const contactEmail = "hello@wardrobe-assistants.ch";
 // Swiss law (UWG Art. 3(1)(s)) requires the legal name and a real postal
 // address (not a PO box) on any commercial website. Replace the placeholders
 // below with the actual registered details before going to production.
-type OperatorConfig = {
+export type OperatorConfig = {
   legalName: string;
   addressLines: readonly string[];
   email: string;
@@ -38,8 +38,11 @@ export const operator: OperatorConfig = {
 // Production guard: ship-blocking sanity check that fires at build/start time
 // when NODE_ENV is "production". Prevents the placeholder Impressum from
 // reaching real visitors if someone forgets to fill in operator details.
-function assertOperatorReady(op: OperatorConfig): void {
-  if (process.env.NODE_ENV !== "production") return;
+export function assertOperatorReady(
+  op: OperatorConfig,
+  nodeEnv: string | undefined = process.env.NODE_ENV,
+): void {
+  if (nodeEnv !== "production") return;
   const offenders: string[] = [];
   const isPlaceholder = (v: string) => v.startsWith("TODO:");
   if (isPlaceholder(op.legalName)) offenders.push("legalName");

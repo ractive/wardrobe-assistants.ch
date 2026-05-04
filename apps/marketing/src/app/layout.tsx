@@ -75,7 +75,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      className="h-full antialiased"
+      data-scroll-behavior="smooth"
+    >
       <head>
         <link
           href="https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700|inter:400,500|geist:400,500"

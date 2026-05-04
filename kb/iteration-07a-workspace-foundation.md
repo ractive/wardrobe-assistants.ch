@@ -1,7 +1,7 @@
 ---
 title: Iteration 7a — Workspace foundation + tests
 type: iteration
-status: planned
+status: done
 order: 7
 ---
 
@@ -47,31 +47,31 @@ Marketing is verified compatible with `output: "export"`: no `cookies()`/`header
 
 ## Scope — repo restructure (atomic commit) [0/4]
 
-- [ ] Add root `package.json` with `"workspaces": ["apps/*", "packages/*"]`; lift devDependencies that the verify gate needs (vitest, typescript, etc.) to the root
-- [ ] Move `src/` → `apps/marketing/src/`; relocate `next.config.ts`, `tsconfig.json`, `next-env.d.ts`, `postcss.config.mjs`, `package.json` into `apps/marketing/`
-- [ ] Delete `Dockerfile` from the repo root (replaced by static export)
-- [ ] Keep `kb/`, `wardrobe-assistants.pen`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `.claude/`, `.hyalo.toml`, `biome.json` at the repo root
+- [x] Add root `package.json` with `"workspaces": ["apps/*", "packages/*"]`; lift devDependencies that the verify gate needs (vitest, typescript, etc.) to the root
+- [x] Move `src/` → `apps/marketing/src/`; relocate `next.config.ts`, `tsconfig.json`, `next-env.d.ts`, `postcss.config.mjs`, `package.json` into `apps/marketing/`
+- [x] Delete `Dockerfile` from the repo root (replaced by static export)
+- [x] Keep `kb/`, `wardrobe-assistants.pen`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `.claude/`, `.hyalo.toml`, `biome.json` at the repo root
 
 ## Scope — marketing → static export [0/2]
 
-- [ ] `apps/marketing/next.config.ts`: `output: "standalone"` → `output: "export"`; add `images: { unoptimized: true }` defensively
-- [ ] Verify `apps/marketing/out/` contains `index.html`, `services/index.html`, `impressum/index.html`, `datenschutz/index.html`, `sitemap.xml`, `robots.txt`
+- [x] `apps/marketing/next.config.ts`: `output: "standalone"` → `output: "export"`; add `images: { unoptimized: true }` defensively
+- [x] Verify `apps/marketing/out/` contains `index.html`, `services/index.html`, `impressum/index.html`, `datenschutz/index.html`, `sitemap.xml`, `robots.txt`
 
 ## Scope — testing infrastructure [0/5]
 
 Tests gate the deploy. bunny.net rolls out are slow, so cheap signals (typecheck + Vitest) need to fail in CI before any upload runs.
 
-- [ ] Install at root: `vitest`, `@vitejs/plugin-react`, `happy-dom`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`
-- [ ] Root `vitest.config.ts` with one workspace project pointing at `apps/marketing` (`environment: "happy-dom"` for components, `node` elsewhere); structured so iter-7b can add `apps/admin` and `packages/db` projects without rewriting it
-- [ ] Shared `tests/setup.ts` registers `@testing-library/jest-dom` matchers
-- [ ] Scripts: root `"test": "vitest run"`, `"test:watch": "vitest"`, `"typecheck": "tsc -b"`; mirrored as workspace scripts in `apps/marketing`
-- [ ] Initial test: `apps/marketing/src/app/site-config.test.ts` — production guard throws when any operator field starts with `TODO:` and `NODE_ENV=production`; passes otherwise
+- [x] Install at root: `vitest`, `@vitejs/plugin-react`, `happy-dom`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`
+- [x] Root `vitest.config.ts` with one workspace project pointing at `apps/marketing` (`environment: "happy-dom"` for components, `node` elsewhere); structured so iter-7b can add `apps/admin` and `packages/db` projects without rewriting it
+- [x] Shared `tests/setup.ts` registers `@testing-library/jest-dom` matchers
+- [x] Scripts: root `"test": "vitest run"`, `"test:watch": "vitest"`, `"typecheck": "tsc -b"`; mirrored as workspace scripts in `apps/marketing`
+- [x] Initial test: `apps/marketing/src/app/site-config.test.ts` — production guard throws when any operator field starts with `TODO:` and `NODE_ENV=production`; passes otherwise
 
 ## Scope — CI [0/3]
 
-- [ ] New `verify` job: `npm ci`, `npm run typecheck`, `npm run test`. Triggers on every push to `main` and every PR. **No `paths-ignore`** — md/pen-only changes still get cheap typecheck insurance.
-- [ ] Replace existing `build-and-push` job with `build-marketing` (`needs: verify`): runs `npm -w apps/marketing run build`, uploads `apps/marketing/out/` to bunny Storage Zone via `bunnycdn-storage` action (or equivalent), purges Pull Zone via bunny API. `paths-ignore`: `*.md`, `*.pen`, `kb/**`, `.claude/**`, `.hyalo.toml`
-- [ ] Required new GitHub secrets/vars: `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_PASSWORD`, `BUNNY_PULL_ZONE_ID`, `BUNNY_API_KEY`
+- [x] New `verify` job: `npm ci`, `npm run typecheck`, `npm run test`. Triggers on every push to `main` and every PR. **No `paths-ignore`** — md/pen-only changes still get cheap typecheck insurance.
+- [x] Replace existing `build-and-push` job with `build-marketing` (`needs: verify`): runs `npm -w apps/marketing run build`, uploads `apps/marketing/out/` to bunny Storage Zone via `bunnycdn-storage` action (or equivalent), purges Pull Zone via bunny API. `paths-ignore`: `*.md`, `*.pen`, `kb/**`, `.claude/**`, `.hyalo.toml`
+- [x] Required new GitHub secrets/vars: `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_PASSWORD`, `BUNNY_PULL_ZONE_ID`, `BUNNY_API_KEY`
 
 ## Scope — bunny.net infrastructure (operational, outside the PR diff) [0/4]
 
