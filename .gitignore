@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# obsidian (knowledgebase app local state)
+kb/.obsidian/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

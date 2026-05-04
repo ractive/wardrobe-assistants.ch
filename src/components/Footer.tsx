@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="flex flex-col gap-10 px-6 pt-14 pb-8 md:px-10 lg:px-[120px]">
@@ -33,6 +35,25 @@ export function Footer() {
           <span className="font-body text-[13px] text-[var(--muted-foreground)]">
             Zürich
           </span>
+        </div>
+
+        {/* Legal */}
+        <div className="flex flex-col gap-3.5">
+          <span className="font-primary text-[12px] font-medium tracking-[1.5px] text-[var(--muted-foreground)]">
+            Legal
+          </span>
+          <Link
+            href="/impressum"
+            className="font-body text-[13px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+          >
+            Impressum
+          </Link>
+          <Link
+            href="/datenschutz"
+            className="font-body text-[13px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+          >
+            Privacy policy
+          </Link>
         </div>
       </div>
 

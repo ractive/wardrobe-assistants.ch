@@ -1,7 +1,7 @@
 ---
 title: Iteration 6 — Swiss legal compliance (Impressum + privacy + AGB)
 type: iteration
-status: planned
+status: implemented
 order: 6
 ---
 
@@ -87,13 +87,13 @@ If analytics is added later (recommended Plausible or Vercel Analytics — both 
 - [ ] Decide and document the legal entity (sole proprietor name, registered company, etc.) — precondition for the Impressum
 - [ ] Confirm whether the entity is in the Commercial Register (UID-CHE) and VAT-registered (MWST)
 - [ ] Confirm the postal address that can be published
-- [ ] Create `src/app/(site)/impressum/page.tsx` with the required identification fields
-- [ ] Create `src/app/(site)/datenschutz/page.tsx` (or `/privacy`) with the privacy policy — adapted from a Swiss template, edited to match actual processing (Bunny.net hosting, email, no analytics yet)
-- [ ] Add footer links to both pages from `src/components/Footer.tsx`
-- [ ] Update sitemap (Iteration 2) to include both legal pages
-- [ ] Make sure both pages are indexable (no `noindex`) — they should be discoverable
-- [ ] (Optional) Draft AGB as a separate document, kept in `kb/` until referenced from the site or quotes
-- [ ] Document the no-tracking state so any future analytics work knows to revisit consent
+- [x] Create `src/app/(site)/impressum/page.tsx` with the required identification fields (placeholders in `src/app/site-config.ts > operator` — must be filled before production)
+- [x] Create `src/app/(site)/datenschutz/page.tsx` (or `/privacy`) with the privacy policy — adapted from a Swiss template, edited to match actual processing (Bunny.net hosting, email, no analytics yet)
+- [x] Add footer links to both pages from `src/components/Footer.tsx`
+- [x] Update sitemap (Iteration 2) to include both legal pages
+- [x] Make sure both pages are indexable (no `noindex`) — they should be discoverable
+- [x] (Optional) Draft AGB as a separate document, kept in `kb/` until referenced from the site or quotes
+- [x] Document the no-tracking state so any future analytics work knows to revisit consent
 
 ## Out of scope
 

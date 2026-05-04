@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Project layout
 
-- `src/app/` — App Router routes (`/`, `/services`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
+- `src/app/` — App Router routes (`/`, `/services`, `/impressum`, `/datenschutz`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
 - `src/components/` — shared React components
 - `public/` — static assets
 - `kb/` — internal knowledgebase (iteration plans, notes); markdown with YAML frontmatter, queryable via the `hyalo` CLI
@@ -46,6 +46,10 @@ Required CI secrets/vars:
 - `secrets.GITHUB_TOKEN` — provided automatically
 - `secrets.BUNNYNET_API_KEY`
 - `vars.APP_ID` — bunny.net Magic Containers app id
+
+## Legal pages
+
+`/impressum` and `/datenschutz` are required by Swiss law (UWG Art. 3(1)(s) and revFADP). The operator's legal name, address and registration details live in `src/app/site-config.ts` under the `operator` constant — placeholder strings prefixed with `TODO:` must be replaced with real values before going to production. See `kb/iteration-06-legal-compliance.md` for the legal context and `kb/no-tracking-note.md` for the consent state.
 
 ## Working with this repo
 
