@@ -1,7 +1,7 @@
 ---
 title: SEO Iteration 3 — Asset hygiene
 type: iteration
-status: planned
+status: completed
 order: 3
 ---
 
