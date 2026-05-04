@@ -1,0 +1,32 @@
+import { type NextRequest, NextResponse } from "next/server";
+
+// Cheap edge-only check: presence of the Better Auth session cookie. The full
+// session validation happens server-side in the (dashboard) layout via
+// auth.api.getSession(), which is the source of truth. The middleware is just
+// a fast redirect so unauthenticated visitors never see a flash of dashboard
+// chrome before the layout redirects them.
+const SESSION_COOKIE_NAMES = [
+  "better-auth.session_token",
+  "__Secure-better-auth.session_token",
+];
+
+export function middleware(request: NextRequest) {
+  const hasSession = SESSION_COOKIE_NAMES.some((name) =>
+    request.cookies.has(name),
+  );
+  if (!hasSession) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+  return NextResponse.next();
+}
+
+export const config = {
+  // Gate everything except /login, /api/auth/*, Next internals, and static
+  // assets. Negative lookahead keeps the matcher cheap at the edge.
+  matcher: [
+    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|robots.txt).*)",
+  ],
+};

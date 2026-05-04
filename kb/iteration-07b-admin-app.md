@@ -1,7 +1,7 @@
 ---
 title: Iteration 7b — Admin app + auth ("Hello admin")
 type: iteration
-status: planned
+status: implemented
 order: 8
 ---
 
@@ -36,66 +36,66 @@ DB: **bunny.net Database (libSQL / SQLite, EU region)**. Two auth tokens:
 
 Stack on the admin side: **Better Auth** (email/password + TOTP MFA), **Drizzle ORM** (libSQL driver, SQLite dialect), **shadcn/ui** + Tailwind v4, react-hook-form + zod, sonner, server actions. **Resend** for verification + password-reset email.
 
-## Scope — `packages/db` [0/4]
+## Scope — `packages/db` [4/4]
 
-- [ ] Drizzle ORM (`drizzle-orm`, `drizzle-kit`, `@libsql/client`); SQLite dialect
-- [ ] `packages/db/src/schema.ts` — Better Auth tables defined with `sqliteTable` (`user`, `session`, `account`, `verification`); IDs `text('id')`, timestamps `integer({ mode: 'timestamp_ms' })`; domain tables left empty
-- [ ] `packages/db/src/client.ts` — `createDb({ url, authToken })` factory using `drizzle-orm/libsql`; consumers pass their own credentials. Same client works against `file:./dev.db` for dev and `libsql://…` in prod
-- [ ] `packages/db/drizzle.config.ts` — `dialect: 'sqlite'`; `drizzle-kit generate` produces SQL migrations under `packages/db/migrations/`
+- [x] Drizzle ORM (`drizzle-orm`, `drizzle-kit`, `@libsql/client`); SQLite dialect
+- [x] `packages/db/src/schema.ts` — Better Auth tables defined with `sqliteTable` (`user`, `session`, `account`, `verification`); IDs `text('id')`, timestamps `integer({ mode: 'timestamp_ms' })`; domain tables left empty
+- [x] `packages/db/src/client.ts` — `createDb({ url, authToken })` factory using `drizzle-orm/libsql`; consumers pass their own credentials. Same client works against `file:./dev.db` for dev and `libsql://…` in prod
+- [x] `packages/db/drizzle.config.ts` — `dialect: 'sqlite'`; `drizzle-kit generate` produces SQL migrations under `packages/db/migrations/`
 
-## Scope — `apps/admin` [0/4]
+## Scope — `apps/admin` [4/4]
 
-- [ ] Fresh Next.js 16 app, App Router, TypeScript, Tailwind v4, React Compiler, `output: "standalone"`
-- [ ] Own `Dockerfile` building from workspace root with `npm ci -w apps/admin --include-workspace-root`; multi-stage; final stage runs `node apps/admin/server.js`
-- [ ] Migrations applied on container start: `apps/admin/scripts/migrate.ts` invoked from Docker `CMD` before `node server.js`
-- [ ] Initialize shadcn/ui via `npx shadcn@latest init`; add `button`, `input`, `label`, `form`, `card`, `sonner`; add the `dashboard-01` block as the protected-area shell. Companion deps: `react-hook-form`, `zod`, `@hookform/resolvers`, `sonner`
+- [x] Fresh Next.js 16 app, App Router, TypeScript, Tailwind v4, React Compiler, `output: "standalone"`
+- [x] Own `Dockerfile` building from workspace root with `npm ci -w apps/admin --include-workspace-root`; multi-stage; final stage runs `node apps/admin/server.js`
+- [x] Migrations applied on container start: `apps/admin/scripts/migrate.ts` invoked from Docker `CMD` before `node server.js`
+- [x] Initialize shadcn/ui via `npx shadcn@latest init`; add `button`, `input`, `label`, `form`, `card`, `sonner`; add the `dashboard-01` block as the protected-area shell. Companion deps: `react-hook-form`, `zod`, `@hookform/resolvers`, `sonner`
 
-## Scope — Better Auth [0/5]
+## Scope — Better Auth [5/5]
 
-- [ ] `apps/admin/src/lib/auth.ts` — Drizzle adapter, `emailAndPassword`, TOTP plugin (required once enrolled), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
-- [ ] Session cookie: `secure: true`, `sameSite: "lax"`, `httpOnly: true`, host-only on `admin.wardrobe-assistants.ch`
-- [ ] `apps/admin/src/app/api/auth/[...all]/route.ts` — Better Auth route handler
-- [ ] `apps/admin/middleware.ts` gates everything except `/login`, `/api/auth/*`, Next.js internals
-- [ ] `<meta name="robots" content="noindex,nofollow">` in admin root layout; `apps/admin/src/app/robots.ts` returns `Disallow: /` for all user agents
+- [x] `apps/admin/src/lib/auth.ts` — Drizzle adapter, `emailAndPassword`, TOTP plugin (required once enrolled), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+- [x] Session cookie: `secure: true`, `sameSite: "lax"`, `httpOnly: true`, host-only on `admin.wardrobe-assistants.ch`
+- [x] `apps/admin/src/app/api/auth/[...all]/route.ts` — Better Auth route handler
+- [x] `apps/admin/middleware.ts` gates everything except `/login`, `/api/auth/*`, Next.js internals
+- [x] `<meta name="robots" content="noindex,nofollow">` in admin root layout; `apps/admin/src/app/robots.ts` returns `Disallow: /` for all user agents
 
-## Scope — Resend [0/3]
+## Scope — Resend [3/3]
 
-- [ ] Account + sending domain `wardrobe-assistants.ch` verified (SPF/DKIM/DMARC at the registrar) — operational, outside the PR
-- [ ] `apps/admin/src/lib/email.ts` — wrapper over `resend` SDK
-- [ ] Wired into Better Auth's `emailVerification.sendVerificationEmail` and `emailAndPassword.sendResetPassword`. Env: `RESEND_API_KEY`, `EMAIL_FROM`
+- [x] Account + sending domain `wardrobe-assistants.ch` verified (SPF/DKIM/DMARC at the registrar) — operational, outside the PR
+- [x] `apps/admin/src/lib/email.ts` — wrapper over `resend` SDK
+- [x] Wired into Better Auth's `emailVerification.sendVerificationEmail` and `emailAndPassword.sendResetPassword`. Env: `RESEND_API_KEY`, `EMAIL_FROM`
 
-## Scope — login + protected dashboard [0/3]
+## Scope — login + protected dashboard [3/3]
 
-- [ ] `apps/admin/src/app/login/page.tsx` — react-hook-form + zod, two-step (password → TOTP)
-- [ ] `apps/admin/src/app/(dashboard)/layout.tsx` — server component; calls `auth.api.getSession()`; redirects to `/login` if unauthenticated; uses shadcn `dashboard-01` shell
-- [ ] `apps/admin/src/app/(dashboard)/page.tsx` — renders "Hello, {user.email}" + sign-out (server action)
+- [x] `apps/admin/src/app/login/page.tsx` — react-hook-form + zod, two-step (password → TOTP)
+- [x] `apps/admin/src/app/(dashboard)/layout.tsx` — server component; calls `auth.api.getSession()`; redirects to `/login` if unauthenticated; uses shadcn `dashboard-01` shell
+- [x] `apps/admin/src/app/(dashboard)/page.tsx` — renders "Hello, {user.email}" + sign-out (server action)
 
-## Scope — first-admin seed script [0/4]
+## Scope — first-admin seed script [4/4]
 
-- [ ] `apps/admin/scripts/seed-admin.ts` — run via `npm -w apps/admin run seed:admin`
-- [ ] Reads `ADMIN_EMAIL` and `ADMIN_PASSWORD` from env; refuses if missing
-- [ ] Idempotent; exits 0 if user already exists
-- [ ] Creates user, marks email verified, generates TOTP secret, prints secret + ASCII QR (`qrcode-terminal`) to stdout once
+- [x] `apps/admin/scripts/seed-admin.ts` — run via `npm -w apps/admin run seed:admin`
+- [x] Reads `ADMIN_EMAIL` and `ADMIN_PASSWORD` from env; refuses if missing
+- [x] Idempotent; exits 0 if user already exists
+- [x] Creates user, marks email verified, generates TOTP secret, prints secret + ASCII QR (`qrcode-terminal`) to stdout once
 
-## Scope — testing additions [0/2]
+## Scope — testing additions [2/2]
 
-- [ ] Extend root `vitest.config.ts` with workspace projects for `packages/db` and `apps/admin`
-- [ ] Representative tests:
+- [x] Extend root `vitest.config.ts` with workspace projects for `packages/db` and `apps/admin`
+- [x] Representative tests:
   - `packages/db`: schema imports cleanly; `createDb({ url: 'file::memory:' })` returns a working client; migrations apply against in-memory libSQL
   - `apps/admin`: zod login schema (valid/invalid cases), middleware redirect for unauthenticated request, `seed-admin.ts` idempotency against in-memory libSQL
 
-## Scope — CI [0/3]
+## Scope — CI [3/3]
 
-- [ ] Extend the `verify` job to also run `npm -w apps/admin run build` so PRs catch admin build breakage before merge (mirrors what iter-7a does for marketing). Cheaper than catching it via a failed Docker push on `main`.
-- [ ] Add `build-admin` job (`needs: verify`): Docker build/push/roll flow targeted at the new admin Magic Container app (new `APP_ID` GitHub var). Runs only on `push` to `main`. Use `dorny/paths-filter` with `'**'` as the first positive pattern followed by negations (`'!**/*.md'`, `'!**/*.pen'`, `'!kb/**'`, `'!.claude/**'`, `'!.hyalo.toml'`) — negation-only filters always evaluate to false, the leading `'**'` is required.
-- [ ] Required new GitHub secrets/vars: admin `APP_ID` (var), `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM` (secrets)
+- [x] Extend the `verify` job to also run `npm -w apps/admin run build` so PRs catch admin build breakage before merge (mirrors what iter-7a does for marketing). Cheaper than catching it via a failed Docker push on `main`.
+- [x] Add `build-admin` job (`needs: verify`): Docker build/push/roll flow targeted at the new admin Magic Container app (new `APP_ID` GitHub var). Runs only on `push` to `main`. Use `dorny/paths-filter` with `'**'` as the first positive pattern followed by negations (`'!**/*.md'`, `'!**/*.pen'`, `'!kb/**'`, `'!.claude/**'`, `'!.hyalo.toml'`) — negation-only filters always evaluate to false, the leading `'**'` is required.
+- [x] Required new GitHub secrets/vars: admin `APP_ID` (var), `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM` (secrets)
 
-## Scope — bunny.net infrastructure (operational, outside the PR diff) [0/4]
+## Scope — bunny.net infrastructure (operational, outside the PR diff) [4/4]
 
-- [ ] Provision libSQL DB on bunny.net Database; mint two auth tokens (full-access for admin runtime, read-only for marketing CI)
-- [ ] Provision second Magic Container app for admin; bind `admin.wardrobe-assistants.ch`; enable auto-TLS
-- [ ] DNS: `admin` CNAME → admin Magic Container
-- [ ] Admin container env: `DATABASE_URL` (libsql://…), `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`, `RESEND_API_KEY`, `EMAIL_FROM`
+- [x] Provision libSQL DB on bunny.net Database; mint two auth tokens (full-access for admin runtime, read-only for marketing CI)
+- [x] Provision second Magic Container app for admin; bind `admin.wardrobe-assistants.ch`; enable auto-TLS
+- [x] DNS: `admin` CNAME → admin Magic Container
+- [x] Admin container env: `DATABASE_URL` (libsql://…), `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`, `RESEND_API_KEY`, `EMAIL_FROM`
 
 ## Critical files
 

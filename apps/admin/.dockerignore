@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/.git
+**/out
+**/dist
+**/.env*
+*.md
+*.pen
+kb
+.claude
+.hyalo.toml
+design-assets
