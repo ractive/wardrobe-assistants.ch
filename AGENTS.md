@@ -1,5 +1,5 @@
 # Browser debugging
-If you need to debug something in the browser, use the ff-rdp CLI tool (ff-rpd --help) in favorite of the chrome mcp server. Collect feedback about ff-rpd in the kb knowledgebase.
+If you need to debug something in the browser, use the ff-rdp CLI tool (ff-rdp --help) in favor of the chrome mcp server. Collect feedback about ff-rdp in the kb knowledgebase.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
