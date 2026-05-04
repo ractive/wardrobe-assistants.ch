@@ -49,7 +49,7 @@ Capture from the response:
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -69,7 +69,7 @@ Capture `Id` from the response → `BUNNY_PULL_ZONE_ID` (GitHub secret) and `<ne
 
 Output:
 
-```
+```text
 TODO: paste curl response here
 ```
 
@@ -84,7 +84,7 @@ hoppy pull-zone hostname remove --id 5719318 --hostname www.wardrobe-assistants.
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -98,7 +98,7 @@ hoppy pull-zone hostname add --id $NEW_PZ --hostname www.wardrobe-assistants.ch 
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -118,7 +118,7 @@ hoppy dns record update --zone-id 775662 --id 16538537 --value wardrobe-assistan
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -135,7 +135,7 @@ If Let's Encrypt is rate-limited, retry every 60s until issued. Plan a 10-min bu
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -148,26 +148,26 @@ hoppy pull-zone hostname force-ssl --id $NEW_PZ --hostname www.wardrobe-assistan
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
 ### 8. GitHub repo configuration
 
-Set as **secrets** (sensitive):
+Set as **secrets** (the homepage workflow reads each of these as `${{ secrets.* }}` — see `.github/workflows/deploy.yml`):
 
 - `BUNNY_STORAGE_PASSWORD` — `Password` from step 1.
 - `BUNNY_API_KEY` — already configured at the org level; verify it survived org/repo permission boundaries.
+- `BUNNY_STORAGE_ZONE_NAME=wardrobe-assistants-homepage` — workflow reads as `${{ secrets.BUNNY_STORAGE_ZONE_NAME }}`.
+- `BUNNY_PULL_ZONE_ID=<new-pz-id>` — workflow reads as `${{ secrets.BUNNY_PULL_ZONE_ID }}`.
 - `BUNNY_REGISTRY`, `BUNNY_REGISTRY_USERNAME`, `BUNNY_REGISTRY_PASSWORD` — admin Docker push credentials (admin section, but set together to avoid two trips).
 - `DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, `BETTER_AUTH_SECRET`, `RESEND_API_KEY` — admin runtime (admin section).
 
-Set as **variables** (non-sensitive identifiers):
+Set as **variables** (workflow reads via `${{ vars.* }}`):
 
-- `BUNNY_STORAGE_ZONE_NAME=wardrobe-assistants-homepage` — referenced as `${{ secrets.BUNNY_STORAGE_ZONE_NAME }}` in `.github/workflows/deploy.yml`. The workflow currently reads from `secrets`; either set as a secret or change the workflow to read from `vars`. Pick one and document.
-- `BUNNY_PULL_ZONE_ID=<new-pz-id>` — same note as above.
-- `ADMIN_APP_ID=<from admin step 4>` — workflow reads as `${{ vars.ADMIN_APP_ID }}`, so this MUST be a variable (not a secret).
+- `ADMIN_APP_ID=<from admin step 4>` — bunny Magic Container app id; non-sensitive identifier baked into the registry tag and the deploy POST URL.
 
-> Deviation note (TODO): the homepage workflow reads `BUNNY_STORAGE_ZONE_NAME` and `BUNNY_PULL_ZONE_ID` from `secrets`, while the admin workflow reads `ADMIN_APP_ID` from `vars`. The split is fine in practice (both are mountable in workflow steps), but document the operator's choice here so future engineers don't hunt for a "missing" secret that's actually a variable.
+> Note: the homepage zone identifiers (`BUNNY_STORAGE_ZONE_NAME`, `BUNNY_PULL_ZONE_ID`) are not strictly secret, but the workflow reads them from `secrets` for consistency with the password/API-key triple they sit next to. Don't promote them to `vars` without also editing `.github/workflows/deploy.yml`.
 
 Trigger the first homepage deploy by pushing an empty commit to `main` (or merging this PR — both fire `verify` then `build-homepage`).
 
@@ -179,7 +179,7 @@ curl -I https://wardrobe-assistants.b-cdn.net/index.html  # confirms storage upl
 
 Output:
 
-```
+```text
 TODO: paste deploy log + first 200 line for index.html
 ```
 
@@ -199,7 +199,7 @@ Store all three in 1Password / pass under labelled entries — see "Token confus
 
 Output:
 
-```
+```text
 TODO: paste DB connection params (redacted) here
 ```
 
@@ -214,7 +214,7 @@ DATABASE_URL=<from step 1> DATABASE_AUTH_TOKEN=<full token> npx drizzle-kit migr
 
 Output:
 
-```
+```text
 TODO: paste migration log here
 ```
 
@@ -256,14 +256,14 @@ Configure env vars on the container template (via `hoppy container app update` o
 
 - `DATABASE_URL`
 - `DATABASE_AUTH_TOKEN` (the full token)
-- `BETTER_AUTH_SECRET` (32+ bytes random)
+- `BETTER_AUTH_SECRET` — generate with `openssl rand -base64 32`. 32+ bytes of secure randomness; rotation invalidates all sessions, so capture it once into 1Password before pasting it in.
 - `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`
-- `RESEND_API_KEY`
+- `RESEND_API_KEY` — mint at https://resend.com/api-keys, scope to the admin app's domain.
 - `EMAIL_FROM=admin@wardrobe-assistants.ch`
 
 Output:
 
-```
+```text
 TODO: paste container app create response (id + endpoint hostname)
 ```
 
@@ -280,7 +280,7 @@ hoppy pull-zone hostname force-ssl --id $ADMIN_PZ --hostname admin.wardrobe-assi
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -300,7 +300,7 @@ Use plain `CNAME`, not `PullZone` — the latter rejects Magic-Container auto Pu
 
 Output:
 
-```
+```text
 TODO: paste hoppy output here
 ```
 
@@ -315,7 +315,7 @@ Trigger the first admin Docker build/push/roll. Either merge a doc-touching comm
 
 Output:
 
-```
+```text
 TODO: paste workflow run URL and first /sign-in HTTP/2 response
 ```
 
@@ -341,7 +341,7 @@ Browser checks:
 
 Output:
 
-```
+```text
 TODO: paste curl -I responses + admin sign-in screenshot path
 ```
 
@@ -364,7 +364,7 @@ curl -X DELETE https://api.bunny.net/pullzone/5719318 -H "AccessKey: $BUNNY_API_
 
 Output:
 
-```
+```text
 TODO: paste delete responses
 ```
 

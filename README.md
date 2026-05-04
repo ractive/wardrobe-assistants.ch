@@ -35,11 +35,12 @@ Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly
 
 ## Project layout
 
-- `apps/homepage/` — Next.js homepage (App Router), the public-facing landing site
+- `apps/homepage/` — Next.js homepage (App Router), the public-facing landing site. Deploys via `build-homepage` to `wardrobe-assistants.ch` / `www.wardrobe-assistants.ch`.
   - `src/app/` — routes (`/`, `/services`, `/impressum`, `/datenschutz`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
   - `src/components/` — shared React components
   - `public/` — static assets
-- `packages/` — shared libraries (populated in iter-7b)
+- `apps/admin/` — Next.js admin app (App Router) with Better Auth (email/password + TOTP). Deploys via `build-admin` as a Docker image to a bunny.net Magic Container at `admin.wardrobe-assistants.ch`.
+- `packages/db/` — shared libSQL/Drizzle schema and client used by `apps/admin/`
 - `tests/setup.ts` — Vitest shared setup (`@testing-library/jest-dom` matchers)
 - `vitest.config.ts` — root Vitest workspace config
 - `kb/` — internal knowledgebase (iteration plans, notes); markdown with YAML frontmatter, queryable via the `hyalo` CLI

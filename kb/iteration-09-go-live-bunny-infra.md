@@ -32,6 +32,17 @@ A previous attempt during iter-7a (2026-05-05) created and rolled back the homep
 - [x] Capture current state: `hoppy --format json container app list`, `hoppy --format text dns record list --zone-id 775662`, `hoppy --format text storage-zone list`, `hoppy --format text pull-zone list`. Save to `kb/runbook-go-live-pre-state.json` for rollback reference.
 - [ ] Confirm with the user: which window is acceptable for the live-site break? The cutover window between detaching hostnames from the old Magic Container's auto Pull Zone and Let's Encrypt issuing certs on the new Pull Zone is typically 1–10 min. HTTP-only access is broken until the cert lands; HTTPS-only browsers see TLS errors during this window.
 
+## Rollback (read this before the homepage Storage/Pull Zone steps)
+
+If TLS does not issue within ~15 min on the new Pull Zone, or the new PZ returns errors after DNS swap:
+
+1. Re-attach the old auto Pull Zone (id `5719318`): `hoppy pull-zone hostname add --id 5719318 --hostname wardrobe-assistants.ch --yes` and the same for `www.wardrobe-assistants.ch`. Hostnames captured in `kb/runbook-go-live-pre-state.json` under `pull_zones_hidden`.
+2. Revert DNS records `16538536` (apex) and `16538537` (`www`) in zone `775662` back to `mc-tug74k9naa.b-cdn.net` (original values captured in `runbook-go-live-pre-state.json`).
+3. Confirm `https://wardrobe-assistants.ch` resolves to the old Magic Container homepage. The container is still running — no restart needed.
+4. **Preserve**, do not delete, the new Storage Zone, Pull Zone, and admin Magic Container so the failure can be diagnosed at leisure. Capture the failure mode (exact error, hoppy command, timestamp) into `kb/runbook-go-live-pre-state.json` (or a sibling `…-rollback.json`) for the post-mortem.
+
+The runbook (`kb/runbook-go-live.md` § Rollback) carries the same procedure with copy-pasteable commands; this section exists so an operator hitting trouble on this iteration plan doesn't have to context-switch to find the rollback steps.
+
 ## Scope — homepage infrastructure [0/8]
 
 - [ ] **Storage Zone:** `hoppy storage-zone create --name wardrobe-assistants-homepage --region DE --zone-tier 0 --yes`. Capture `Id`, `Password`, `ReadOnlyPassword` from the response.
@@ -55,7 +66,8 @@ A previous attempt during iter-7a (2026-05-05) created and rolled back the homep
 - [ ] **libSQL DB:** Provision on bunny.net Database, EU region. Mint two tokens — full-access for admin runtime, read-only for the future homepage CI build step (unused in this iteration but plumbed). Capture `DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, `DATABASE_AUTH_TOKEN_READONLY`.
 - [ ] **Run migrations:** Point iter-7b's `packages/db` Drizzle migrations at the new DB. Verify schema landed.
 - [ ] **Seed first admin user:** Run iter-7b's seed script with the user's email. Save the bootstrap TOTP enrollment QR locally; do not commit.
-- [ ] **Magic Container app:** `hoppy container app create` for the admin app, region DE. Configure image registry (Docker Hub `ractive/wardrobe-assistants-admin`), entry point, env vars (`DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, Better Auth secrets, Resend API key, `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`). Capture the new app's `Id` for GitHub secrets.
+- [ ] **Generate runtime secrets before container create:** `BETTER_AUTH_SECRET` via `openssl rand -base64 32` (capture into 1Password — rotation invalidates sessions). Mint `RESEND_API_KEY` at https://resend.com/api-keys. Confirm libSQL `DATABASE_AUTH_TOKEN_FULL` from the Database step is in hand. These values feed both the `hoppy container app create` env config and the GitHub secrets list.
+- [ ] **Magic Container app:** `hoppy container app create` for the admin app, region DE. Configure image registry (bunny container registry, `${{ secrets.BUNNY_REGISTRY }}/${{ vars.ADMIN_APP_ID }}`), entry point, env vars (`DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`, `RESEND_API_KEY`, `EMAIL_FROM=admin@wardrobe-assistants.ch`). Capture the new app's `Id` for the `ADMIN_APP_ID` GitHub variable.
 - [ ] **Hostname + TLS:** Bind `admin.wardrobe-assistants.ch` to the admin container's auto Pull Zone; enable auto-TLS.
 - [ ] **DNS:** Add CNAME `admin` → the admin container's CDN hostname (`mc-<id>.b-cdn.net`) in zone `775662`.
 - [ ] **GitHub secrets:** Set `ADMIN_APP_ID` (Magic Container app id), `ADMIN_DOCKER_REGISTRY_ID`, `DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, `BETTER_AUTH_SECRET`, `RESEND_API_KEY`. Trigger first admin Docker build/push/roll.
