@@ -1,7 +1,7 @@
 ---
 title: Iteration 6 — Swiss legal compliance (Impressum + privacy + AGB)
 type: iteration
-status: planned
+status: partially-implemented
 order: 6
 ---
 
@@ -84,16 +84,18 @@ If analytics is added later (recommended Plausible or Vercel Analytics — both 
 
 ## Implementation scope
 
+Status note: the routes, footer links, sitemap entries and AGB draft are in place, but the iteration is **not production-ready** until the three operator prerequisites at the top of this list are completed and the placeholder values in `src/app/site-config.ts > operator` are replaced. A production guard in `site-config.ts` throws at build time if `TODO:` placeholders remain when `NODE_ENV === "production"`, so a real deploy will fail-fast until the data is filled in.
+
 - [ ] Decide and document the legal entity (sole proprietor name, registered company, etc.) — precondition for the Impressum
 - [ ] Confirm whether the entity is in the Commercial Register (UID-CHE) and VAT-registered (MWST)
 - [ ] Confirm the postal address that can be published
-- [ ] Create `src/app/(site)/impressum/page.tsx` with the required identification fields
-- [ ] Create `src/app/(site)/datenschutz/page.tsx` (or `/privacy`) with the privacy policy — adapted from a Swiss template, edited to match actual processing (Bunny.net hosting, email, no analytics yet)
-- [ ] Add footer links to both pages from `src/components/Footer.tsx`
-- [ ] Update sitemap (Iteration 2) to include both legal pages
-- [ ] Make sure both pages are indexable (no `noindex`) — they should be discoverable
-- [ ] (Optional) Draft AGB as a separate document, kept in `kb/` until referenced from the site or quotes
-- [ ] Document the no-tracking state so any future analytics work knows to revisit consent
+- [x] Create `src/app/(site)/impressum/page.tsx` with the required identification fields *(scaffolded — operator details still placeholders in `src/app/site-config.ts > operator`; production build is blocked until they are filled)*
+- [x] Create `src/app/(site)/datenschutz/page.tsx` (or `/privacy`) with the privacy policy — adapted from a Swiss template, edited to match actual processing (Bunny.net hosting, email, no analytics yet)
+- [x] Add footer links to both pages from `src/components/Footer.tsx`
+- [x] Update sitemap (Iteration 2) to include both legal pages
+- [x] Make sure both pages are indexable (no `noindex`) — they should be discoverable
+- [x] (Optional) Draft AGB as a separate document, kept in `kb/` until referenced from the site or quotes
+- [x] Document the no-tracking state so any future analytics work knows to revisit consent
 
 ## Out of scope
 
