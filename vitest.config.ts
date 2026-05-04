@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// Vitest workspace config. iter-7a added apps/marketing; iter-7b adds
+// Vitest workspace config. iter-7a added apps/homepage; iter-7b adds
 // apps/admin (UI + middleware + scripts) and packages/db (schema/migrations).
 export default defineConfig({
   plugins: [react()],
@@ -11,9 +11,9 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: "marketing",
+          name: "homepage",
           environment: "happy-dom",
-          include: ["apps/marketing/src/**/*.{test,spec}.{ts,tsx}"],
+          include: ["apps/homepage/src/**/*.{test,spec}.{ts,tsx}"],
         },
       },
       {

@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test
-      - run: npm -w @wardrobe-assistants/marketing run build
+      - run: npm -w @wardrobe-assistants/homepage run build
       # Admin build needs env vars to satisfy lib/env.ts at build time.
       # Values here are placeholders only; runtime uses container env.
       - name: Build admin standalone
@@ -33,9 +33,9 @@ jobs:
           EMAIL_FROM: admin@wardrobe-assistants.ch
         run: npm -w @wardrobe-assistants/admin run build
 
-  # Static marketing build + upload to bunny Storage Zone, then purge the
+  # Static homepage build + upload to bunny Storage Zone, then purge the
   # Pull Zone. Skipped for md/pen-only changes via paths-filter.
-  build-marketing:
+  build-homepage:
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -63,15 +63,15 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         run: npm ci
 
-      - name: Build marketing static export
+      - name: Build homepage static export
         if: steps.changes.outputs.app == 'true'
-        run: npm -w @wardrobe-assistants/marketing run build
+        run: npm -w @wardrobe-assistants/homepage run build
 
       - name: Upload to bunny Storage Zone and purge Pull Zone
         if: steps.changes.outputs.app == 'true'
         uses: ayeressian/bunnycdn-storage-deploy@v2.2.5
         with:
-          source: "apps/marketing/out"
+          source: "apps/homepage/out"
           destination: "/"
           storageZoneName: ${{ secrets.BUNNY_STORAGE_ZONE_NAME }}
           storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}

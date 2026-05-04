@@ -15,7 +15,7 @@ export const auth = betterAuth({
     schema,
   }),
   // Origin-scoped session cookies on admin.wardrobe-assistants.ch — XSS on
-  // the marketing origin can't reach them.
+  // the homepage origin can't reach them.
   advanced: {
     defaultCookieAttributes: {
       secure: true,
