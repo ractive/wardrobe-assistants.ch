@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Project layout
 
-- `src/app/` — App Router routes, `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
+- `src/app/` — App Router routes (`/`, `/services`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
 - `src/components/` — shared React components
 - `public/` — static assets
 - `kb/` — internal knowledgebase (iteration plans, notes); markdown with YAML frontmatter, queryable via the `hyalo` CLI
