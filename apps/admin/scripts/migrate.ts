@@ -31,8 +31,13 @@ const authToken = process.env.DATABASE_AUTH_TOKEN || undefined;
 const client = createClient({ url, authToken });
 const db = drizzle(client);
 
-console.log(`Applying migrations from ${migrationsFolder} to ${url}…`);
-await migrate(db, { migrationsFolder });
-console.log("Migrations applied.");
-
-await client.close();
+// libSQL URLs occasionally embed credentials (e.g. file:memdb?authToken=…).
+// Strip query string + userinfo before logging.
+const safeUrl = url.replace(/\?.*$/u, "").replace(/:\/\/[^@/]+@/u, "://");
+console.log(`Applying migrations from ${migrationsFolder} to ${safeUrl}…`);
+try {
+  await migrate(db, { migrationsFolder });
+  console.log("Migrations applied.");
+} finally {
+  await client.close();
+}

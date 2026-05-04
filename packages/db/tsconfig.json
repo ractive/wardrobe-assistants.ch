@@ -10,7 +10,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "declaration": true,
     "incremental": true
   },
   "include": ["src/**/*.ts", "drizzle.config.ts"],

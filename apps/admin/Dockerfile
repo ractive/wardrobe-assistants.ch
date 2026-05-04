@@ -17,9 +17,6 @@ COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/admin/node_modules ./apps/admin/node_modules
 COPY . .
 RUN npm -w apps/admin run build
-# Generate Drizzle migrations alongside the build artefact so the runtime
-# stage can apply them at boot.
-RUN npm -w packages/db run db:generate || true
 
 FROM node:22-alpine AS runner
 WORKDIR /app

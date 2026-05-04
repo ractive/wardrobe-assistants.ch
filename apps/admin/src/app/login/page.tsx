@@ -44,7 +44,7 @@ export default function LoginPage() {
       setStep("totp");
       return;
     }
-    router.push("/");
+    router.replace("/");
   }
 
   async function onTotp(values: TotpInput) {
@@ -56,7 +56,7 @@ export default function LoginPage() {
       setServerError(error.message ?? "Invalid code");
       return;
     }
-    router.push("/");
+    router.replace("/");
   }
 
   return (

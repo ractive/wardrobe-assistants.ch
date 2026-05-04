@@ -13,8 +13,13 @@ export function SignOutButton() {
       disabled={pending}
       onClick={async () => {
         setPending(true);
-        await authClient.signOut();
-        router.push("/login");
+        try {
+          await authClient.signOut();
+          router.replace("/login");
+        } catch (error) {
+          console.error("Sign out failed:", error);
+          setPending(false);
+        }
       }}
       className="self-start rounded-md border border-[var(--border)] bg-[var(--secondary)] px-4 py-2 font-medium text-sm disabled:opacity-60"
     >
