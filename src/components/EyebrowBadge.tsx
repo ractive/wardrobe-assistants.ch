@@ -3,7 +3,7 @@ export function EyebrowBadge({
 	size = "sm",
 }: { label: string; size?: "sm" | "md" }) {
 	return (
-		<span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-2">
+		<span className="inline-flex w-fit items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-2">
 			<span
 				className={`font-primary tracking-[1.5px] text-[var(--primary)] ${
 					size === "md"

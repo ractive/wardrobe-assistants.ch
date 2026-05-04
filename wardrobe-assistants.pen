@@ -144,48 +144,13 @@
                         "fill": "$--border"
                       },
                       "gap": 4,
-                      "padding": 8,
+                      "padding": [
+                        8,
+                        12
+                      ],
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
-                        {
-                          "type": "frame",
-                          "id": "cVmpi",
-                          "x": 8,
-                          "y": 8,
-                          "name": "icon-Star-2",
-                          "enabled": false,
-                          "clip": true,
-                          "width": 16,
-                          "height": 16,
-                          "fill": {
-                            "type": "color",
-                            "color": "#ffffffff",
-                            "enabled": false
-                          },
-                          "stroke": {
-                            "align": "inside",
-                            "thickness": 1
-                          },
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "path",
-                              "id": "6uj3S",
-                              "x": 1.8756510019302368,
-                              "y": 1.89599609375,
-                              "name": "Vector 2134",
-                              "geometry": "M9.187 0l-2.81 6.376-6.377 2.811 6.377 2.811 2.81 6.378 2.812-6.377 6.376-2.811-6.376-2.811-2.812-6.377z",
-                              "width": 12.25,
-                              "height": 12.250665664672852,
-                              "stroke": {
-                                "align": "center",
-                                "thickness": 1,
-                                "fill": "$--color-info-foreground"
-                              }
-                            }
-                          ]
-                        },
                         {
                           "type": "text",
                           "id": "Mplxl",
@@ -522,48 +487,13 @@
                     "fill": "$--border"
                   },
                   "gap": 4,
-                  "padding": 8,
+                  "padding": [
+                    8,
+                    12
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    {
-                      "type": "frame",
-                      "id": "LIs7M",
-                      "x": 8,
-                      "y": 8,
-                      "name": "icon-Star-2",
-                      "enabled": false,
-                      "clip": true,
-                      "width": 16,
-                      "height": 16,
-                      "fill": {
-                        "type": "color",
-                        "color": "#ffffffff",
-                        "enabled": false
-                      },
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1
-                      },
-                      "layout": "none",
-                      "children": [
-                        {
-                          "type": "path",
-                          "id": "UMukc",
-                          "x": 1.8756510019302368,
-                          "y": 1.89599609375,
-                          "name": "Vector 2134",
-                          "geometry": "M9.187 0l-2.81 6.376-6.377 2.811 6.377 2.811 2.81 6.378 2.812-6.377 6.376-2.811-6.376-2.811-2.812-6.377z",
-                          "width": 12.25,
-                          "height": 12.250665664672852,
-                          "stroke": {
-                            "align": "center",
-                            "thickness": 1,
-                            "fill": "$--color-info-foreground"
-                          }
-                        }
-                      ]
-                    },
                     {
                       "type": "text",
                       "id": "FIRTV",
@@ -630,7 +560,7 @@
                       "name": "Service Card",
                       "reusable": true,
                       "width": "fill_container",
-                      "fill": "$--accent",
+                      "fill": "#2A2724CC",
                       "cornerRadius": 20,
                       "stroke": {
                         "align": "inside",
@@ -705,7 +635,7 @@
                       "id": "LjPTe",
                       "name": "Service Card 2",
                       "width": "fill_container",
-                      "fill": "$--accent",
+                      "fill": "#2A2724CC",
                       "cornerRadius": 20,
                       "stroke": {
                         "align": "inside",
@@ -780,7 +710,7 @@
                       "id": "vzLM1",
                       "name": "Service Card 3",
                       "width": "fill_container",
-                      "fill": "$--accent",
+                      "fill": "#2A2724CC",
                       "cornerRadius": 20,
                       "stroke": {
                         "align": "inside",
@@ -864,7 +794,7 @@
                       "id": "uY7he",
                       "name": "Service Card 4",
                       "width": "fill_container",
-                      "fill": "$--accent",
+                      "fill": "#2A2724CC",
                       "cornerRadius": 20,
                       "stroke": {
                         "align": "inside",
@@ -939,7 +869,7 @@
                       "id": "6uCeX",
                       "name": "Service Card 5",
                       "width": "fill_container",
-                      "fill": "$--accent",
+                      "fill": "#2A2724CC",
                       "cornerRadius": 20,
                       "stroke": {
                         "align": "inside",
@@ -1001,7 +931,7 @@
                           "fill": "$--muted-foreground",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Labelled rail systems, detailed packing lists and careful transport between venues. Organised down to the last hanger.",
+                          "content": "We help build up and break down — from the first hanger on the rail to the last one packed in the truck.",
                           "lineHeight": 1.55,
                           "fontFamily": "Geist",
                           "fontSize": 14,
@@ -1014,7 +944,7 @@
                       "id": "U28wp",
                       "name": "Service Card 6",
                       "width": "fill_container",
-                      "fill": "$--accent",
+                      "fill": "#2A2724CC",
                       "cornerRadius": 20,
                       "stroke": {
                         "align": "inside",
@@ -1131,48 +1061,13 @@
                     "fill": "$--border"
                   },
                   "gap": 4,
-                  "padding": 8,
+                  "padding": [
+                    8,
+                    12
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    {
-                      "type": "frame",
-                      "id": "e2UZt",
-                      "x": 8,
-                      "y": 8,
-                      "name": "icon-Star-2",
-                      "enabled": false,
-                      "clip": true,
-                      "width": 16,
-                      "height": 16,
-                      "fill": {
-                        "type": "color",
-                        "color": "#ffffffff",
-                        "enabled": false
-                      },
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1
-                      },
-                      "layout": "none",
-                      "children": [
-                        {
-                          "type": "path",
-                          "id": "bz7D3",
-                          "x": 1.8756510019302368,
-                          "y": 1.89599609375,
-                          "name": "Vector 2134",
-                          "geometry": "M9.187 0l-2.81 6.376-6.377 2.811 6.377 2.811 2.81 6.378 2.812-6.377 6.376-2.811-6.376-2.811-2.812-6.377z",
-                          "width": 12.25,
-                          "height": 12.250665664672852,
-                          "stroke": {
-                            "align": "center",
-                            "thickness": 1,
-                            "fill": "$--color-info-foreground"
-                          }
-                        }
-                      ]
-                    },
                     {
                       "type": "text",
                       "id": "JbxMv",
