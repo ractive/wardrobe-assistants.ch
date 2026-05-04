@@ -364,9 +364,9 @@ export default function ServicesPage() {
               <p className="max-w-[760px] font-secondary text-[17px] leading-[1.55] text-[var(--foreground)] lg:text-[18px]">
                 {service.tagline}
               </p>
-              {service.body.map((paragraph) => (
+              {service.body.map((paragraph, paragraphIndex) => (
                 <p
-                  key={paragraph.slice(0, 32)}
+                  key={`${service.id}-p${paragraphIndex}`}
                   className="max-w-[720px] font-secondary text-[15px] leading-[1.65] text-[var(--muted-foreground)] lg:text-[16px]"
                 >
                   {paragraph}

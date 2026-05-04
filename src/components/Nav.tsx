@@ -24,13 +24,13 @@ export function Nav() {
       {/* Desktop links */}
       <div className="hidden items-center gap-8 md:flex">
         {links.map((link) => (
-          <a
+          <Link
             key={link.href}
             href={link.href}
             className="font-secondary text-[14px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
           >
             {link.label}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -48,14 +48,14 @@ export function Nav() {
       {open && (
         <div className="absolute top-full left-0 z-50 flex w-full flex-col gap-4 border-b border-[var(--secondary)] bg-[var(--background)] px-6 py-6 md:hidden">
           {links.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
               className="font-secondary text-[16px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
       )}

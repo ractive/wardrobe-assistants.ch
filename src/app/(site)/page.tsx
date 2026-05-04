@@ -6,6 +6,7 @@ import {
   Shirt,
   Truck,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/Button";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -105,12 +106,12 @@ export default function Home() {
           ))}
         </div>
 
-        <a
+        <Link
           href="/services"
           className="font-primary text-[14px] font-medium tracking-[1px] text-[var(--primary)] underline-offset-4 transition-opacity hover:opacity-80 hover:underline"
         >
           See full services →
-        </a>
+        </Link>
       </section>
 
       {/* CTA Section */}

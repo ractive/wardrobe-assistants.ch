@@ -5,7 +5,10 @@ export function Footer() {
         {/* Brand */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--primary)]" />
+            <span
+              className="h-2.5 w-2.5 rounded-full bg-[var(--primary)]"
+              aria-hidden="true"
+            />
             <span className="font-primary text-[14px] font-medium tracking-[2px] text-[#EDEAE4]">
               WARDROBE ASSISTANTS
             </span>
