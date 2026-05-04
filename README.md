@@ -48,15 +48,28 @@ Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly
 
 ## Deployment
 
-Pushes to `main` first run `verify` (typecheck + Vitest). Only on green does `build-homepage` run: it builds the static export, uploads `apps/homepage/out/` to the bunny Storage Zone, and purges the Pull Zone. Markdown, design source, and `.claude/` changes are skipped from the build/deploy step (verify still runs).
+Pushes to `main` first run `verify` (typecheck + Vitest + both Next builds). Only on green do the deploy jobs run:
+
+- `build-homepage` — builds the static export, uploads `apps/homepage/out/` to the bunny Storage Zone, and purges the Pull Zone. Public origin: `wardrobe-assistants.ch` / `www.wardrobe-assistants.ch`.
+- `build-admin` — builds the admin Next.js app as a Docker image, pushes to bunny's container registry, and rolls the Magic Container deployment. Public origin: `admin.wardrobe-assistants.ch`.
+
+Markdown, design source, and `.claude/` changes are skipped from the deploy steps via paths-filter (verify still runs).
+
+The two-origin split is deliberate: an XSS on the public homepage cannot read admin session cookies because they live on a different origin.
 
 Required CI secrets:
 
 - `secrets.GITHUB_TOKEN` — provided automatically
-- `secrets.BUNNY_STORAGE_ZONE_NAME`
-- `secrets.BUNNY_STORAGE_PASSWORD`
-- `secrets.BUNNY_PULL_ZONE_ID`
 - `secrets.BUNNY_API_KEY`
+- `secrets.BUNNY_STORAGE_ZONE_NAME`, `secrets.BUNNY_STORAGE_PASSWORD`, `secrets.BUNNY_PULL_ZONE_ID` — homepage upload
+- `secrets.BUNNY_REGISTRY`, `secrets.BUNNY_REGISTRY_USERNAME`, `secrets.BUNNY_REGISTRY_PASSWORD` — admin Docker push
+- `secrets.DATABASE_URL`, `secrets.DATABASE_AUTH_TOKEN_FULL`, `secrets.BETTER_AUTH_SECRET`, `secrets.RESEND_API_KEY` — admin runtime
+
+Required CI variables:
+
+- `vars.ADMIN_APP_ID` — bunny Magic Container app id used in the registry tag and the deploy POST
+
+The infrastructure-provisioning playbook (Storage Zones, Pull Zones, Magic Container, DNS, TLS, decommission of the legacy container) lives in [`kb/runbook-go-live.md`](kb/runbook-go-live.md). Pre-cutover state snapshot: [`kb/runbook-go-live-pre-state.json`](kb/runbook-go-live-pre-state.json).
 
 ## Legal pages
 

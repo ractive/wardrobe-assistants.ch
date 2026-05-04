@@ -70,3 +70,20 @@ The `BunnyWay/actions/container-update-image` GitHub Action expects the containe
 3. Make `PullZone` DNS record type work with Magic Container pull zones.
 4. Standardize `--id` usage across all `pull-zone hostname` subcommands.
 5. Add a `container deploy` quickstart that chains app create → endpoint add → DNS setup.
+
+## Iter-9 follow-up (2026-05-05) — homepage + admin go-live planning
+
+Re-running pre-flight for iter-9 (`kb/iteration-09-go-live-bunny-infra.md`) confirms both bugs in `kb/hoppy-bug-report-pullzone-storagezone.md` are still present in `hoppy 0.1.0`:
+
+- Issue 1 (cannot bind Storage Zone via `pull-zone create`) — `curl` fallback baked into `kb/runbook-go-live.md` step 2.
+- Issue 2 (`pull-zone get` deserialization on Magic Container PZs) — old container's auto Pull Zone (id `5719318`) still invisible in `pull-zone list`. Pre-state JSON lists it under `pull_zones_hidden` so the rollback path is recoverable.
+
+New gap surfaced during iter-9 planning:
+
+### 6. No CLI surface for bunny.net Database
+
+The libSQL DB has to be provisioned via the bunny dashboard. There's no `hoppy database` subcommand. For an automation-first CLI, this is the biggest hole left after `pull-zone create --storage-zone-id`. Filing as a feature request rather than a bug — but worth flagging because it forces a context switch in the middle of an otherwise-scriptable runbook.
+
+### 7. Env-var management on Magic Container apps is dashboard-only
+
+`hoppy container app create` accepts the registry/image flags but no `--env KEY=VAL` repeatable flag. Setting `DATABASE_URL`, `BETTER_AUTH_SECRET`, etc. on the admin container requires either the dashboard or a direct API call. Same friction as Database — captured in the runbook so the next operator doesn't waste time hunting for the flag.

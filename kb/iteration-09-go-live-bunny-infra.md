@@ -1,0 +1,117 @@
+---
+title: Iteration 9 — Go live on bunny.net (homepage + admin)
+type: iteration
+status: planned
+order: 10
+---
+
+# Iteration 9 — Go live on bunny.net (homepage + admin)
+
+The first user-visible-on-the-internet iteration since iter-7a/7b/8 landed the code. Provision all bunny.net infrastructure for both deploy targets, flip DNS, watch first deploys land green, decommission the old Magic Container.
+
+Two surfaces, two deploy topologies:
+
+- **Homepage** — static export → bunny Storage Zone → bunny Pull Zone → `wardrobe-assistants.ch` / `www.wardrobe-assistants.ch`. No runtime, no DB.
+- **Admin** — Docker image → bunny Magic Container → `admin.wardrobe-assistants.ch`. Runtime, libSQL DB, Better Auth, Resend.
+
+Origin-scoped cookies are the security payoff: an XSS on the public homepage cannot read admin session tokens because they live on a different origin.
+
+## Context — why this iteration is operational, not code
+
+By the time this iteration starts, iter-7a + iter-7b + iter-8 have already shipped the code, the CI workflows, and the rename. What's missing is everything that lives on bunny.net (and in GitHub's repo settings) — provisioning that is fundamentally **side-effectful, manual-confirmation-heavy, destructive in places**, and outside the PR diff.
+
+This plan is the runbook. The PR diff for this iteration is small (mostly a `kb/runbook-go-live.md` capture and possibly minor CI tweaks); the value is in the discipline of executing the steps in the right order.
+
+A previous attempt during iter-7a (2026-05-05) created and rolled back the homepage Storage Zone + Pull Zone before any DNS change landed. That attempt surfaced two `hoppy` bugs documented in `kb/hoppy-bug-report-pullzone-storagezone.md` — most importantly `hoppy pull-zone create` cannot bind to a Storage Zone, so a `curl` fallback is required.
+
+## Pre-flight (before any provisioning)
+
+- [x] Confirm `iter-8` (rename) is merged on `origin/main`. (commit `9d0bfbe`, merged in `32bed0a`)
+- [x] Confirm `BUNNY_API_KEY` is exported in the local environment.
+- [x] `hoppy auth check` passes.
+- [x] Capture current state: `hoppy --format json container app list`, `hoppy --format text dns record list --zone-id 775662`, `hoppy --format text storage-zone list`, `hoppy --format text pull-zone list`. Save to `kb/runbook-go-live-pre-state.json` for rollback reference.
+- [ ] Confirm with the user: which window is acceptable for the live-site break? The cutover window between detaching hostnames from the old Magic Container's auto Pull Zone and Let's Encrypt issuing certs on the new Pull Zone is typically 1–10 min. HTTP-only access is broken until the cert lands; HTTPS-only browsers see TLS errors during this window.
+
+## Scope — homepage infrastructure [0/8]
+
+- [ ] **Storage Zone:** `hoppy storage-zone create --name wardrobe-assistants-homepage --region DE --zone-tier 0 --yes`. Capture `Id`, `Password`, `ReadOnlyPassword` from the response.
+- [ ] **Pull Zone:** Use the `curl` workaround (hoppy 0.1.0 cannot bind StorageZoneId via CLI):
+  ```bash
+  curl -X POST https://api.bunny.net/pullzone \
+    -H "Content-Type: application/json" \
+    -H "AccessKey: $BUNNY_API_KEY" \
+    -d '{"Name":"wardrobe-assistants","StorageZoneId":<storage-id>,"Type":0}'
+  ```
+  Capture `Id` of the new Pull Zone.
+- [ ] **Detach hostnames from old PZ:** `hoppy pull-zone hostname remove --id 5719318 --hostname wardrobe-assistants.ch --yes` and the same for `www.wardrobe-assistants.ch`. **This breaks the live site immediately.** Old container `lzGns1pTQLcqOGM` keeps running but has no public hostname.
+- [ ] **Attach hostnames to new PZ:** `hoppy pull-zone hostname add --id <new-pz-id> --hostname wardrobe-assistants.ch --yes` and the same for `www.wardrobe-assistants.ch`.
+- [ ] **DNS swap:** Update DNS records `16538536` (apex `@`) and `16538537` (`www`) in zone `775662` from `mc-tug74k9naa.b-cdn.net` to `wardrobe-assistants.b-cdn.net` via `hoppy dns record update`.
+- [ ] **TLS:** `hoppy pull-zone hostname load-free-cert --hostname wardrobe-assistants.ch --yes` and the same for `www.wardrobe-assistants.ch`. Wait for issuance; retry if Let's Encrypt is rate-limited.
+- [ ] **Force SSL:** `hoppy pull-zone hostname force-ssl --id <new-pz-id> --hostname wardrobe-assistants.ch --enabled true --yes` and the same for `www`.
+- [ ] **GitHub secrets:** Set in the repo: `BUNNY_STORAGE_ZONE_NAME=wardrobe-assistants-homepage`, `BUNNY_STORAGE_PASSWORD=<from create response>`, `BUNNY_PULL_ZONE_ID=<new-pz-id>`. `BUNNY_API_KEY` should already exist. Trigger an empty commit on `main` to fire `build-homepage` and upload the first `out/`.
+
+## Scope — admin infrastructure [0/7]
+
+- [ ] **libSQL DB:** Provision on bunny.net Database, EU region. Mint two tokens — full-access for admin runtime, read-only for the future homepage CI build step (unused in this iteration but plumbed). Capture `DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, `DATABASE_AUTH_TOKEN_READONLY`.
+- [ ] **Run migrations:** Point iter-7b's `packages/db` Drizzle migrations at the new DB. Verify schema landed.
+- [ ] **Seed first admin user:** Run iter-7b's seed script with the user's email. Save the bootstrap TOTP enrollment QR locally; do not commit.
+- [ ] **Magic Container app:** `hoppy container app create` for the admin app, region DE. Configure image registry (Docker Hub `ractive/wardrobe-assistants-admin`), entry point, env vars (`DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, Better Auth secrets, Resend API key, `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`). Capture the new app's `Id` for GitHub secrets.
+- [ ] **Hostname + TLS:** Bind `admin.wardrobe-assistants.ch` to the admin container's auto Pull Zone; enable auto-TLS.
+- [ ] **DNS:** Add CNAME `admin` → the admin container's CDN hostname (`mc-<id>.b-cdn.net`) in zone `775662`.
+- [ ] **GitHub secrets:** Set `ADMIN_APP_ID` (Magic Container app id), `ADMIN_DOCKER_REGISTRY_ID`, `DATABASE_URL`, `DATABASE_AUTH_TOKEN_FULL`, `BETTER_AUTH_SECRET`, `RESEND_API_KEY`. Trigger first admin Docker build/push/roll.
+
+## Scope — verification [0/5]
+
+- [ ] `curl -I https://wardrobe-assistants.ch` returns `200`, `HTTP/2`, `cache-control` header from bunny edge.
+- [ ] `curl -I https://www.wardrobe-assistants.ch` same.
+- [ ] Browser test: homepage loads on apex + www; all four pages (home, services, impressum, datenschutz) render; no mixed-content warnings.
+- [ ] `curl -I https://admin.wardrobe-assistants.ch/sign-in` returns `200`; sign-in page renders; Better Auth session cookie scoped to `admin.wardrobe-assistants.ch`.
+- [ ] Admin TOTP-gated dashboard: sign in with seeded credentials, complete TOTP enrollment, land on "Hello, {email}".
+
+## Scope — decommission [0/2]
+
+- [ ] After 24h of healthy homepage serving from the new Pull Zone, delete the old Magic Container app `lzGns1pTQLcqOGM`. Verify no DNS records still point at `mc-tug74k9naa.b-cdn.net`.
+- [ ] Delete the now-orphaned auto Pull Zone `5719318` if bunny doesn't garbage-collect it on app deletion.
+
+## Scope — runbook capture (the only PR-diff-shaped artefact) [2/2]
+
+- [x] Write `kb/runbook-go-live.md` capturing the actual commands run, with output snippets and any deviations from this plan. Future operators should be able to replay this for staging or DR. _(Scaffold landed in this iter-9 PR; operator fills in `Output:` blocks during the live cutover and re-pushes a follow-up commit, then flips status to `complete`.)_
+- [x] Update `kb/hoppy-usage-report.md` with notes on what worked / what didn't during this iteration (cross-reference `kb/hoppy-bug-report-pullzone-storagezone.md`). _(Added iter-9 follow-up section: re-confirmed both bugs, recorded two new gaps — Database CLI absent, Magic Container env-var management dashboard-only.)_
+
+## Out of scope
+
+- **Production-grade observability** — log forwarding, alerting on the admin container, metrics dashboards. A later iteration. For now, `hoppy container app overview` + bunny dashboard suffice.
+- **Database backups / DR** — bunny.net Database has built-in snapshots; we'll trust those for now.
+- **CDN cache rules** — defaults are fine for a static site.
+- **Staging environment** — single-environment deploy is intentional at this stage.
+- **Custom error pages** — bunny defaults are acceptable.
+- **Email deliverability hardening** — SPF/DKIM/DMARC for Resend on the apex domain. A separate small iteration; doesn't block admin going live since transactional email volume is near-zero on day one.
+
+## Critical resources (post-iteration)
+
+| Resource | Identifier | Notes |
+|---|---|---|
+| Homepage Storage Zone | `wardrobe-assistants-homepage` (id TBD) | Standard tier, DE region |
+| Homepage Pull Zone | `wardrobe-assistants` (id TBD) | StorageZoneId-bound; apex + www; auto-TLS |
+| Admin Magic Container | `wardrobe-assistants-admin` (id TBD) | Single region DE, Docker Hub origin |
+| libSQL DB | bunny.net Database (id TBD) | EU region; two tokens |
+| DNS zone | `775662` (`wardrobe-assistants.ch`) | apex, `www`, `admin` CNAMEs |
+| GitHub secrets | listed above | Treat as the source of truth for cutover state |
+
+## Risks / things that bite
+
+- **Hostname-detach-then-reattach window** — site is broken from the moment the apex hostname leaves PZ `5719318` until TLS lands on the new PZ. User has accepted this. Schedule for a low-traffic hour.
+- **Let's Encrypt rate limits** — first-time issuance for new pull zones can be slow if the apex domain has been hammered with cert requests recently. Plan a 10-min buffer.
+- **bunny CDN caching of the broken state** — the failed HTTPS responses may cache briefly on bunny's edge. Use `hoppy purge` against the apex URL after cert issuance if 1xx-3xx responses don't appear within a minute.
+- **Magic Container cold start** — first `admin.wardrobe-assistants.ch` request after deploy may take 5–15s. Subsequent requests are fast.
+- **Forgotten GitHub secrets** — `build-homepage` will silently fail to upload if `BUNNY_STORAGE_PASSWORD` is missing or wrong. Verify upload logs after the first run.
+- **Token confusion** — three different tokens (`BUNNY_API_KEY` for admin operations, `BUNNY_STORAGE_PASSWORD` for storage zone uploads, libSQL `DATABASE_AUTH_TOKEN_*` for DB). Label them clearly in 1Password / pass.
+
+## Done when
+
+- `https://wardrobe-assistants.ch` and `https://www.wardrobe-assistants.ch` serve the static homepage from bunny's edge with valid TLS.
+- `https://admin.wardrobe-assistants.ch/sign-in` serves the admin sign-in page from the Magic Container with valid TLS.
+- Admin user can sign in with seeded credentials, complete TOTP enrollment, and reach the "Hello, {email}" dashboard.
+- The old Magic Container `lzGns1pTQLcqOGM` and its auto Pull Zone `5719318` are deleted.
+- `kb/runbook-go-live.md` captures the actual commands run, ready to replay for staging or DR.
+- All checklists in this file are checked off.
