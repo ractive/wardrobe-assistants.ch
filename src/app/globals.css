@@ -1,40 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #1A1816;
-  --foreground: #EDEAE4;
-  --card: #26231F;
-  --card-foreground: #EDEAE4;
-  --popover: #26231F;
-  --popover-foreground: #EDEAE4;
-  --primary: #B5564F;
-  --primary-foreground: #EDEAE4;
-  --secondary: #2E2B28;
-  --secondary-foreground: #EDEAE4;
-  --muted: #1F1D1B;
-  --muted-foreground: #B8B3AC;
-  --accent: #2A2724;
-  --accent-foreground: #EDEAE4;
-  --destructive: #E53E3E;
-  --border: #3A3734;
-  --input: #3A3734;
-  --ring: #B5564F;
+  --background: #1a1816;
+  --foreground: #edeae4;
+  --card: #26231f;
+  --card-foreground: #edeae4;
+  --popover: #26231f;
+  --popover-foreground: #edeae4;
+  --primary: #b5564f;
+  --primary-foreground: #edeae4;
+  --secondary: #2e2b28;
+  --secondary-foreground: #edeae4;
+  --muted: #1f1d1b;
+  --muted-foreground: #b8b3ac;
+  --accent: #2a2724;
+  --accent-foreground: #edeae4;
+  --destructive: #e53e3e;
+  --border: #3a3734;
+  --input: #3a3734;
+  --ring: #b5564f;
   --sidebar: #161412;
-  --sidebar-foreground: #EDEAE4;
-  --sidebar-primary: #B5564F;
-  --sidebar-primary-foreground: #EDEAE4;
-  --sidebar-border: #2E2B28;
-  --sidebar-accent: #2E2B28;
-  --sidebar-accent-foreground: #EDEAE4;
-  --sidebar-ring: #B5564F;
+  --sidebar-foreground: #edeae4;
+  --sidebar-primary: #b5564f;
+  --sidebar-primary-foreground: #edeae4;
+  --sidebar-border: #2e2b28;
+  --sidebar-accent: #2e2b28;
+  --sidebar-accent-foreground: #edeae4;
+  --sidebar-ring: #b5564f;
   --color-success: #222924;
-  --color-success-foreground: #B6FFCE;
-  --color-warning: #291C0F;
-  --color-warning-foreground: #FF8400;
-  --color-error: #24100B;
-  --color-error-foreground: #FF5C33;
+  --color-success-foreground: #b6ffce;
+  --color-warning: #291c0f;
+  --color-warning-foreground: #ff8400;
+  --color-error: #24100b;
+  --color-error-foreground: #ff5c33;
   --color-info: #222229;
-  --color-info-foreground: #B2B2FF;
+  --color-info-foreground: #b2b2ff;
   --radius-m: 16px;
   --radius-pill: 999px;
 }
@@ -44,7 +44,8 @@
     scroll-behavior: smooth;
   }
 
-  html, body {
+  html,
+  body {
     height: 100%;
   }
 

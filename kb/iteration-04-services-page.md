@@ -1,7 +1,7 @@
 ---
 title: SEO Iteration 4 — Services deep page + FAQ
 type: iteration
-status: planned
+status: implemented
 order: 4
 ---
 
@@ -16,20 +16,20 @@ DE (for later multilingual iteration, but keep in mind): "Garderobenassistent", 
 
 ## Scope
 
-- [ ] New route `src/app/(site)/services/page.tsx` (or `/wardrobe-assistants/page.tsx` — decide based on URL keyword preference)
-- [ ] Page-level `metadata` export (title, description, canonical, OG image override)
-- [ ] Content structure:
+- [x] New route `src/app/(site)/services/page.tsx` — chose `/services` (matches existing `#services` anchor, primary nav target)
+- [x] Page-level `metadata` export (title, description, canonical, OG image override)
+- [x] Content structure:
   - H1 with primary keyword
   - Intro paragraph (~150 words) explaining who we are and where we work
   - Six H2 sections — one per service (quick changes, ironing & steam, repairs & alterations, wigs & accessories, load-in/out, laundry) — each 150–300 words covering process, equipment, when it matters, a real example
   - "Where we work" section — theatres, concerts, festivals, with location signals (Zürich, broader CH)
   - FAQ section with 8–12 Q&A pairs (e.g. "How far in advance should we book?", "Do you travel with the production?", "Can you handle period costumes?", "What's the team size for a typical run?")
   - CTA back to `/#contact` or directly to mailto
-- [ ] JSON-LD on this page:
+- [x] JSON-LD on this page:
   - `Service` × 6 (one per offering)
   - `FAQPage` covering the FAQ section
-- [ ] Internal link from homepage hero/services section to this page (e.g. "See full services →" link, in addition to the in-page anchor)
-- [ ] Add the new route to `sitemap.ts` (built in Iteration 2)
+- [x] Internal link from homepage hero/services section to this page (e.g. "See full services →" link, in addition to the in-page anchor)
+- [x] Add the new route to `sitemap.ts` (built in Iteration 2)
 
 ## Copy guidelines
 
