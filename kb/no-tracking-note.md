@@ -24,7 +24,7 @@ The only personal data the platform sees is server access logs at the Bunny.net 
 
 Swiss law (FMG Art. 45c) requires informing users about cookies and similar tracking and giving them the chance to refuse. With zero tracking present, there is nothing to inform about beyond the privacy policy already published at `/datenschutz`. No banner is shown, and that is correct.
 
-If the audience explicitly extends to EU residents in marketing campaigns *and* tracking is added, GDPR's stricter opt-in regime applies and a real consent prompt becomes necessary.
+GDPR applies whenever personal data of individuals located in the EU/EEA is processed — and because a public website is reachable from the EU, EU visitors *will* arrive whether or not they are deliberately targeted. If tracking is added at any point, assume GDPR obligations apply (including opt-in consent where required) unless a documented legal basis says otherwise. The "Swiss-only audience" reading is not a safe default.
 
 ## What triggers re-evaluation
 

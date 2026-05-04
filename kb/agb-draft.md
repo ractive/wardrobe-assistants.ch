@@ -62,7 +62,7 @@ Each party keeps the other's non-public information confidential, in particular 
 
 ## 11. Data protection
 
-The Crew processes Production contact data and project information in line with the [privacy policy](/datenschutz). Personal data of cast and crew shared with the Crew is processed only to deliver the service and is not retained beyond the engagement, subject to statutory retention obligations.
+The Crew processes Production contact data and project information in line with the privacy policy at [https://wardrobe-assistants.ch/datenschutz](https://wardrobe-assistants.ch/datenschutz). Personal data of cast and crew shared with the Crew is processed only to deliver the service and is not retained beyond the engagement, subject to statutory retention obligations.
 
 ## 12. Applicable law and jurisdiction
 

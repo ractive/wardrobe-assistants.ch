@@ -35,6 +35,25 @@ export const operator: OperatorConfig = {
   responsibleForContent: "TODO: Responsible person name",
 };
 
+// Production guard: ship-blocking sanity check that fires at build/start time
+// when NODE_ENV is "production". Prevents the placeholder Impressum from
+// reaching real visitors if someone forgets to fill in operator details.
+function assertOperatorReady(op: OperatorConfig): void {
+  if (process.env.NODE_ENV !== "production") return;
+  const offenders: string[] = [];
+  const isPlaceholder = (v: string) => v.startsWith("TODO:");
+  if (isPlaceholder(op.legalName)) offenders.push("legalName");
+  if (op.addressLines.some(isPlaceholder)) offenders.push("addressLines");
+  if (isPlaceholder(op.responsibleForContent))
+    offenders.push("responsibleForContent");
+  if (offenders.length > 0) {
+    throw new Error(
+      `site-config: operator placeholders still set in production build: ${offenders.join(", ")}. Replace TODO values in src/app/site-config.ts before deploying.`,
+    );
+  }
+}
+assertOperatorReady(operator);
+
 // Date of last legal-text update. Bump whenever Impressum or
 // privacy policy content changes.
 export const legalLastUpdated = "2026-05-04";
