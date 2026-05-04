@@ -1,7 +1,7 @@
 ---
 title: SEO Iteration 3 — Asset hygiene
 type: iteration
-status: planned
+status: done
 order: 3
 ---
 
@@ -18,12 +18,12 @@ Page weight is a ranking signal and currently 3.3MB of unused images ship to the
 
 ## Scope
 
-- [ ] Delete the disabled `Hero Right` frame (`5cVc5`) from the .pen file (it's no longer in the design — the code uses a full-page background instead)
-- [ ] Delete `public/steam.jpg` (no remaining references after the frame is removed)
-- [ ] Delete `public/steam Kopie.jpg`
-- [ ] For `background.png` (still used in the .pen as the document-level background fill): create `design-assets/` at the repo root, move `background.png` there, and update the .pen reference from `public/background.png` to `../design-assets/background.png`
-- [ ] Verify Pencil still renders the design correctly after the path change
-- [ ] Confirm the only public images shipped are `background.webp`, `og-image.*`, favicons, and any future `next/image` sources
+- [x] Delete the disabled `Hero Right` frame (`5cVc5`) from the .pen file (it's no longer in the design — the code uses a full-page background instead)
+- [x] Delete `public/steam.jpg` (no remaining references after the frame is removed)
+- [x] Delete `public/steam Kopie.jpg`
+- [x] For `background.png` (still used in the .pen as the document-level background fill): create `design-assets/` at the repo root, move `background.png` there, and update the .pen reference from `public/background.png` to `design-assets/background.png`
+- [x] Verify Pencil still renders the design correctly after the path change
+- [x] Confirm the only public images shipped are `background.webp`, `og-image.*`, favicons, and any future `next/image` sources
 - [ ] (Optional) Convert any remaining JPG/PNG content images to WebP/AVIF and migrate to `next/image`
 
 ## Out of scope

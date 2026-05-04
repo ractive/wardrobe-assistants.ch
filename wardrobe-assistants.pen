@@ -18,7 +18,7 @@
           "type": "image",
           "opacity": 0.35,
           "enabled": true,
-          "url": "public/background.png",
+          "url": "design-assets/background.png",
           "mode": "fit"
         }
       ],
@@ -374,68 +374,6 @@
                           ]
                         }
                       ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "5cVc5",
-                  "x": 784,
-                  "y": 72,
-                  "name": "Hero Right",
-                  "enabled": false,
-                  "clip": true,
-                  "width": 600,
-                  "height": 580,
-                  "fill": {
-                    "type": "image",
-                    "enabled": true,
-                    "url": "public/steam.jpg",
-                    "mode": "fill"
-                  },
-                  "cornerRadius": 24,
-                  "stroke": {
-                    "align": "inside",
-                    "thickness": 1,
-                    "fill": "$--secondary"
-                  },
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "#00000040",
-                    "offset": {
-                      "x": 0,
-                      "y": 16
-                    },
-                    "blur": 32
-                  },
-                  "layout": "vertical",
-                  "children": [
-                    {
-                      "type": "rectangle",
-                      "id": "Wv93q",
-                      "name": "overlay",
-                      "fill": {
-                        "type": "gradient",
-                        "gradientType": "linear",
-                        "enabled": true,
-                        "rotation": 0,
-                        "size": {
-                          "height": 1
-                        },
-                        "colors": [
-                          {
-                            "color": "#1A181600",
-                            "position": 0
-                          },
-                          {
-                            "color": "#1A181699",
-                            "position": 1
-                          }
-                        ]
-                      },
-                      "width": "fill_container",
-                      "height": "fill_container"
                     }
                   ]
                 }
@@ -1318,7 +1256,7 @@
                       "id": "eqanK",
                       "name": "fC3l3",
                       "fill": "$--muted-foreground",
-                      "content": "Zürich ",
+                      "content": "Zürich",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
