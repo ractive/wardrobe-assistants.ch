@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# wardrobe-assistants.ch
 
-## Getting Started
+Landing page for a Swiss wardrobe crew. Built with Next.js 16 (App Router) and Tailwind v4.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** with React 19 and the React Compiler
+- **Tailwind CSS v4** via `@tailwindcss/postcss`
+- **Biome** for linting and formatting
+- **TypeScript**
+- Container deploy to **bunny.net Magic Containers** via GitHub Actions
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — start the dev server
+- `npm run build` — production build (`output: "standalone"`)
+- `npm run start` — run the built server
+- `npm run lint` — `biome check`
+- `npm run format` — `biome format --write`
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/` — App Router routes, `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
+- `src/components/` — shared React components
+- `public/` — static assets
+- `kb/` — internal knowledgebase (iteration plans, notes); markdown with YAML frontmatter, queryable via the `hyalo` CLI
+- `wardrobe-assistants.pen` — design source of truth (Pencil); see `AGENTS.md`
+- `Dockerfile` — multi-stage build on `node:22-alpine`, runs `node server.js` from the standalone output
+- `.github/workflows/deploy.yml` — builds the image, pushes to GHCR, rolls the bunny.net container
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Pushes to `main` that touch app code build a Docker image, push it to `ghcr.io/<repo>:<sha>`, and update the bunny.net Magic Container. Markdown, design source, and `.claude/` changes are skipped via `paths-ignore`.
 
-## Deploy on Vercel
+Required CI secrets/vars:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `secrets.GITHUB_TOKEN` — provided automatically
+- `secrets.BUNNYNET_API_KEY`
+- `vars.APP_ID` — bunny.net Magic Containers app id
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Working with this repo
+
+See [`AGENTS.md`](AGENTS.md) for conventions (browser debugging via `ff-rdp`, Next.js 16 caveats, the `.pen` design workflow). Knowledgebase queries should go through `hyalo` rather than raw grep.

@@ -1,7 +1,7 @@
 ---
 title: SEO Iteration 5 — Multilingual (DE first, FR later)
 type: iteration
-status: planned
+status: deferred
 order: 5
 ---
 
