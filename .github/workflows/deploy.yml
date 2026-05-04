@@ -6,8 +6,10 @@ on:
   pull_request:
 
 jobs:
-  # Cheap signal first: typecheck + Vitest. No paths-ignore so md/pen-only
-  # changes still get insurance against a stale typecheck baseline.
+  # Cheap signal first: typecheck + Vitest + static export build. No
+  # paths-ignore so md/pen-only changes still get insurance against a stale
+  # typecheck baseline. Build runs here (not just in build-marketing) so PRs
+  # catch `output: "export"` breakage before merge instead of after.
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test
+      - run: npm -w @wardrobe-assistants/marketing run build
 
   # Static marketing build + upload to bunny Storage Zone, then purge the
   # Pull Zone. Skipped for md/pen-only changes via paths-ignore.
@@ -39,6 +42,7 @@ jobs:
         with:
           filters: |
             app:
+              - '**'
               - '!**/*.md'
               - '!**/*.pen'
               - '!kb/**'

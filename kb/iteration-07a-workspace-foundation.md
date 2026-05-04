@@ -45,19 +45,19 @@ next build (output: "export")
 
 Marketing is verified compatible with `output: "export"`: no `cookies()`/`headers()`/`searchParams`/`use server`/`next/image`/`next/font`/runtime `fetch()`. `sitemap.ts` and `robots.ts` pre-render to static files.
 
-## Scope — repo restructure (atomic commit) [0/4]
+## Scope — repo restructure (atomic commit) [4/4]
 
 - [x] Add root `package.json` with `"workspaces": ["apps/*", "packages/*"]`; lift devDependencies that the verify gate needs (vitest, typescript, etc.) to the root
 - [x] Move `src/` → `apps/marketing/src/`; relocate `next.config.ts`, `tsconfig.json`, `next-env.d.ts`, `postcss.config.mjs`, `package.json` into `apps/marketing/`
 - [x] Delete `Dockerfile` from the repo root (replaced by static export)
 - [x] Keep `kb/`, `wardrobe-assistants.pen`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `.claude/`, `.hyalo.toml`, `biome.json` at the repo root
 
-## Scope — marketing → static export [0/2]
+## Scope — marketing → static export [2/2]
 
 - [x] `apps/marketing/next.config.ts`: `output: "standalone"` → `output: "export"`; add `images: { unoptimized: true }` defensively
 - [x] Verify `apps/marketing/out/` contains `index.html`, `services/index.html`, `impressum/index.html`, `datenschutz/index.html`, `sitemap.xml`, `robots.txt`
 
-## Scope — testing infrastructure [0/5]
+## Scope — testing infrastructure [5/5]
 
 Tests gate the deploy. bunny.net rolls out are slow, so cheap signals (typecheck + Vitest) need to fail in CI before any upload runs.
 
@@ -67,7 +67,7 @@ Tests gate the deploy. bunny.net rolls out are slow, so cheap signals (typecheck
 - [x] Scripts: root `"test": "vitest run"`, `"test:watch": "vitest"`, `"typecheck": "tsc -b"`; mirrored as workspace scripts in `apps/marketing`
 - [x] Initial test: `apps/marketing/src/app/site-config.test.ts` — production guard throws when any operator field starts with `TODO:` and `NODE_ENV=production`; passes otherwise
 
-## Scope — CI [0/3]
+## Scope — CI [3/3]
 
 - [x] New `verify` job: `npm ci`, `npm run typecheck`, `npm run test`. Triggers on every push to `main` and every PR. **No `paths-ignore`** — md/pen-only changes still get cheap typecheck insurance.
 - [x] Replace existing `build-and-push` job with `build-marketing` (`needs: verify`): runs `npm -w apps/marketing run build`, uploads `apps/marketing/out/` to bunny Storage Zone via `bunnycdn-storage` action (or equivalent), purges Pull Zone via bunny API. `paths-ignore`: `*.md`, `*.pen`, `kb/**`, `.claude/**`, `.hyalo.toml`
