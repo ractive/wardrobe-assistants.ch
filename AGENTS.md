@@ -1,3 +1,6 @@
+# bunny.net services
+If you manage bunny.net services, use the "hoppy" CLI tool (hoppy --help) to discover and debug things.
+
 # Browser debugging
 If you need to debug something in the browser, use the ff-rdp CLI tool (ff-rdp --help) in favor of the chrome mcp server. Collect feedback about ff-rdp in the kb knowledgebase.
 

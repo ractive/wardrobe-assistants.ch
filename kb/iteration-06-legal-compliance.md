@@ -1,7 +1,7 @@
 ---
 title: Iteration 6 — Swiss legal compliance (Impressum + privacy + AGB)
 type: iteration
-status: partially-implemented
+status: done
 order: 6
 ---
 
