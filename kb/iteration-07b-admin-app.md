@@ -1,7 +1,7 @@
 ---
 title: Iteration 7b — Admin app + auth ("Hello admin")
 type: iteration
-status: planned
+status: implemented
 order: 8
 ---
 

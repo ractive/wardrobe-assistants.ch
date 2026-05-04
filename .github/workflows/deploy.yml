@@ -6,10 +6,10 @@ on:
   pull_request:
 
 jobs:
-  # Cheap signal first: typecheck + Vitest + static export build. No
+  # Cheap signal first: typecheck + Vitest + both Next builds. No
   # paths-ignore so md/pen-only changes still get insurance against a stale
-  # typecheck baseline. Build runs here (not just in build-marketing) so PRs
-  # catch `output: "export"` breakage before merge instead of after.
+  # typecheck baseline. Builds run here (not just in build-*) so PRs catch
+  # breakage before merge instead of after.
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -22,9 +22,19 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm -w @wardrobe-assistants/marketing run build
+      # Admin build needs env vars to satisfy lib/env.ts at build time.
+      # Values here are placeholders only; runtime uses container env.
+      - name: Build admin standalone
+        env:
+          DATABASE_URL: file:./build.db
+          BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-at-runtime-32b
+          BETTER_AUTH_URL: https://admin.wardrobe-assistants.ch
+          RESEND_API_KEY: ci-placeholder
+          EMAIL_FROM: admin@wardrobe-assistants.ch
+        run: npm -w @wardrobe-assistants/admin run build
 
   # Static marketing build + upload to bunny Storage Zone, then purge the
-  # Pull Zone. Skipped for md/pen-only changes via paths-ignore.
+  # Pull Zone. Skipped for md/pen-only changes via paths-filter.
   build-marketing:
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -70,3 +80,57 @@ jobs:
           upload: "true"
           remove: "true"
           purgePullZone: "true"
+
+  # Admin Docker build/push/roll. Skipped for md/pen-only changes via
+  # paths-filter — note the leading '**' positive pattern: paths-filter
+  # treats negation-only filters as never matching.
+  build-admin:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect non-doc changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            app:
+              - '**'
+              - '!**/*.md'
+              - '!**/*.pen'
+              - '!kb/**'
+              - '!.claude/**'
+              - '!.hyalo.toml'
+
+      - name: Set up Docker Buildx
+        if: steps.changes.outputs.app == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to bunny.net container registry
+        if: steps.changes.outputs.app == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.BUNNY_REGISTRY }}
+          username: ${{ secrets.BUNNY_REGISTRY_USERNAME }}
+          password: ${{ secrets.BUNNY_REGISTRY_PASSWORD }}
+
+      - name: Build and push admin image
+        if: steps.changes.outputs.app == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          push: true
+          tags: ${{ secrets.BUNNY_REGISTRY }}/${{ vars.ADMIN_APP_ID }}:${{ github.sha }},${{ secrets.BUNNY_REGISTRY }}/${{ vars.ADMIN_APP_ID }}:latest
+
+      - name: Roll Magic Container deployment
+        if: steps.changes.outputs.app == 'true'
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+          ADMIN_APP_ID: ${{ vars.ADMIN_APP_ID }}
+        run: |
+          curl -fsS -X POST \
+            -H "AccessKey: $BUNNY_API_KEY" \
+            "https://api.bunny.net/magic-containers/apps/$ADMIN_APP_ID/deploy"
