@@ -25,14 +25,14 @@ type OperatorConfig = {
 };
 
 export const operator: OperatorConfig = {
-  legalName: "TODO: Operator legal name",
-  addressLines: ["TODO: Street and number", "TODO: Postcode City", "Schweiz"],
+  legalName: "Sabine Wyss",
+  addressLines: ["Salomon-Vögelin-Strasse 15", "8038 Zürich", "Schweiz"],
   email: contactEmail,
   phone: "",
   uid: undefined,
   vat: undefined,
   commercialRegister: undefined,
-  responsibleForContent: "TODO: Responsible person name",
+  responsibleForContent: "Sabine Wyss",
 };
 
 // Production guard: ship-blocking sanity check that fires at build/start time
