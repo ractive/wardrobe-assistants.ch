@@ -84,10 +84,11 @@ Stack on the admin side: **Better Auth** (email/password + TOTP MFA), **Drizzle 
   - `packages/db`: schema imports cleanly; `createDb({ url: 'file::memory:' })` returns a working client; migrations apply against in-memory libSQL
   - `apps/admin`: zod login schema (valid/invalid cases), middleware redirect for unauthenticated request, `seed-admin.ts` idempotency against in-memory libSQL
 
-## Scope — CI [0/2]
+## Scope — CI [0/3]
 
-- [ ] Add `build-admin` job (`needs: verify`): existing Docker build/push/roll flow targeted at the new admin Magic Container app (new `APP_ID` GitHub var). Triggers on `apps/admin/**`, `packages/db/**`, root config.
-- [ ] `paths-ignore`: `*.md`, `*.pen`, `kb/**`, `.claude/**`, `.hyalo.toml`
+- [ ] Extend the `verify` job to also run `npm -w apps/admin run build` so PRs catch admin build breakage before merge (mirrors what iter-7a does for marketing). Cheaper than catching it via a failed Docker push on `main`.
+- [ ] Add `build-admin` job (`needs: verify`): Docker build/push/roll flow targeted at the new admin Magic Container app (new `APP_ID` GitHub var). Runs only on `push` to `main`. Use `dorny/paths-filter` with `'**'` as the first positive pattern followed by negations (`'!**/*.md'`, `'!**/*.pen'`, `'!kb/**'`, `'!.claude/**'`, `'!.hyalo.toml'`) — negation-only filters always evaluate to false, the leading `'**'` is required.
+- [ ] Required new GitHub secrets/vars: admin `APP_ID` (var), `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM` (secrets)
 
 ## Scope — bunny.net infrastructure (operational, outside the PR diff) [0/4]
 
