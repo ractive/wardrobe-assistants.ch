@@ -63,6 +63,6 @@ Pure rename — zero behavior change, zero new dependencies, zero infra moves. T
 - `apps/homepage/` exists; `apps/marketing/` does not.
 - `npm ci && npm run typecheck && npm run test` passes locally and in CI.
 - `npm -w apps/homepage run build` produces `apps/homepage/out/` with the same files as the previous `apps/marketing/out/` build.
-- `git grep -i marketing` returns hits only in the three frozen iteration plans (`iteration-06`, `iteration-07a`, `iteration-07b`) and nowhere else.
+- `git grep -i marketing` returns hits only in the three frozen iteration plans (`iteration-06`, `iteration-07a`, `iteration-07b`) and in this file itself (`iteration-08-rename-marketing-to-homepage.md`, where the term is unavoidable as the subject of the rename) — and nowhere else.
 - The `verify` and `build-homepage` jobs both run green on the PR.
 - PR review addressed; squash-merged into `main`.
