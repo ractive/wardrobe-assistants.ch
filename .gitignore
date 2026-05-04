@@ -15,7 +15,7 @@ node_modules
 
 # next.js
 **/.next/
-apps/marketing/out/
+apps/homepage/out/
 
 # production
 /build

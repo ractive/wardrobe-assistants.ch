@@ -23,19 +23,19 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Scripts (root)
 
-- `npm run dev` — start the marketing dev server
-- `npm run build` — production build (static export to `apps/marketing/out/`)
+- `npm run dev` — start the homepage dev server
+- `npm run build` — production build (static export to `apps/homepage/out/`)
 - `npm run typecheck` — workspace-wide TypeScript check
 - `npm test` — run Vitest across the workspace
 - `npm run test:watch` — Vitest in watch mode
 - `npm run lint` — `biome check`
 - `npm run format` — `biome format --write`
 
-Scripts are mirrored as workspace scripts in `apps/marketing/`; run them directly with `npm -w @wardrobe-assistants/marketing run <script>`.
+Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly with `npm -w @wardrobe-assistants/homepage run <script>`.
 
 ## Project layout
 
-- `apps/marketing/` — Next.js marketing site (App Router), the only deployable in iter-7a
+- `apps/homepage/` — Next.js homepage (App Router), the public-facing landing site
   - `src/app/` — routes (`/`, `/services`, `/impressum`, `/datenschutz`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
   - `src/components/` — shared React components
   - `public/` — static assets
@@ -48,7 +48,7 @@ Scripts are mirrored as workspace scripts in `apps/marketing/`; run them directl
 
 ## Deployment
 
-Pushes to `main` first run `verify` (typecheck + Vitest). Only on green does `build-marketing` run: it builds the static export, uploads `apps/marketing/out/` to the bunny Storage Zone, and purges the Pull Zone. Markdown, design source, and `.claude/` changes are skipped from the build/deploy step (verify still runs).
+Pushes to `main` first run `verify` (typecheck + Vitest). Only on green does `build-homepage` run: it builds the static export, uploads `apps/homepage/out/` to the bunny Storage Zone, and purges the Pull Zone. Markdown, design source, and `.claude/` changes are skipped from the build/deploy step (verify still runs).
 
 Required CI secrets:
 
@@ -60,7 +60,7 @@ Required CI secrets:
 
 ## Legal pages
 
-`/impressum` and `/datenschutz` are required by Swiss law (UWG Art. 3(1)(s) and revFADP). The operator's legal name, address and registration details live in `apps/marketing/src/app/site-config.ts` under the `operator` constant — placeholder strings prefixed with `TODO:` must be replaced with real values before going to production. A Vitest unit test (`site-config.test.ts`) plus the `assertOperatorReady` production guard fail the build if any placeholder slips through. See `kb/iteration-06-legal-compliance.md` for the legal context and `kb/no-tracking-note.md` for the consent state.
+`/impressum` and `/datenschutz` are required by Swiss law (UWG Art. 3(1)(s) and revFADP). The operator's legal name, address and registration details live in `apps/homepage/src/app/site-config.ts` under the `operator` constant — placeholder strings prefixed with `TODO:` must be replaced with real values before going to production. A Vitest unit test (`site-config.test.ts`) plus the `assertOperatorReady` production guard fail the build if any placeholder slips through. See `kb/iteration-06-legal-compliance.md` for the legal context and `kb/no-tracking-note.md` for the consent state.
 
 ## Working with this repo
 

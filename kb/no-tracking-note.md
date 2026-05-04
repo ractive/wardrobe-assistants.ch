@@ -7,7 +7,7 @@ order: 101
 
 # No-tracking state — current
 
-As of the current iteration, `wardrobe-assistants.ch` runs **without any client-side tracking**. This note exists so the next person to add analytics or a marketing pixel knows what consent surface they are taking on.
+As of the current iteration, `wardrobe-assistants.ch` runs **without any client-side tracking**. This note exists so the next person to add analytics or an advertising pixel knows what consent surface they are taking on.
 
 ## Confirmed clean
 
@@ -32,7 +32,7 @@ Re-open this note before merging any of the following:
 
 - **Cookieless analytics** (Plausible, Vercel Analytics, Cloudflare Web Analytics) — no banner is required, but the privacy policy must mention the processor, the data categories collected and the retention. Update `src/app/(site)/datenschutz/page.tsx` accordingly.
 - **Cookie-based analytics** (Google Analytics, Matomo with cookies, Hotjar) — cookie banner with informed consent required *before* the script fires; banner must remember the choice and not load anything until accepted.
-- **Marketing pixels** (Meta Pixel, LinkedIn Insight Tag, Google Ads remarketing) — same as cookie analytics; expect a Data Processing Agreement and a Standard Contractual Clauses paragraph in the privacy policy for non-EEA recipients.
+- **Advertising pixels** (Meta Pixel, LinkedIn Insight Tag, Google Ads retargeting) — same as cookie analytics; expect a Data Processing Agreement and a Standard Contractual Clauses paragraph in the privacy policy for non-EEA recipients.
 - **Embedded video** (YouTube, Vimeo) — use the `*-nocookie.com` variants or load the embed only after a user gesture; otherwise treat as third-party tracking.
 - **Newsletter signup** — separate opt-in flow, double opt-in confirmation, dedicated consent record kept by the email provider.
 - **Booking forms collecting cast/crew data** — DPA with the form processor, retention policy, and deletion path.

@@ -7,7 +7,7 @@ FROM node:22-alpine AS deps
 WORKDIR /repo
 COPY package.json package-lock.json ./
 COPY apps/admin/package.json apps/admin/package.json
-COPY apps/marketing/package.json apps/marketing/package.json
+COPY apps/homepage/package.json apps/homepage/package.json
 COPY packages/db/package.json packages/db/package.json
 RUN npm ci -w apps/admin --include-workspace-root
 
