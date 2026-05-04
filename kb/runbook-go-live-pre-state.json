@@ -1,0 +1,47 @@
+{
+  "captured_at": "2026-05-05",
+  "captured_by": "iter-9 pre-flight",
+  "purpose": "Rollback reference for go-live cutover. Snapshot of every bunny.net resource the cutover touches, taken before any provisioning.",
+  "container_apps": [
+    {
+      "id": "lzGns1pTQLcqOGM",
+      "name": "wardrobe-assistants",
+      "description": "default_lzGns1pTQLcqOGM(00000000-0000-0000-0000-000000000000)",
+      "displayEndpoint": {
+        "id": "lzGns1pTQLcqOGM-wardrobe-assistants-cdn-cVZYZ8qnwM",
+        "address": "wardrobe-assistants.ch",
+        "type": "cdn"
+      },
+      "status": "active",
+      "notes": "Legacy single-app container that currently serves the public homepage. To be decommissioned once the static homepage Pull Zone is healthy for 24h. Its auto Pull Zone is id 5719318 (invisible to `pull-zone list` per kb/hoppy-bug-report-pullzone-storagezone.md issue 2)."
+    }
+  ],
+  "dns_zone_775662_records": [
+    {
+      "id": "16538536",
+      "name": "@",
+      "type": "CNAME",
+      "ttl": 0,
+      "value": "mc-tug74k9naa.b-cdn.net",
+      "disabled": false,
+      "notes": "Apex CNAME — bunny does CNAME-flattening. To be repointed to the new homepage Pull Zone hostname during cutover."
+    },
+    {
+      "id": "16538537",
+      "name": "www",
+      "type": "CNAME",
+      "ttl": 0,
+      "value": "mc-tug74k9naa.b-cdn.net",
+      "disabled": false,
+      "notes": "www CNAME. To be repointed to the new homepage Pull Zone hostname during cutover."
+    }
+  ],
+  "storage_zones": [],
+  "pull_zones_visible": [],
+  "pull_zones_hidden": [
+    {
+      "id": 5719318,
+      "notes": "Auto Pull Zone for Magic Container lzGns1pTQLcqOGM. Hidden from `pull-zone list` (kb/hoppy-bug-report-pullzone-storagezone.md issue 2). Holds hostnames wardrobe-assistants.ch and www.wardrobe-assistants.ch — these will be detached during cutover."
+    }
+  ]
+}
