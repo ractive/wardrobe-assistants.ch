@@ -1,3 +1,7 @@
+// @vitest-environment node
+// This test exercises pure Node middleware (NextRequest cookie parsing,
+// header inspection) — no DOM is needed, and happy-dom 20 mutates the
+// global Headers/cookie behaviour in ways that break NextRequest here.
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { middleware } from "./middleware";

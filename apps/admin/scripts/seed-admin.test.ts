@@ -1,3 +1,7 @@
+// @vitest-environment node
+// Pure-Node script test: uses node:fs/node:path/node:url and the libsql
+// in-memory database. happy-dom 20 mishandles `import.meta.url` here, so
+// pin this file to the node environment regardless of the workspace default.
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDb } from "@wardrobe-assistants/db";
