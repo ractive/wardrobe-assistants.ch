@@ -32,7 +32,7 @@ Once these land, the 100/100/100/100 scoreboard is a useful invariant going forw
   - Pinned major to avoid silent throttling-model changes.
 - [x] Add a root script `npm run lighthouse:homepage` and `npm run lighthouse:services` that hits the live URL by default (override with `LH_TARGET=local` to boot a static preview of `apps/homepage/out/`). Use `lighthouse --preset=desktop --output=json --output=html --chrome-flags="--headless=new"`.
   - Default target: live URL (`https://wardrobe-assistants.ch/` and `https://wardrobe-assistants.ch/services/`).
-  - Output to `kb/perf-reports/<page>-<timestamp>.{json,html}` (gitignored).
+  - Output to `kb/perf-reports/<page>-<timestamp>.report.{json,html}` (gitignored; Lighthouse appends the `.report.` infix when emitting both formats).
   - Implemented as `scripts/lighthouse.mjs` thin wrapper around the local `lighthouse` CLI.
 - [x] Add `kb/perf-reports/` to `.gitignore` (with `cross-browser-notes.md` un-ignored so the overview stays committed).
 - [x] Document the script in `README.md` under a new "Performance auditing" subsection (covers both Lighthouse + ff-rdp).
@@ -52,8 +52,6 @@ For fun and as a sanity-check on Lighthouse's Chromium-only numbers, run the sam
 - [ ] Run `ff-rdp perf compare https://wardrobe-assistants.ch/ https://wardrobe-assistants.ch/services/` for a single side-by-side report.
 - [ ] Compare ff-rdp's LCP/FCP/TTFB against the Lighthouse numbers. Note any meaningful divergence (>20%) in `kb/perf-reports/cross-browser-notes.md` — these are the "Firefox-only" issues that wouldn't surface in CI.
 - [ ] Per `AGENTS.md`, collect any ff-rdp feedback (bugs, surprising behavior, missing features) into the kb knowledgebase as a `tool-report` document, mirroring the `hoppy-usage-report.md` precedent.
-
-## Scope — fix color-contrast failures [4]
 
 ## Scope — fix color-contrast failures [5]
 

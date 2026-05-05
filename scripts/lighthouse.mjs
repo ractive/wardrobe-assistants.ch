@@ -41,8 +41,11 @@ const args = [
 ];
 
 console.log(`Running Lighthouse against ${url}`);
-console.log(`Reports: ${base}.{json,html}`);
+console.log(`Reports: ${base}.report.{json,html}`);
 
-const cli = resolve(repoRoot, "node_modules/.bin/lighthouse");
-const child = spawn(cli, args, { stdio: "inherit" });
+const child = spawn("npx", ["--no-install", "lighthouse", ...args], {
+  cwd: repoRoot,
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
 child.on("exit", (code) => process.exit(code ?? 1));

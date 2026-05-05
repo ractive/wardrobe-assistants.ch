@@ -84,7 +84,15 @@ npm run lighthouse:homepage    # audits https://wardrobe-assistants.ch/
 npm run lighthouse:services    # audits https://wardrobe-assistants.ch/services/
 ```
 
-Reports land in `kb/perf-reports/<page>-<timestamp>.{json,html}` (gitignored). Set `LH_TARGET=local` to point at a locally-served `apps/homepage/out/` instead of the live URL.
+Reports land in `kb/perf-reports/<page>-<timestamp>.report.{json,html}` (gitignored — Lighthouse appends a `.report.` infix when emitting both JSON and HTML).
+
+To audit a local build, export the static site and serve `apps/homepage/out/` on `http://localhost:4173`, then set `LH_TARGET=local`:
+
+```bash
+npm -w @wardrobe-assistants/homepage run build
+npx serve apps/homepage/out -l 4173 &
+LH_TARGET=local npm run lighthouse:homepage
+```
 
 The current invariant is **Performance ≥95, Accessibility 100, Best Practices 100, SEO 100** on the desktop preset. Any regression below that bar should be triaged before merge.
 

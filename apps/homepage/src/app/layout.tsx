@@ -88,6 +88,11 @@ export default function RootLayout({
           fetchPriority="high"
         />
         <link
+          rel="preconnect"
+          href="https://fonts.bunny.net"
+          crossOrigin="anonymous"
+        />
+        <link
           href="https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700|inter:400,500|geist:400,500&display=swap"
           rel="stylesheet"
         />
