@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   legalLastUpdated,
   operator,
@@ -70,9 +71,9 @@ export default function DatenschutzPage() {
             {operator.email}
           </a>
           . Full operator details are listed in the{" "}
-          <a href="/impressum/" className={linkClass}>
+          <Link href="/impressum/" className={linkClass}>
             Impressum
-          </a>
+          </Link>
           .
         </p>
       </section>

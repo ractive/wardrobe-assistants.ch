@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/Button";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
 import {
@@ -105,12 +106,12 @@ export default function Home() {
           ))}
         </div>
 
-        <a
+        <Link
           href="/services/"
           className="font-primary text-[14px] font-medium tracking-[1px] text-[var(--primary-on-dark)] underline-offset-4 transition-opacity hover:opacity-80 hover:underline"
         >
           See full services →
-        </a>
+        </Link>
       </section>
 
       {/* CTA Section */}

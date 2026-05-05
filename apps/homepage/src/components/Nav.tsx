@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Menu } from "@/components/icons";
 
 const links = [
@@ -7,33 +8,35 @@ const links = [
 
 // CSS-only mobile menu via the checkbox-hack: the hidden checkbox is the
 // `peer`, the `<label>` toggles it, and the mobile menu panel uses
-// `peer-checked:flex` to appear. No client JS, no React hydration needed —
-// this lets the rest of the homepage render as a fully static page.
+// `peer-checked:flex` to appear. No useState, so the Nav itself stays a
+// server component (no `"use client"` boundary).
 //
-// Trade-off: hash-fragment links (e.g. `/#contact`) don't trigger a page
-// reload, so the menu stays open after tapping them on mobile. Closing it
-// requires another tap on the toggle. Re-introducing JS just to dismiss the
-// menu on hash clicks would defeat the point of the static-only build.
+// Mobile menu items deliberately use plain `<a>` instead of `<Link>` — a
+// full-page navigation auto-closes the menu by resetting the checkbox.
+// `<Link>` does soft navigation, which would leave the checkbox checked
+// and the menu open after every tap, and there's no JS-free way to reset
+// it. Brand + desktop links use `<Link>` since those don't have a menu to
+// close.
 export function Nav() {
   return (
     <nav className="relative flex w-full items-center justify-between border-b border-[var(--secondary)] px-6 py-5 lg:px-14">
-      <a
+      <Link
         href="/"
         className="font-primary text-[14px] font-bold tracking-[2px] text-[var(--foreground)]"
       >
         WARDROBE ASSISTANTS
-      </a>
+      </Link>
 
       {/* Desktop links */}
       <div className="hidden items-center gap-8 md:flex">
         {links.map((link) => (
-          <a
+          <Link
             key={link.href}
             href={link.href}
             className="font-secondary text-[14px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
           >
             {link.label}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -55,7 +58,9 @@ export function Nav() {
         <span className="sr-only">Toggle navigation menu</span>
       </label>
 
-      {/* Mobile menu — sibling of the checkbox, appears when checked */}
+      {/* Mobile menu — sibling of the checkbox, appears when checked.
+          Plain <a> on purpose: full-page nav resets the checkbox and the
+          menu auto-closes. See top-of-file comment. */}
       <div
         id="nav-menu"
         className="absolute top-full left-0 z-50 hidden w-full flex-col gap-4 border-b border-[var(--secondary)] bg-[var(--background)] px-6 py-6 peer-checked:flex md:hidden"
