@@ -41,7 +41,7 @@ const paragraph =
 const listClass =
   "ml-5 flex max-w-[760px] list-disc flex-col gap-2 font-secondary text-[15px] leading-[1.65] text-[var(--muted-foreground)] lg:text-[16px]";
 const linkClass =
-  "underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary)]";
+  "underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary-on-dark)]";
 
 export default function DatenschutzPage() {
   return (

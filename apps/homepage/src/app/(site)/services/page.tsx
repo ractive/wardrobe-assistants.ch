@@ -373,7 +373,7 @@ export default function ServicesPage() {
                 </p>
               ))}
               <div className="mt-2 max-w-[720px] rounded-[16px] border border-[var(--border)] bg-[var(--accent)]/70 p-5 lg:p-6">
-                <span className="font-primary text-[11px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+                <span className="font-primary text-[11px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
                   {service.example.label}
                 </span>
                 <p className="mt-2 font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">

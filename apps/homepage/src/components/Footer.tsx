@@ -62,7 +62,7 @@ export function Footer() {
 
       {/* Bottom */}
       <div className="flex w-full items-center justify-between">
-        <span className="font-body text-[12px] text-[#6E6962]">
+        <span className="font-body text-[12px] text-[#9B958D]">
           © 2026 wardrobe-assistants.ch
         </span>
       </div>

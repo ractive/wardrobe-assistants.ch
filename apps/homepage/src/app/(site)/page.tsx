@@ -108,7 +108,7 @@ export default function Home() {
 
         <Link
           href="/services"
-          className="font-primary text-[14px] font-medium tracking-[1px] text-[var(--primary)] underline-offset-4 transition-opacity hover:opacity-80 hover:underline"
+          className="font-primary text-[14px] font-medium tracking-[1px] text-[var(--primary-on-dark)] underline-offset-4 transition-opacity hover:opacity-80 hover:underline"
         >
           See full services →
         </Link>

@@ -82,7 +82,13 @@ export default function RootLayout({
     >
       <head>
         <link
-          href="https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700|inter:400,500|geist:400,500"
+          rel="preload"
+          as="image"
+          href="/background.webp"
+          fetchPriority="high"
+        />
+        <link
+          href="https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700|inter:400,500|geist:400,500&display=swap"
           rel="stylesheet"
         />
         <script
