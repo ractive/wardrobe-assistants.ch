@@ -16,12 +16,12 @@
 // stroke-width=2, round caps/joins) from the `Svg` wrapper, so the visual
 // output matches `lucide-react` exactly.
 
-import type { ReactElement, SVGProps } from "react";
+import type { ReactElement, ReactNode, SVGProps } from "react";
 
 export type IconProps = SVGProps<SVGSVGElement>;
 export type Icon = (props: IconProps) => ReactElement;
 
-function Svg({ children, ...rest }: IconProps & { children: React.ReactNode }) {
+function Svg({ children, ...rest }: IconProps & { children: ReactNode }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
