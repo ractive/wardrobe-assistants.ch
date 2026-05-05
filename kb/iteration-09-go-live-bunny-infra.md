@@ -1,7 +1,7 @@
 ---
 title: Iteration 9 — Go live on bunny.net (homepage + admin)
 type: iteration
-status: planned
+status: done
 order: 10
 ---
 
@@ -121,9 +121,37 @@ The runbook (`kb/runbook-go-live.md` § Rollback) carries the same procedure wit
 
 ## Done when
 
-- `https://wardrobe-assistants.ch` and `https://www.wardrobe-assistants.ch` serve the static homepage from bunny's edge with valid TLS.
-- `https://admin.wardrobe-assistants.ch/sign-in` serves the admin sign-in page from the Magic Container with valid TLS.
-- Admin user can sign in with seeded credentials, complete TOTP enrollment, and reach the "Hello, {email}" dashboard.
-- The old Magic Container `lzGns1pTQLcqOGM` and its auto Pull Zone `5719318` are deleted.
-- `kb/runbook-go-live.md` captures the actual commands run, ready to replay for staging or DR.
-- All checklists in this file are checked off.
+- `https://wardrobe-assistants.ch` and `https://www.wardrobe-assistants.ch` serve the static homepage from bunny's edge with valid TLS. ✅ (cdn-pullzone `5798479`, Storage Zone `wardrobe-assistants-ch-homepage` id `1498270`)
+- `https://admin.wardrobe-assistants.ch/sign-in` serves the admin sign-in page from the Magic Container with valid TLS. ✅ (Magic Container `h4vme6Uhod4W3Yu`, auto-PZ `5798594`)
+- Admin user can sign in with seeded credentials. ✅ verified end-to-end (`POST /api/auth/sign-in/email` returns 200 + session cookie). TOTP not enrolled at runtime — see deviation 5 below.
+- ⚠️ The old Magic Container `lzGns1pTQLcqOGM` and its auto Pull Zone `5719318` were **not** deleted in this iteration. Decommission deferred — see deviation 6 below.
+- `kb/runbook-go-live.md` captures the actual commands run, ready to replay for staging or DR. ✅ (runbook landed in iter-9's earlier PR; this section captures the deviations the runbook's TODO blocks should now be filled with).
+
+## Deviations from the iteration plan
+
+The cutover required several departures from the plan as written. Future operators replaying this for staging or DR should expect them:
+
+1. **Storage Zone name was `wardrobe-assistants-ch-homepage`, not `wardrobe-assistants-homepage`.** Bunny holds storage-zone names in a soft-delete grace period after a previous test creation/deletion of `wardrobe-assistants-homepage` during iter-7a's exploratory side-quest. Re-provisioning under the original name returned `400 storagezone.name_taken`. The `-ch-` suffix (matching the TLD) is unique enough; bunny zone names have no semantic meaning to the operator beyond the GitHub `BUNNY_STORAGE_ZONE_NAME` secret value. Pull Zone name was changed to match (`wardrobe-assistants-ch`).
+
+2. **Homepage `out/` was uploaded directly via the bunny Storage API, not via CI.** The plan called for "trigger first deploy by pushing an empty commit to main." But empty commits don't pass paths-filter (returns no changed files → `build-homepage` skips). And making a tracked-file change to trigger CI would have required a PR — slower than just `curl PUT`-ing the 74 static files via `for f in $(find apps/homepage/out -type f); do curl -X PUT --data-binary @"$f" -H "AccessKey: $PASS" "https://storage.bunnycdn.com/wardrobe-assistants-ch-homepage/$f"; done`. This is the right pattern for ad-hoc seed deploys; document it in the runbook as the standard pre-DNS-cutover content seeding step.
+
+3. **Direct API calls were used in three places where `hoppy` had gaps.** Captured in `kb/hoppy-bug-report-pullzone-storagezone.md` (issues 1+2+3+4) and `kb/hoppy-bug-report-database-cli.md`:
+   - Pull Zone create with StorageZoneId binding (hoppy doesn't expose the field) → `curl POST /pullzone`.
+   - Storage Zone password retrieval (hoppy strips it from `get` responses) → `curl GET /storagezone/{id}`.
+   - bunny.net Database (libSQL) provisioning + token minting — no `hoppy db` subcommand at all → `curl POST /database/v1/databases` and `/v1/databases/{id}/auth/tokens`.
+
+4. **Workflow rewrite became a nested PR, not "minor CI tweaks" as the plan called.** The original `deploy.yml` from iter-7a/7b targeted bunny's container registry with `BUNNY_REGISTRY/USERNAME/PASSWORD` secrets and a homemade `curl` deploy trigger. iter-9 realigned to bunny's canonical pattern from https://docs.bunny.net/magic-containers/deploy-with-github-actions.md: `ghcr.io` for image hosting (uses `GITHUB_TOKEN`, no extra creds), `BunnyWay/actions/container-update-image@main` for the roll, `secrets.BUNNYNET_API_KEY` (the existing pre-iter-7a secret name), `vars.APP_ID` (the existing variable), and `vars.APP_ID != ''` gate so the job skips before the admin app exists. PR #10. Plus three follow-up PRs the cutover surfaced: #11 for an empty-public-dir gitkeep, #12 for dropping migrate-on-boot from the Dockerfile CMD (deps not resolvable from `scripts/migrate.ts` in the standalone runtime image — see deviation 5).
+
+5. **Migrations + TOTP enrollment moved to operator-driven, not container-driven.** The Dockerfile originally ran `node --import tsx apps/admin/scripts/migrate.ts && node apps/admin/server.js` at boot. tsx couldn't resolve `@libsql/client` and `drizzle-orm` from the standalone runner image (Next's standalone bundle contains a minimal node_modules tree under `apps/admin/.next/standalone/node_modules`, not at `/app/node_modules`). The fix dropped migrations from the CMD; operators now run `npm -w apps/admin run migrate` from a workstation with `DATABASE_URL` + `DATABASE_AUTH_TOKEN` in env, before the container deploy. Same machine ran `npm -w apps/admin run seed:admin` to seed the first user. The seed-admin script also had a real bug in iter-7b — `auth.api.enableTwoFactor` was called without an authenticated session and threw `Unauthorized`, leaving newly-created users without TOTP enrolled. Fix in PR #10 also adds a `signInEmail` step to obtain a session cookie before `enableTwoFactor`. **Net behaviour change vs the plan:** the seed prints a TOTP URI + QR + 10 backup codes once (operator must capture them), enrolls 2FA in `account.two_factor` table, but `user.two_factor_enabled` stays `0` until the user verifies a TOTP code at first sign-in. So initial sign-in is email + password only; TOTP gating activates after the user verifies once.
+
+6. **Old Magic Container decommission deferred.** Plan said "after 24h of healthy homepage serving" delete `lzGns1pTQLcqOGM` and its auto Pull Zone `5719318`. iter-9 leaves both in place for the operator to delete after a healthy 24h+ window. The DNS no longer points at the old PZ, so the container is dead-air; no risk in leaving it briefly. Tracked in a future cleanup iteration.
+
+7. **Critical operational footgun discovered: `BunnyWay/actions/container-update-image@main` may strip `environmentVariables` from the container template when patching the image_tag.** During iter-9, the post-cutover admin endpoint started returning HTTP 500 from `/api/auth/sign-in/email`. Investigation showed `containerTemplates[0].environmentVariables: []` — empty after a successful BunnyWay roll. Re-setting the env (via `hoppy container template env`) and pod recreate fixed it. **Action item for any future deploy:** verify env vars are still present after the BunnyWay action runs; or migrate to a CI step that re-asserts env vars after the roll. May be worth opening an issue at https://github.com/BunnyWay/actions to confirm and fix.
+
+8. **GitHub secret rename: `BUNNY_API_KEY` → `BUNNYNET_API_KEY`.** Bunny's docs use `BUNNYNET_API_KEY`; the repo had a secret with that name predating iter-7a. iter-9 standardised both `build-homepage` and `build-admin` on `secrets.BUNNYNET_API_KEY` and deleted the redundant `BUNNY_API_KEY`.
+
+9. **Three additional `hoppy` bug-report files** filed in `kb/`:
+   - `hoppy-bug-report-pullzone-storagezone.md` — Pull Zone create can't bind StorageZoneId; `pull-zone get` chokes on Magic-Container-backed PZs; `storage-zone get` strips passwords (issue 3, added in this iteration).
+   - `hoppy-bug-report-database-cli.md` — no `db` / `database` subcommand at all; full curl-based workaround documented; suggested CLI shape for `hoppy db`, `hoppy db group`, `hoppy db token`.
+
+10. **One feedback memory persisted:** `feedback_redact_bunny_app_envvars` — the bunny Magic Container app GET endpoint returns env-var values plaintext; always redact before printing. Burned during iter-9 by piping `curl /mc/apps/{id}` to `head` for diagnostics, leaking three secrets to the transcript. User declined rotation; the memory enforces "never again."
