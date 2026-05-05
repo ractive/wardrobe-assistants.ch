@@ -23,47 +23,41 @@ Findings from iter-9's admin go-live (2026-05-05). Sister reports cover [Pull Zo
 
 ## Issues
 
-### Issue 1 — `template env` (and any PATCH-based template/app update path) **wipes `environmentVariables`** when callers don't echo them back
+### Issue 1 — `container template env` silently wipes ALL env vars when called with zero `--env` flags
 
-**Severity:** Critical operational footgun. Every code deploy via `BunnyWay/actions/container-update-image@main` (the canonical bunny GHA pattern) silently empties the container's runtime env unless the caller patches with the existing env array merged in.
+**Severity:** High operational footgun. Documented behaviour in `--help` ("replaces all"), but no guard rail when the "all" being replaced is "with nothing."
 
-**What happened in iter-9:**
+**Reproduction:**
 
-1. Provisioned admin Magic Container `h4vme6Uhod4W3Yu`.
-2. Set 9 env vars via `hoppy container template env --env KEY=VAL …` — confirmed via subsequent `hoppy container app get`.
-3. Container went live, served `/login` correctly.
-4. PR merged → CI ran → `BunnyWay/actions/container-update-image` patched the template to bump `image_tag` → roll succeeded → container ran the new image.
-5. `/api/auth/sign-in/email` started returning **HTTP 500**. Sign-in completely broken.
-6. `hoppy container app get` showed `containerTemplates[0].environmentVariables: []` — empty after the BunnyWay roll.
-7. Re-running `hoppy container template env --env …` with the original 9 vars + pod recreate restored sign-in.
+```bash
+# State: container template has 9 env vars set.
+hoppy --yes container template env \
+  --app-id h4vme6Uhod4W3Yu \
+  --container-id h4vme6Uhod4W3Yu-63yu
+# Exit 0, prints template metadata, no warning.
+# State: container template has 0 env vars. Sign-in / DB connection / TLS — all broken at next pod start.
+```
 
-**Operator (user) confirmation of underlying cause:**
+The "replaces all" semantics is correct per the help text, but the destructive transition from N>0 → 0 entries is exactly the case operators need protected from.
 
-> "I remember that there were issues using PATCH that overwrote/removed all env vars."
+**Symmetric reproduction with one `--env`:** state goes from 9 → 1 — same "replace all" semantics, just to a non-empty target. Equally surprising for operators who expect "set" to mean "add or update."
 
-So this is the bunny.net Magic Containers REST API behaviour, not a BunnyWay-action-specific bug: a `PATCH` that omits `environmentVariables` is treated as "set to empty," not "leave alone." Every client that does partial template updates is exposed.
+**This was NOT bunny's PATCH behaviour or BunnyWay/actions:**
 
-**`hoppy` is exposed in two places:**
-
-- `hoppy container template update` — likely uses PATCH; needs audit.
-- `hoppy container app update` — same; needs audit.
-
-If they use PATCH and don't merge `environmentVariables` from a prior `GET`, they have the same bug.
+iter-9 originally hypothesised that `BunnyWay/actions/container-update-image` was wiping env vars during code deploys. **Investigation refutes this** — see [`bunnyway-actions-investigation.md`](bunnyway-actions-investigation.md). The bunny Magic Containers PATCH endpoint correctly preserves omitted fields; the BunnyWay action's PATCH body `{id, imageTag}` does NOT touch env vars; pod recreate also does not wipe. The wipe in iter-9 was almost certainly an accidental hoppy invocation with the wrong `--env` arg list — exactly the footgun this issue describes.
 
 **Fix direction:**
 
-Inside hoppy, every `update`-style command that touches container templates or apps should:
+1. **Refuse zero-`--env` calls by default.** Treating "no args" as "wipe all" is the worst possible default. Either error out (`error: at least one --env required, use --clear to explicitly wipe all`) or require an explicit `--clear` flag.
+2. **Require `--allow-clear` for the N>0 → 0 transition.** A destructive call should look destructive at the call site — `--yes` alone is too permissive.
+3. **Add granular operations** (see Issue 5 of this report): `--add KEY=VAL`, `--remove KEY`, `--update KEY=VAL`. Most operator updates are "tweak one var without losing the rest." `--replace-all` becomes the explicit name for the current behaviour.
+4. **Help text should call out the destructive default loudly.** Current `--help` says "Set environment variables for a container template (replaces all)" — fine, but doesn't surface the "with no `--env` flags = wipe all" edge case.
 
-1. `GET` the current template/app first.
-2. Merge requested patches over the current state.
-3. `PATCH` the full merged document.
+**Defensive engineering for operators (until upstream is fixed):**
 
-This is the canonical "read-modify-write" dance for any partial-update API where omitted fields are treated as "remove." Document it in the hoppy contributor guide so future commands don't reintroduce the bug.
-
-**Beyond hoppy:**
-
-- File an issue at https://github.com/BunnyWay/actions noting that `container-update-image` has the same hazard. Until they fix it, the workaround is "every CI deploy reasserts env vars after the BunnyWay action runs."
-- The durable fix for any iter-9-shaped admin: stop treating the bunny container template as the source of truth for env vars. Treat GitHub repo secrets as the source of truth, and add a CI step that reasserts env after the BunnyWay roll. The container template becomes a derived view.
+- Always pass the complete env list (every `--env` flag for every var).
+- Pull source-of-truth env values from GitHub repo secrets in CI, not from the container template state.
+- A CI step after every `BunnyWay/actions/container-update-image` call could reassert the full env list — defensive even though BunnyWay itself isn't the culprit, because any future code path that ends up calling `hoppy template env` with the wrong args (manual operator + future automation alike) is exposed.
 
 ---
 
@@ -213,7 +207,7 @@ This would also align with operator memory `feedback_redact_bunny_app_envvars`: 
 | PZ.2 | `pull-zone get` 500s on MC-backed PZs (typed-enum) | [pullzone-storagezone](hoppy-bug-report-pullzone-storagezone.md#issue-2) + [refinement](hoppy-bug-report-pullzone-storagezone.md#issue-4) |
 | SZ.1 | `storage-zone get` strips Password/ReadOnlyPassword | [pullzone-storagezone](hoppy-bug-report-pullzone-storagezone.md#issue-3) |
 | DB.1 | No `db` / `database` subcommand at all | [database-cli](hoppy-bug-report-database-cli.md) |
-| MC.1 | `template env` PATCH wipes vars on partial update | this file, Issue 1 |
+| MC.1 | `template env` with zero `--env` flags silently wipes all env vars | this file, Issue 1 |
 | MC.2 | `pull-zone list` excludes auto-managed PZs | this file, Issue 2 |
 | MC.3 | `container app delete` orphans the auto-PZ | this file, Issue 3 |
 | MC.4 | `container app create` return too thin for workflows | this file, Issue 4 |
