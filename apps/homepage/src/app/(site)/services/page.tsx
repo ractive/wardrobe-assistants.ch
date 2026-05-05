@@ -1,3 +1,7 @@
+import type { Metadata } from "next";
+import { contactEmail, siteName, siteUrl } from "@/app/site-config";
+import { Button } from "@/components/Button";
+import { EyebrowBadge } from "@/components/EyebrowBadge";
 import {
   ClipboardList,
   Crown,
@@ -5,11 +9,7 @@ import {
   Scissors,
   Shirt,
   Truck,
-} from "lucide-react";
-import type { Metadata } from "next";
-import { contactEmail, siteName, siteUrl } from "@/app/site-config";
-import { Button } from "@/components/Button";
-import { EyebrowBadge } from "@/components/EyebrowBadge";
+} from "@/components/icons";
 
 const pageTitle = "Wardrobe Assistants in Switzerland — Services";
 const pageDescription =

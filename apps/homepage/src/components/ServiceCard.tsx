@@ -1,7 +1,7 @@
-import type { LucideIcon } from "lucide-react";
+import type { Icon } from "@/components/icons";
 
 interface ServiceCardProps {
-  icon: LucideIcon;
+  icon: Icon;
   title: string;
   description: string;
 }
