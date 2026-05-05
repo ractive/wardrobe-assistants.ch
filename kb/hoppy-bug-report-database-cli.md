@@ -5,8 +5,12 @@ tool: hoppy
 date: 2026-05-05
 status: active
 hoppy_version: 0.1.0
-related: hoppy-bug-report-pullzone-storagezone.md
+related:
+  - hoppy-bug-report-pullzone-storagezone.md
+  - hoppy-bug-report-magic-containers.md
 ---
+
+> See also: [pull-zone / storage-zone report](hoppy-bug-report-pullzone-storagezone.md) and [magic containers report](hoppy-bug-report-magic-containers.md). The MC report's bottom contains a [cross-reference index](hoppy-bug-report-magic-containers.md#cross-reference-index-of-all-hoppy-gaps-from-iter-7a--iter-9) of all 12 hoppy issues surfaced from iter-7a + iter-9.
 
 # Hoppy bug report — missing bunny.net Database (libSQL) CLI support
 

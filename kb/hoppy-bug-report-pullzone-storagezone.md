@@ -5,7 +5,12 @@ tool: hoppy
 date: 2026-05-05
 status: active
 hoppy_version: 0.1.0
+related:
+  - hoppy-bug-report-database-cli.md
+  - hoppy-bug-report-magic-containers.md
 ---
+
+> See also: [database CLI report](hoppy-bug-report-database-cli.md) for the missing `hoppy db` subcommand, and [magic containers report](hoppy-bug-report-magic-containers.md) for env-wipe / list-excludes-auto-PZ / cascade-delete / redaction-policy issues. The MC report's bottom contains a [cross-reference index](hoppy-bug-report-magic-containers.md#cross-reference-index-of-all-hoppy-gaps-from-iter-7a--iter-9) of all 12 issues across the three reports.
 
 # Hoppy bug report — Pull Zone ↔ Storage Zone binding + help text gaps
 
