@@ -1,5 +1,5 @@
 ---
-title: Hoppy bug report — Pull Zone ↔ Storage Zone binding + help text gaps
+title: Hoppy bug report — Pull Zone ↔ Storage Zone binding + help text gaps + storage-zone get strips passwords
 type: tool-report
 tool: hoppy
 date: 2026-05-05
@@ -114,6 +114,57 @@ curl -s https://api.bunny.net/pullzone/5719318 -H "AccessKey: $BUNNY_API_KEY" | 
 ```
 
 …then look for any field with value `5`. Happy to capture the raw response if useful.
+
+---
+
+## Issue 3 — `storage-zone get` strips `Password` and `ReadOnlyPassword`
+
+**Severity:** High. The Storage Zone password is required to set the `BUNNY_STORAGE_PASSWORD` GitHub secret used by the deploy workflow's `bunnycdn-storage-deploy` action — and to do any direct uploads via the bunny Storage API. Without it, the Storage Zone is effectively write-locked from anywhere outside the bunny dashboard.
+
+**What I tried (iter-9 admin go-live, 2026-05-05):**
+
+```bash
+hoppy --format json storage-zone get --id 1498270 | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+print('keys:', sorted(d.keys()))
+print('Has Password:', 'Password' in d, 'Has ReadOnlyPassword:', 'ReadOnlyPassword' in d)
+"
+# keys: ['Custom404FilePath','DateModified','Deleted','Discount','FilesStored',
+#        'Id','Name','PriceOverride','PullZones','Region','ReplicationChangeInProgress',
+#        'ReplicationRegions','Rewrite404To200','StorageHostname','StorageUsed',
+#        'StorageZoneType','UserId','ZoneTier']
+# Has Password: False  Has ReadOnlyPassword: False
+```
+
+`storage-zone create` also doesn't return them. So `hoppy` exposes no path to retrieve them at all.
+
+**What bunny actually returns:**
+
+```bash
+curl -sS -H "AccessKey: $BUNNY_API_KEY" "https://api.bunny.net/storagezone/1498270" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print('len:', len(d.get('Password','')))"
+# len: 41
+```
+
+`Password` and `ReadOnlyPassword` are 41-char strings in the raw response. `hoppy` strips them in its `StorageZone` deserializer (the Rust struct doesn't carry the field, so serde drops it).
+
+**Fix direction:**
+
+Add `password: Option<String>` and `read_only_password: Option<String>` to the `StorageZone` struct (`#[serde(default)]` so listing endpoints that don't return them stay happy). Then for safety, default to redacting them in CLI output:
+
+- `hoppy storage-zone get` — JSON output omits the password fields by default; help text notes that passwords aren't in default output.
+- `hoppy storage-zone get-password --id <id> [--read-only] [--reveal]` — explicit, opt-in. Default prints `<set, length=41>`; `--reveal` prints raw. Operators frequently pipe `hoppy` output to logs (CI, recordings, terminal scrollback) — default-redact is the right safety stance.
+
+This pairs naturally with the bunny Magic Containers env-var report (`feedback_redact_bunny_app_envvars` memory): the bunny API surfaces stored secrets in many places; every path that reads them needs the same redact-by-default treatment.
+
+---
+
+## Issue 4 — `pull-zone get` typed-enum deserialisation reaches deeper than just OriginType
+
+(Recapping issue 2 with new evidence from iter-9.) When iter-9 fetched the admin Pull Zone (`5798594`, freshly created and Storage-Zone-backed), `hoppy pull-zone get --id` succeeded — the deserialiser handled this PZ. But the pre-existing auto-managed Pull Zone for the legacy Magic Container (`5719318`) still 500s with the same `expected one of: 0, 2, 3, 4` error. This narrows the bug: the offending value is a property of *Magic-Container-backed Pull Zones specifically*, not Storage-Zone-backed ones. Strong support for `OriginType: 5 = MagicContainerEndpoint` being the unrecognised variant.
+
+The catch-all `Unknown(i32)` fix in issue 2 still applies. Adding a test against an existing Magic-Container-backed PZ in CI would catch future regressions.
 
 ---
 
