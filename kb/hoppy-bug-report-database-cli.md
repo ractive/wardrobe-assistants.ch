@@ -3,7 +3,7 @@ title: Hoppy bug report — missing bunny.net Database (libSQL) CLI support
 type: tool-report
 tool: hoppy
 date: 2026-05-05
-status: active
+status: addressed
 hoppy_version: 0.1.0
 related:
   - hoppy-bug-report-pullzone-storagezone.md

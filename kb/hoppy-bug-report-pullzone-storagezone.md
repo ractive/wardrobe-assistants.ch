@@ -1,9 +1,11 @@
 ---
-title: Hoppy bug report — Pull Zone ↔ Storage Zone binding + help text gaps + storage-zone get strips passwords
+title: >-
+  Hoppy bug report — Pull Zone ↔ Storage Zone binding + help text gaps +
+  storage-zone get strips passwords
 type: tool-report
 tool: hoppy
 date: 2026-05-05
-status: active
+status: addressed
 hoppy_version: 0.1.0
 related:
   - hoppy-bug-report-database-cli.md

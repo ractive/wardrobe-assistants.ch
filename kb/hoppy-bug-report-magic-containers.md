@@ -1,9 +1,11 @@
 ---
-title: Hoppy bug report — Magic Containers (env wipe, auto-PZ orphans, list gaps, ergonomics)
+title: >-
+  Hoppy bug report — Magic Containers (env wipe, auto-PZ orphans, list gaps,
+  ergonomics)
 type: tool-report
 tool: hoppy
 date: 2026-05-05
-status: active
+status: addressed
 hoppy_version: 0.1.0
 related:
   - hoppy-bug-report-pullzone-storagezone.md

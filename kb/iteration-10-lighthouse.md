@@ -1,7 +1,7 @@
 ---
 title: Iteration 10 — Lighthouse polish (perf + a11y to 100)
 type: iteration
-status: implemented
+status: done
 order: 11
 ---
 
