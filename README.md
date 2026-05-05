@@ -38,7 +38,7 @@ Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly
 
 - `apps/homepage/` — Next.js homepage (App Router), the public-facing landing site. Deploys via `build-homepage` to `wardrobe-assistants.ch` / `www.wardrobe-assistants.ch`.
   - `src/app/` — routes (`/`, `/services`, `/impressum`, `/datenschutz`), `layout.tsx`, `sitemap.ts`, `robots.ts`, `site-config.ts`
-  - `src/components/` — shared React components
+  - `src/components/` — shared React components. Icons are inlined as SVG in [`icons.tsx`](apps/homepage/src/components/icons.tsx) (no `lucide-react` runtime in the homepage bundle); the file's header comment documents how to add a new one.
   - `public/` — static assets
 - `apps/admin/` — Next.js admin app (App Router) with Better Auth (email/password + TOTP). Deploys via `build-admin` as a Docker image to a bunny.net Magic Container at `admin.wardrobe-assistants.ch`.
 - `packages/db/` — shared libSQL/Drizzle schema and client used by `apps/admin/`

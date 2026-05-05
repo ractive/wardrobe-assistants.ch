@@ -1,3 +1,5 @@
+import { Button } from "@/components/Button";
+import { EyebrowBadge } from "@/components/EyebrowBadge";
 import {
   ClipboardList,
   Crown,
@@ -5,10 +7,7 @@ import {
   Scissors,
   Shirt,
   Truck,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/Button";
-import { EyebrowBadge } from "@/components/EyebrowBadge";
+} from "@/components/icons";
 import { ServiceCard } from "@/components/ServiceCard";
 
 const servicesRow1 = [
@@ -106,12 +105,12 @@ export default function Home() {
           ))}
         </div>
 
-        <Link
-          href="/services"
+        <a
+          href="/services/"
           className="font-primary text-[14px] font-medium tracking-[1px] text-[var(--primary-on-dark)] underline-offset-4 transition-opacity hover:opacity-80 hover:underline"
         >
           See full services →
-        </Link>
+        </a>
       </section>
 
       {/* CTA Section */}
