@@ -17,7 +17,10 @@
     "lighthouse:homepage": "node scripts/lighthouse.mjs homepage",
     "lighthouse:services": "node scripts/lighthouse.mjs services"
   },
-  "overrides": {
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
     "zod": "^4.4.3"
   },
   "devDependencies": {

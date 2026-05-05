@@ -366,7 +366,7 @@ export default function ServicesPage() {
               </p>
               {service.body.map((paragraph) => (
                 <p
-                  key={`${service.id}-${paragraph.slice(0, 32)}`}
+                  key={paragraph}
                   className="max-w-[720px] font-secondary text-[15px] leading-[1.65] text-[var(--muted-foreground)] lg:text-[16px]"
                 >
                   {paragraph}
