@@ -16,6 +16,14 @@ WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/admin/node_modules ./apps/admin/node_modules
 COPY . .
+# Placeholder env for Next's build-time page-data collection. Runtime
+# values come from the container env, not from this image — these never
+# leak into the runner stage because ENV doesn't cross FROM boundaries.
+ENV DATABASE_URL=file:./build.db \
+    BETTER_AUTH_SECRET=build-placeholder-secret-not-used-at-runtime-32b \
+    BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch \
+    RESEND_API_KEY=build-placeholder \
+    EMAIL_FROM=admin@wardrobe-assistants.ch
 RUN npm -w apps/admin run build
 
 FROM node:22-alpine AS runner

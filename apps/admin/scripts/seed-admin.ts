@@ -35,8 +35,11 @@ if (!(await isSeedNeeded(db, email))) {
 }
 
 // Sign up via the auth API so password hashing matches Better Auth's runtime.
+// Empty Headers satisfies Better Auth's server-API origin-check middleware
+// when called outside an HTTP request context (e.g. from this CLI).
 const signUp = await auth.api.signUpEmail({
   body: { email, password, name: email },
+  headers: new Headers(),
 });
 if (!signUp || !("user" in signUp)) {
   console.error("Failed to create admin user.");
@@ -49,10 +52,22 @@ await db
   .set({ emailVerified: true, updatedAt: new Date() })
   .where(eq(schema.user.id, signUp.user.id));
 
+// Sign in to obtain a session so the next call (enableTwoFactor) is
+// authenticated. Better Auth's API requires an active session for
+// account-mutating actions; enableTwoFactor cannot be called as the unauthed
+// CLI would.
+const signInRes = await auth.api.signInEmail({
+  body: { email, password },
+  asResponse: true,
+});
+const setCookie = signInRes.headers.get("set-cookie");
+const sessionHeaders = new Headers();
+if (setCookie) sessionHeaders.set("cookie", setCookie);
+
 // Generate TOTP secret + backup codes by enabling 2FA via the API.
 const enable = await auth.api.enableTwoFactor({
   body: { password, issuer: "Wardrobe Assistants Admin" },
-  headers: new Headers(),
+  headers: sessionHeaders,
 });
 
 if (!enable || !("totpURI" in enable)) {
