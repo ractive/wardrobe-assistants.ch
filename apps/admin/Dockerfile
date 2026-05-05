@@ -37,11 +37,11 @@ COPY --from=builder /repo/apps/admin/.next/standalone ./
 COPY --from=builder /repo/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=builder /repo/apps/admin/public ./apps/admin/public
 
-# Migration runner + Drizzle SQL files
-COPY --from=builder /repo/apps/admin/scripts ./apps/admin/scripts
-COPY --from=builder /repo/packages/db/migrations ./packages/db/migrations
-# tsx is needed to run scripts/migrate.ts at boot
-RUN npm install --no-save --no-package-lock tsx@4.19.2
-
 EXPOSE 3000
-CMD ["sh", "-c", "node --import tsx apps/admin/scripts/migrate.ts && node apps/admin/server.js"]
+# Migrations run as a separate operator step (npm -w apps/admin run migrate
+# from a workstation with the libSQL URL + token), not at container boot.
+# The runner image is a Next standalone bundle and intentionally does NOT
+# carry tsx + drizzle-orm + @libsql/client in resolvable paths for the
+# scripts/ directory — bundling those just to migrate-on-boot meant a 6×
+# crash loop when the deps weren't where tsx expected them.
+CMD ["node", "apps/admin/server.js"]
