@@ -8,7 +8,8 @@
   --popover: #26231f;
   --popover-foreground: #edeae4;
   --primary: #b5564f;
-  --primary-foreground: #edeae4;
+  --primary-on-dark: #d97468;
+  --primary-foreground: #ffffff;
   --secondary: #2e2b28;
   --secondary-foreground: #edeae4;
   --muted: #1f1d1b;

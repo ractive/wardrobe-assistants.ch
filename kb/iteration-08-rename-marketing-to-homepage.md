@@ -1,7 +1,7 @@
 ---
 title: Iteration 8 — Rename "marketing" to "homepage" everywhere
 type: iteration
-status: in_progress
+status: done
 order: 9
 ---
 

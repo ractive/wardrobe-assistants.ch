@@ -8,7 +8,7 @@ export function EyebrowBadge({
   return (
     <span className="inline-flex w-fit items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-2">
       <span
-        className={`font-primary tracking-[1.5px] text-[var(--primary)] ${
+        className={`font-primary tracking-[1.5px] text-[var(--primary-on-dark)] ${
           size === "md" ? "text-[14px] font-normal" : "text-[12px] font-medium"
         }`}
       >

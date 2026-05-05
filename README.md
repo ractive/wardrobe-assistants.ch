@@ -30,6 +30,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run test:watch` — Vitest in watch mode
 - `npm run lint` — `biome check`
 - `npm run format` — `biome format --write`
+- `npm run lighthouse:homepage` / `npm run lighthouse:services` — headless Lighthouse audit (see [Performance auditing](#performance-auditing))
 
 Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly with `npm -w @wardrobe-assistants/homepage run <script>`.
 
@@ -71,6 +72,40 @@ Required CI variables:
 - `vars.ADMIN_APP_ID` — bunny Magic Container app id used in the registry tag and the deploy POST
 
 The infrastructure-provisioning playbook (Storage Zones, Pull Zones, Magic Container, DNS, TLS, decommission of the legacy container) lives in [`kb/runbook-go-live.md`](kb/runbook-go-live.md). Pre-cutover state snapshot: [`kb/runbook-go-live-pre-state.json`](kb/runbook-go-live-pre-state.json).
+
+## Performance auditing
+
+Two-browser flow: Lighthouse for the Chromium numbers, `ff-rdp` for Firefox parity.
+
+**Lighthouse (Chromium, headless):**
+
+```bash
+npm run lighthouse:homepage    # audits https://wardrobe-assistants.ch/
+npm run lighthouse:services    # audits https://wardrobe-assistants.ch/services/
+```
+
+Reports land in `kb/perf-reports/<page>-<timestamp>.report.{json,html}` (gitignored — Lighthouse appends a `.report.` infix when emitting both JSON and HTML).
+
+To audit a local build, export the static site and serve `apps/homepage/out/` on `http://localhost:4173`, then set `LH_TARGET=local`:
+
+```bash
+npm -w @wardrobe-assistants/homepage run build
+npx serve apps/homepage/out -l 4173 &
+LH_TARGET=local npm run lighthouse:homepage
+```
+
+The current invariant is **Performance ≥95, Accessibility 100, Best Practices 100, SEO 100** on the desktop preset. Any regression below that bar should be triaged before merge.
+
+**Firefox cross-check (`ff-rdp`):**
+
+```bash
+ff-rdp launch
+ff-rdp perf audit > kb/perf-reports/firefox-homepage-$(date +%Y%m%d-%H%M).json
+ff-rdp perf compare https://wardrobe-assistants.ch/ https://wardrobe-assistants.ch/services/
+ff-rdp a11y    # contrast + a11y inspector findings
+```
+
+Meaningful divergence between Chromium and Firefox (>20% on LCP/FCP/TTFB) goes into `kb/perf-reports/cross-browser-notes.md` (the only file in that directory committed to git) so the next iteration has a baseline.
 
 ## Legal pages
 

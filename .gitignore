@@ -52,3 +52,7 @@ next-env.d.ts
 *.db-journal
 *.db-wal
 *.db-shm
+
+# performance reports (Lighthouse, ff-rdp); cross-browser-notes.md is committed
+kb/perf-reports/*
+!kb/perf-reports/cross-browser-notes.md

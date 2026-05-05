@@ -51,14 +51,14 @@ export default function ImpressumPage() {
           Operator
         </h2>
         <dl className="grid grid-cols-1 gap-5 md:grid-cols-[200px_1fr] md:gap-x-10 md:gap-y-5">
-          <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+          <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
             Legal name
           </dt>
           <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
             {operator.legalName}
           </dd>
 
-          <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+          <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
             Address
           </dt>
           <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
@@ -71,13 +71,13 @@ export default function ImpressumPage() {
             </address>
           </dd>
 
-          <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+          <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
             Email
           </dt>
           <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
             <a
               href={`mailto:${operator.email}`}
-              className="underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary)]"
+              className="underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary-on-dark)]"
             >
               {operator.email}
             </a>
@@ -85,13 +85,13 @@ export default function ImpressumPage() {
 
           {operator.phone ? (
             <>
-              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
                 Phone
               </dt>
               <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
                 <a
                   href={`tel:${operator.phone.replace(/\s+/g, "")}`}
-                  className="underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary)]"
+                  className="underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary-on-dark)]"
                 >
                   {operator.phone}
                 </a>
@@ -101,7 +101,7 @@ export default function ImpressumPage() {
 
           {operator.commercialRegister ? (
             <>
-              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
                 Commercial Register
               </dt>
               <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
@@ -112,7 +112,7 @@ export default function ImpressumPage() {
 
           {operator.uid ? (
             <>
-              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
                 UID
               </dt>
               <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
@@ -123,7 +123,7 @@ export default function ImpressumPage() {
 
           {operator.vat ? (
             <>
-              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary)]">
+              <dt className="font-primary text-[12px] font-medium uppercase tracking-[1.5px] text-[var(--primary-on-dark)]">
                 VAT number
               </dt>
               <dd className="font-secondary text-[15px] leading-[1.6] text-[var(--foreground)]">
@@ -142,7 +142,7 @@ export default function ImpressumPage() {
           {operator.responsibleForContent}, reachable at{" "}
           <a
             href={`mailto:${operator.email}`}
-            className="underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary)]"
+            className="underline decoration-[var(--primary)] decoration-1 underline-offset-4 transition-colors hover:text-[var(--primary-on-dark)]"
           >
             {operator.email}
           </a>
