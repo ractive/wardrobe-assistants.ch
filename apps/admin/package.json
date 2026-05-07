@@ -12,8 +12,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "migrate": "tsx scripts/migrate.ts",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
+    "seed:admin": "tsx --env-file-if-exists=.env.local scripts/seed-admin.ts",
+    "db:reset": "tsx --env-file-if-exists=.env.local scripts/db-reset.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

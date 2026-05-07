@@ -21,9 +21,21 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Admin app
+
+```bash
+npm install
+npm run db:reset:admin    # creates apps/admin/dev.db + seeds admin@example.com / dev-only-not-secure
+npm run dev:admin         # starts http://localhost:3000
+```
+
+`db:reset:admin` is dev-only — it refuses to run when `NODE_ENV=production`, and `apps/admin/.env.local` is auto-generated on first run from `apps/admin/.env.example`.
+
 ## Scripts (root)
 
 - `npm run dev` — start the homepage dev server
+- `npm run dev:admin` — start the admin dev server (Next.js, port 3000)
+- `npm run db:reset:admin` — wipe + remigrate + reseed `apps/admin/dev.db` (dev only)
 - `npm run build` — production build (static export to `apps/homepage/out/`)
 - `npm run typecheck` — workspace-wide TypeScript check
 - `npm test` — run Vitest across the workspace

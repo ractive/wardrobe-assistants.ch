@@ -8,6 +8,8 @@
   ],
   "scripts": {
     "dev": "npm -w @wardrobe-assistants/homepage run dev",
+    "dev:admin": "npm -w @wardrobe-assistants/admin run dev",
+    "db:reset:admin": "npm -w @wardrobe-assistants/admin run db:reset",
     "build": "npm -w @wardrobe-assistants/homepage run build",
     "lint": "biome check",
     "format": "biome format --write",

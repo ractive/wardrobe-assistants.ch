@@ -3,6 +3,7 @@ import { schema } from "@wardrobe-assistants/db/schema";
 import { eq } from "drizzle-orm";
 import qrcode from "qrcode-terminal";
 import { auth } from "../src/lib/auth";
+import { env } from "../src/lib/env";
 import { isSeedNeeded } from "./seed-admin.lib";
 
 // Bootstraps the very first admin user. Idempotent: if a user with the given
@@ -10,8 +11,8 @@ import { isSeedNeeded } from "./seed-admin.lib";
 // ASCII QR exactly once — there is no way to retrieve it later, so capture it
 // when this script runs.
 
-const email = process.env.ADMIN_EMAIL;
-const password = process.env.ADMIN_PASSWORD;
+const email = env.adminEmail;
+const password = env.adminPassword;
 
 if (!email || !password) {
   console.error(
@@ -20,14 +21,7 @@ if (!email || !password) {
   process.exit(1);
 }
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL is required.");
-  process.exit(1);
-}
-const authToken = process.env.DATABASE_AUTH_TOKEN || undefined;
-
-const db = createDb({ url, authToken });
+const db = createDb({ url: env.databaseUrl, authToken: env.databaseAuthToken });
 
 if (!(await isSeedNeeded(db, email))) {
   console.log(`Admin user ${email} already exists; nothing to do.`);
