@@ -1,6 +1,10 @@
 # General
 Use agents for implementation tasks whenever possible.
 
+# Admin app architecture
+
+When working in `apps/admin/` or `packages/db/`, read [`kb/admin-architecture/overview.md`](kb/admin-architecture/overview.md) first. It's a short summary of the architectural rules (folder layout, type contracts, permissions, services, UI stack) with links to detailed docs per topic and a [decision log](kb/admin-architecture/decision-log.md) recording *why* each rule exists. Don't break the rules without first reading the relevant ADR — there's usually a reason.
+
 # bunny.net services
 If you manage bunny.net services, use the "hoppy" CLI tool (hoppy --help) to discover and debug things.
 

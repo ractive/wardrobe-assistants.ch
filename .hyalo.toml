@@ -1,1 +1,133 @@
 dir = "kb"
+
+[schema]
+validate_on_write = true
+
+[schema.types]
+
+[schema.types.iteration]
+required = ["title", "type", "order", "status"]
+
+[schema.types.iteration.properties]
+
+[schema.types.iteration.properties.status]
+type = "enum"
+values = ["planned", "implemented", "done", "deferred", "blocked"]
+
+[schema.types.iteration.properties.order]
+type = "number"
+
+[schema.types.iteration.properties.type]
+type = "string"
+
+[schema.types.iteration.properties.title]
+type = "string"
+
+[schema.types.iteration.properties.related]
+type = "list"
+
+[schema.types.architecture]
+required = ["title", "type", "status"]
+
+[schema.types.architecture.properties]
+
+[schema.types.architecture.properties.status]
+type = "enum"
+values = ["current", "superseded", "draft"]
+
+[schema.types.architecture.properties.type]
+type = "string"
+
+[schema.types.architecture.properties.title]
+type = "string"
+
+[schema.types.architecture.properties.related]
+type = "list"
+
+[schema.types.decision]
+required = ["title", "type", "status", "date"]
+
+[schema.types.decision.properties]
+
+[schema.types.decision.properties.status]
+type = "enum"
+values = ["accepted", "proposed", "superseded", "rejected"]
+
+[schema.types.decision.properties.type]
+type = "string"
+
+[schema.types.decision.properties.date]
+type = "date"
+
+[schema.types.decision.properties.title]
+type = "string"
+
+[schema.types.runbook]
+required = ["title", "type", "status"]
+
+[schema.types.runbook.properties]
+
+[schema.types.runbook.properties.status]
+type = "enum"
+values = ["active", "archived", "draft"]
+
+[schema.types.runbook.properties.type]
+type = "string"
+
+[schema.types.runbook.properties.title]
+type = "string"
+
+[schema.types.runbook.properties.related]
+type = "list"
+
+[schema.types.note]
+required = ["title", "type"]
+
+[schema.types.note.properties]
+
+[schema.types.note.properties.type]
+type = "string"
+
+[schema.types.note.properties.title]
+type = "string"
+
+[schema.types.note.properties.related]
+type = "list"
+
+[schema.types.tool-report]
+required = ["title", "type", "tool"]
+
+[schema.types.tool-report.properties]
+
+[schema.types.tool-report.properties.type]
+type = "string"
+
+[schema.types.tool-report.properties.tool]
+type = "string"
+
+[schema.types.tool-report.properties.title]
+type = "string"
+
+[schema.types.tool-report.properties.related]
+type = "list"
+
+[schema.types.tool-report.properties.status]
+type = "string"
+
+[schema.types.tool-report.properties.date]
+type = "date"
+
+[schema.types.legal-draft]
+required = ["title", "type", "status"]
+
+[schema.types.legal-draft.properties]
+
+[schema.types.legal-draft.properties.status]
+type = "enum"
+values = ["draft", "reviewed", "published"]
+
+[schema.types.legal-draft.properties.type]
+type = "string"
+
+[schema.types.legal-draft.properties.title]
+type = "string"

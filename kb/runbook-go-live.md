@@ -1,8 +1,9 @@
 ---
 title: Runbook — go live on bunny.net (homepage + admin)
 type: runbook
-status: in-progress
-related: iteration-09-go-live-bunny-infra.md
+status: active
+related:
+  - iteration-09-go-live-bunny-infra.md
 ---
 
 # Runbook — go live on bunny.net (homepage + admin)

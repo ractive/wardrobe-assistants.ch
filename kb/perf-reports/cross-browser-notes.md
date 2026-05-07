@@ -1,7 +1,6 @@
 ---
 title: Cross-browser performance notes
-type: tool-report
-status: ongoing
+type: note
 ---
 
 # Cross-browser performance notes
