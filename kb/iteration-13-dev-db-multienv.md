@@ -2,8 +2,11 @@
 title: Iteration 13 — Dev bootstrap + per-environment env loader
 type: iteration
 order: 14
-status: planned
-related: [iteration-07b-admin-app.md, iteration-09-go-live-bunny-infra.md, iac-runbook.md]
+status: done
+related:
+  - iteration-07b-admin-app.md
+  - iteration-09-go-live-bunny-infra.md
+  - iac-runbook.md
 ---
 
 # Iteration 13 — Dev bootstrap + per-environment env loader
