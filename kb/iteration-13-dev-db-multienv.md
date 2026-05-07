@@ -16,12 +16,12 @@ Audit before scoping. Iter-7b and iter-9 left a usable foundation:
 
 - `apps/admin/.env.example` — committed, well-commented, documents `DATABASE_URL=file:./dev.db` as the dev default.
 - `apps/admin/scripts/migrate.ts` — Drizzle migrator, locates the migrations folder, fails on missing `DATABASE_URL`.
-- `apps/admin/scripts/seed-admin.ts` — idempotent first-admin bootstrap; signs the user up via Better Auth's `signUpEmail` so password hashing matches runtime; prints the TOTP secret + an ASCII QR exactly once.
+- `apps/admin/scripts/seed-admin.ts` — idempotent first-admin bootstrap; signs the user up via Better Auth's `signUpEmail` so password hashing matches runtime.
 - `packages/db` exports `createDb({ url, authToken })`. libSQL's `createClient` already handles `file:` URLs natively without an auth token.
 - `apps/admin/package.json` already has `migrate` and `seed:admin` scripts.
 - `*.db` in `.gitignore` covers the local dev database.
 
-Auth flow today is **email + password + TOTP via authenticator app** — there are no magic links or sign-in emails. Transactional email lands in a future iteration; this iteration prepares the env-shape so that lands cleanly.
+User/password handling and MFA aren't this iteration's concern — they'll be revisited in a dedicated auth iteration that figures out the right dev-friendly default for sign-in. Iter-13 doesn't touch `auth.ts` beyond replacing `process.env.X` reads with the new env loader. Transactional email lands in a future iteration too; this iteration prepares the env-shape so that lands cleanly.
 
 ## What's missing today
 
@@ -52,7 +52,7 @@ Auth flow today is **email + password + TOTP via authenticator app** — there a
   1. Delete `apps/admin/dev.db` (and any `dev.db-journal`, `dev.db-wal`, `dev.db-shm`) if present.
   2. Run migrations against `file:./dev.db` (reuse the same `migrate.ts` logic; either `import` and call, or `child_process.spawnSync`).
   3. Default `ADMIN_EMAIL=admin@localhost` and `ADMIN_PASSWORD=dev-only-not-secure` in the script's env when not set, then run `seed:admin`.
-  4. Print the resulting TOTP QR + a one-line "now run `npm -w @wardrobe-assistants/admin run dev`" hint.
+  4. Print a one-line "now run `npm run dev:admin`" hint plus whatever output `seed:admin` produces.
 - [ ] Refuse to run if `NODE_ENV === "production"`. The script is a dev-only construct; the only way to seed prod is via `seed:admin` with explicit env values.
 - [ ] Add `db:reset` to `apps/admin/package.json` scripts: `"db:reset": "tsx scripts/db-reset.ts"`.
 - [ ] Add `dev:admin` and `db:reset:admin` to root `package.json`:
@@ -64,7 +64,7 @@ Auth flow today is **email + password + TOTP via authenticator app** — there a
 - [ ] Update root `README.md`'s "Getting started" section: a 3-line dev-quickstart for the admin app:
   ```bash
   npm install
-  npm run db:reset:admin    # creates apps/admin/dev.db + seeds admin@localhost/dev-only-not-secure + prints TOTP QR
+  npm run db:reset:admin    # creates apps/admin/dev.db + seeds admin@localhost/dev-only-not-secure
   npm run dev:admin         # starts http://localhost:3000
   ```
 - [ ] Update `apps/admin/.env.example`: keep the existing comments; explicitly note that `ADMIN_EMAIL` / `ADMIN_PASSWORD` are only consulted by `seed:admin` and that `db:reset` defaults them in dev.
@@ -78,12 +78,13 @@ The admin will start sending transactional email in a future iteration (password
 
 ## Scope — verify [0/3]
 
-- [ ] Fresh-clone smoke test: in a temp directory, `git clone … && npm install && npm run db:reset:admin && npm run dev:admin`. Should reach `http://localhost:3000` sign-in within ~30s without manual env editing. Sign in with `admin@localhost` / `dev-only-not-secure`, complete TOTP enrolment with the QR from the reset script, land on the dashboard.
+- [ ] Fresh-clone smoke test: in a temp directory, `git clone … && npm install && npm run db:reset:admin && npm run dev:admin`. Should reach `http://localhost:3000` sign-in within ~30s without manual env editing. Sign in as `admin@localhost` / `dev-only-not-secure` — whatever auth steps the admin currently requires, that's the path; iter-13 isn't changing it.
 - [ ] Booting `npm run dev:admin` with a prod-shaped `DATABASE_URL` in scope fails fast with a clear Zod error.
 - [ ] Booting the prod container with a `file:` URL fails fast with the same error shape.
 
 ## Out of scope (deliberate)
 
+- **User/password handling and MFA.** A dedicated future iteration redesigns the user model, the sign-in/sign-up flow, password requirements, and any MFA story (incl. how dev bootstrapping should look once that lands). Iter-13 leaves `src/lib/auth.ts` untouched except for swapping `process.env.X` to the new env loader.
 - **Implementing transactional email senders.** Mail wrapper shape is documented; real `mail.send(...)` callsites land in the next email-needing iteration.
 - **Mailpit / MailHog container.** When email senders land, console transport (above) covers day-1 dev; mailpit can come if/when templates need visual review.
 - **Bunny dev libSQL database.** `file:` SQLite has 100% schema parity with libSQL for our use; bunny generations on a dev DB add no value.
@@ -109,7 +110,6 @@ The admin will start sending transactional email in a future iteration (password
 
 - **Drizzle migrations on first run.** The reset script must run migrations *before* the seed, otherwise the seed inserts into a schema-less DB. Migrate runner is already idempotent against an empty file (verified during iter-7b); double-check after the wrap.
 - **Better Auth cookie domain in dev.** With `BETTER_AUTH_URL=http://localhost:3000`, the session cookie is host-only on `localhost`. Verify it works rather than assuming. Cookie name: Better Auth's default.
-- **Seed user TOTP enrolment.** The seed script *creates* the user but does not enrol TOTP — first sign-in shows the enrolment screen. That's the intended UX. The QR printed by the seed script is for the existing seeded admin's TOTP secret, generated at seed time. Verify which path Better Auth actually takes (enrolment-on-first-sign-in vs. seeded-and-enrolled) and document in the README.
 - **`NODE_ENV` in Next.js.** `next dev` sets `NODE_ENV=development`; `next start` keeps whatever the host set. The env loader runs on the server side at first import; tripwires fire once at boot.
 - **`apps/admin/.dev/` vs `apps/admin/dev.db`.** Going with the existing convention (just `dev.db` in the app root). Already covered by the `*.db` gitignore.
 - **Production drift from changes.** None of this should affect prod — every guard branches on `NODE_ENV`, and prod sets `NODE_ENV=production` + a `libsql://…` URL on the bunny container app. Verify with the admin's deploy workflow before merge.
