@@ -35,7 +35,7 @@ The fix: a `.env.local` (developer-edited) + `.env.local.example` (committed) pa
 
 ## Scope — env config split [0/5]
 
-- [ ] Create `apps/admin/.env.local.example` with safe local-dev defaults: `DATABASE_URL=file:./.dev/dev.db`, `BETTER_AUTH_URL=http://localhost:3000`, `BETTER_AUTH_SECRET=dev-only-not-real-secret-32-chars-x`, `EMAIL_FROM=admin@localhost`, `RESEND_API_KEY=` (empty — see "email in dev" below), `NODE_ENV=development`, `PORT=3000`, `HOSTNAME=0.0.0.0`. Commit; gitignore `.env.local` itself.
+- [ ] Create `apps/admin/.env.local.example` with safe local-dev defaults: `DATABASE_URL=file:./.dev/dev.db`, `BETTER_AUTH_URL=http://localhost:3000`, `BETTER_AUTH_SECRET=dev-only-not-a-real-secret-xx32` (exactly 32 chars; tripwire for the prod-key-shape check), `EMAIL_FROM=admin@localhost`, `RESEND_API_KEY=` (empty — see "email in dev" below), `NODE_ENV=development`, `PORT=3000`, `HOSTNAME=0.0.0.0`. Commit; gitignore `.env.local` itself.
 - [ ] Add a startup-time guard in `apps/admin/src/lib/env.ts` (or wherever the env loader lives — likely a Zod schema) that refuses to boot if `NODE_ENV === "development"` and `DATABASE_URL` does NOT start with `file:`. This is the "don't accidentally hit prod from dev" tripwire.
 - [ ] Symmetric guard for prod: refuse to boot if `NODE_ENV === "production"` and `DATABASE_URL` starts with `file:`. Mainly to surface misconfiguration, not for security.
 - [ ] Document the split in `apps/admin/README.md` (or root README) — copy `.env.local.example` to `.env.local`, run `bun run db:reset`, run `bun dev`, sign in with the seeded admin email at `http://localhost:3000`.

@@ -1,7 +1,10 @@
 // DNS zone + 7 records for wardrobe-assistants.ch.
-// Records 17098158/17098159/17098160/17098161 are managed by Resend
-// (DKIM, MX, SPF, DMARC); we import them for visibility but
-// ignore_changes = all so OpenTofu never modifies them.
+//
+// The four records 17098158/17098159/17098160/17098161 belong to the email
+// stack (Resend, which sends through Amazon SES — hence the SES-shaped MX
+// and SPF values). They're imported for visibility; lifecycle.ignore_changes
+// = all keeps OpenTofu from modifying them. The Resend dashboard is the
+// source of truth for those four; rotating the DKIM key happens there.
 
 resource "bunnynet_dns_zone" "wardrobe_assistants_ch" {
   domain = "wardrobe-assistants.ch"
@@ -17,6 +20,10 @@ resource "bunnynet_dns_record" "apex_cname" {
   name  = ""
   value = "wardrobe-assistants-ch.b-cdn.net"
   ttl   = 0
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "bunnynet_dns_record" "www_cname" {
@@ -25,6 +32,10 @@ resource "bunnynet_dns_record" "www_cname" {
   name  = "www"
   value = "wardrobe-assistants-ch.b-cdn.net"
   ttl   = 0
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "bunnynet_dns_record" "admin_cname" {
@@ -33,6 +44,10 @@ resource "bunnynet_dns_record" "admin_cname" {
   name  = "admin"
   value = "mc-r6f39iacv2.b-cdn.net"
   ttl   = 0
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "bunnynet_dns_record" "dmarc_txt" {
@@ -43,7 +58,8 @@ resource "bunnynet_dns_record" "dmarc_txt" {
   ttl   = 0
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -55,7 +71,8 @@ resource "bunnynet_dns_record" "resend_dkim_txt" {
   ttl   = 0
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -67,7 +84,8 @@ resource "bunnynet_dns_record" "send_spf_txt" {
   ttl   = 0
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -80,6 +98,7 @@ resource "bunnynet_dns_record" "send_mx" {
   ttl      = 0
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }

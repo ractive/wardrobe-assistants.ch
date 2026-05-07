@@ -120,7 +120,7 @@ TF_VAR_bunny_api_key="$BUNNY_API_KEY" tofu apply -lock=false
 
 ### Safety belts
 
-- `prevent_destroy = true` on every production resource (DNS zone, storage zones, pull zones, container app, database). `tofu destroy` will hard-fail without a `lifecycle` edit in the same PR.
+- `prevent_destroy = true` on **every** managed resource — DNS zone + 7 records, both storage zones, both pull zones, all 3 hostnames, container app + image registry, database. A `tofu destroy` (or stray `terraform destroy` in the wrong directory) hard-fails without a deliberate `lifecycle` edit in the same PR.
 - `ignore_changes = [container]` on the admin app — env vars + image tag are owned by the deploy pipeline, never enter state.
 - `ignore_changes = all` on Resend-managed DNS records (DKIM, SPF, MX, DMARC).
 - Snapshot of the live config at iter-11 lives in [`kb/bunny-snapshot-2026-05-07/`](kb/bunny-snapshot-2026-05-07/) as a manual rebuild reference if state is ever lost.

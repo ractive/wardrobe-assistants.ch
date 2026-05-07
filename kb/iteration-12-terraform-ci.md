@@ -26,7 +26,7 @@ If/when this changes (more contributors, formal change-control), upgrading to a 
 
 ## Pre-flight
 
-- [ ] Confirm `BUNNYNET_API_KEY` is in repo secrets (set during iter-9; the existing `deploy.yml` references it).
+- [ ] Confirm `BUNNYNET_API_KEY` is in repo secrets (set during iter-9; `deploy.yml` already uses it). Note the naming asymmetry: the **CI secret** is `BUNNYNET_API_KEY`; the **local env var** in `.env.local` is `BUNNY_API_KEY`. Both map onto OpenTofu's `TF_VAR_bunny_api_key`. Don't rename either side without updating both.
 - [ ] Add `TERRAFORM_STATE_STORAGE_KEY` to repo secrets — the `wardrobe-assistants-terraform-state` storage zone password (zone id `1503083`). Same value already in `.env.local`.
 - [ ] Pin the OpenTofu version we'll use in CI: `1.11.6` (matches local toolchain at iter-11). Update if a newer version is what people are running.
 

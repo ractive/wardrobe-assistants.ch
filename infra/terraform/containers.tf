@@ -17,7 +17,12 @@ resource "bunnynet_compute_container_imageregistry" "ghcr_ractive" {
     // The provider's "registry" field expects "GitHub" but bunny's API
     // returns the display name "GitHub Packages ractive" — ignore to
     // prevent force-replace. Token is a write-only secret.
-    ignore_changes = [token, registry]
+    //
+    // The literal "managed-out-of-band" token below is harmless on the
+    // current already-imported resource (ignore_changes covers updates),
+    // but it would be sent on a fresh create — see prevent_destroy.
+    ignore_changes  = [token, registry]
+    prevent_destroy = true
   }
 }
 

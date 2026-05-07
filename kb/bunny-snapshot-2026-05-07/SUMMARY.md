@@ -19,7 +19,7 @@ Point-in-time capture of every bunny.net resource backing wardrobe-assistants.ch
 | Storage zone | `1498270` | `wardrobe-assistants-ch-homepage`, region `DE` |
 | Magic Container app | `h4vme6Uhod4W3Yu` | `wardrobe-assistants-admin`, image `ractive/wardrobe-assistants-admin:8f10eabb…`, region `DE`, autoscale 1/1 |
 | Container registry (GitHub Packages) | `5602` | `ghcr.io`, owner `ractive` (per `container-registries.json`) |
-| libSQL Database | `db_01KQV95KJ611YYT48VSZKHC495` | name `wa-admin-prod`, group `group_01KKPNWQQ846P1RP4HTN1MWQ1A`, host `01KKPNWQQ846P1RP4HTN1MWQ1A-wa-admin-prod.lite.bunnydb.net`, libSQL `0.24.27`, size 61.4 KB / 1024 MB cap. Captured via `hoppy db {get,versions,statistics,group list}` — see `database-*.json`. Built-in generations: 4 most recent visible, oldest dated 2026-05-05T05:48:31Z (~2h before snapshot run). |
+| libSQL Database | `db_01KQV95KJ611YYT48VSZKHC495` | name `wa-admin-prod`, group `group_01KKPNWQQ846P1RP4HTN1MWQ1A`, host `01KKPNWQQ846P1RP4HTN1MWQ1A-wa-admin-prod.lite.bunnydb.net`, libSQL `0.24.27`, size 61.4 KB / 1024 MB cap. Captured via `hoppy db {get,versions,statistics,group list}` — see `database-*.json`. Built-in generations: 4 most recent visible, oldest dated 2026-05-05T05:48:31Z (~2 days before snapshot run). |
 | Edge scripts | — | none |
 | Shield zones | — | none configured (both pull zones return "Shield Zone not found") |
 

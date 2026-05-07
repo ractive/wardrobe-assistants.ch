@@ -8,6 +8,7 @@
 
 resource "bunnynet_pullzone" "homepage" {
   name                  = "wardrobe-assistants-ch"
+  cache_enabled         = false
   cache_chunked         = true
   cache_expiration_time = 2592000
 
@@ -28,6 +29,10 @@ resource "bunnynet_pullzone_hostname" "homepage_apex" {
   name        = "wardrobe-assistants.ch"
   force_ssl   = true
   tls_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "bunnynet_pullzone_hostname" "homepage_www" {
@@ -35,8 +40,19 @@ resource "bunnynet_pullzone_hostname" "homepage_www" {
   name        = "www.wardrobe-assistants.ch"
   force_ssl   = true
   tls_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
+// `cache_enabled = true` and `strip_cookies = false` match live state and
+// the MC controller's defaults. The admin app is responsible for setting
+// `Cache-Control: no-store, private` on every authenticated response so
+// the bunny CDN never caches a Set-Cookie or session-bearing body. Verify
+// during audit; if Better Auth ever drops that header, flip strip_cookies
+// to true here and add an edge rule that bypasses cache for requests with
+// a `Cookie:` header.
 resource "bunnynet_pullzone" "admin_cdn" {
   name          = "mc-r6f39iacv2"
   cache_enabled = true
@@ -64,4 +80,8 @@ resource "bunnynet_pullzone_hostname" "admin_cdn" {
   name        = "admin.wardrobe-assistants.ch"
   force_ssl   = true
   tls_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
