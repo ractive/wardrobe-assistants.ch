@@ -87,3 +87,77 @@ The libSQL DB has to be provisioned via the bunny dashboard. There's no `hoppy d
 ### 7. Env-var management on Magic Container apps is dashboard-only
 
 `hoppy container app create` accepts the registry/image flags but no `--env KEY=VAL` repeatable flag. Setting `DATABASE_URL`, `BETTER_AUTH_SECRET`, etc. on the admin container requires either the dashboard or a direct API call. Same friction as Database — captured in the runbook so the next operator doesn't waste time hunting for the flag.
+
+## Iter-11 follow-up (2026-05-07) — IaC migration + snapshot
+
+Used hoppy intensively to (a) snapshot all bunny.net resources for the IaC migration and (b) verify drift against the snapshot at start of iter-11. Two new bugs surfaced, several existing gaps closed, and the new `db` subcommand made the database half of the work tractable.
+
+### What's improved
+
+- **`hoppy db ...` subcommand fills the gap from gap #6 above.** `db list/get/versions/statistics/token/restore/group` cover the full libSQL lifecycle. `db versions` + `db restore` is now the project's DR primitive for the database — no need for an external libSQL `.dump` script. `db token mint` removes the dashboard dependency for new auth tokens.
+- **`--reveal-env <KEY>` flag is excellent.** Per-key opt-in revelation matches the project's redact-by-default policy from memory `redact_bunny_app_envvars`. Saves a lot of "I want one value, not all of them."
+- **`--record <DIR>` flag is a great escape hatch.** Whenever the typed deserialiser fails, recording raw responses for offline replay is the right shape.
+
+### Bugs hit during iter-11
+
+#### Bug A — `container app get` fails on lowercase `protocols: ["tcp"]`
+```
+failed to decode success response: unknown variant `tcp`,
+expected one of `Tcp`, `Udp`, `Sctp` at line 1 column 1979
+```
+Bunny's API now returns `tcp` lowercase; hoppy's enum still expects PascalCase. Breaks every `container app get` against an app with an endpoint port mapping. Workaround: `--debug` + `grep '<<< '` to read the raw body. Same shape as the OriginType=5 bug — provider tightened its enum-string matching faster than its tolerance for upstream casing.
+
+**Fix idea:** deserialise enum-like strings case-insensitively, or match against a `#[serde(alias = "tcp")]` set per variant.
+
+#### Bug B — `--debug` body output bypasses redaction entirely
+The `<<< {body}` line on `--debug` is the literal API response, including secret values. Hit this twice: once on `pull-zone get --id <admin-pz>` (cert key fields were null, so harmless), once on `container app get` (env-var values came through plaintext, including `BETTER_AUTH_SECRET`, `DATABASE_AUTH_TOKEN`, `RESEND_API_KEY`).
+
+The redact pipeline only kicks in for hoppy's *normalised* output, not for `--debug`'s pre-deserialise dump. So when bug A or the OriginType=5 bug forces an operator into `--debug` to recover, they get the unredacted view as a side effect — even if they only wanted to read non-secret fields.
+
+**Fix idea:** apply a JSON-key-name redaction pass to `--debug`'s body output too (e.g. any field whose path matches `*.environmentVariables[*].value`, `*.password*`, `*.token`, `*.certificateKey`). Cheap to implement, removes the foot-gun.
+
+### Pre-existing gaps re-confirmed in iter-11
+
+#### Gap 1 — `pull-zone get` returns slim/incomplete fields
+Hoppy's `--format json pull-zone get` strips fields like `EnableSmartCache`, `EnableLogging`, optimizer settings, log forwarding, geo zones, edge rules, etc. The `--debug` body has them all. Means TF imports against hoppy's view alone would miss real config. We had to use `--debug` + `grep '<<< '` to capture full pull-zone state.
+
+**Fix idea:** make the typed model a superset of the API response, not a strict subset. Default verbose, opt-in compact via flag.
+
+#### Gap 2 — inconsistent flag names across subcommands
+- `hoppy pull-zone get --id <id>`
+- `hoppy container app get --id <id>` ✓
+- `hoppy container app autoscaling-get --app-id <id>` ✗ (different)
+- `hoppy container app region-settings-get --app-id <id>` ✗ (different)
+- `hoppy shield zone get-by-pullzone --pull-zone-id <id>` ✗ (different again)
+- `hoppy container endpoint list --app-id <id>` (now consistent within container)
+
+**Fix idea:** every command takes `--id` for its primary subject. Cross-references (e.g. shield-zone-by-pullzone) take `--pullzone-id` or similar fully-qualified names. Hidden aliases for backward compat are cheap.
+
+#### Gap 3 — `pull-zone hostname` lacks `list`
+Listing custom hostnames on a pull zone requires `pull-zone get` and reading `.Hostnames[]`. Add a `pull-zone hostname list --id <pullzone-id>` for symmetry with other `hostname` subcommands.
+
+#### Gap 4 — `dns zone get --id` is single-form; no plural variant
+Have to use `dns zone list` then filter, or pass `--id` if known. Could accept domain-name as alternative key (`--domain`).
+
+#### Gap 5 — `db config` parent help text is silently captured when redirected
+Running `hoppy db config > out.json` writes nothing to stdout but exits 0 + dumps help to stderr. Easy to miss and ends with empty/nonsense file. Either require a subcommand or print "use `db config show|limits|optimal`".
+
+#### Gap 6 — pull-zone `edge-rule list` implicitly does a `pull-zone get`
+The HTTP debug shows the only request `edge-rule list` makes is `GET /pullzone/<id>` — it then extracts `EdgeRules` from the body. So when `pull-zone get` deserialise fails (OriginType=5), `edge-rule list` fails identically. Fine logically; surprising in error messages because the "command" wasn't `pull-zone get`. A hint in the error like "edge-rule list reads from the parent pull zone resource" would help.
+
+#### Gap 7 — no storage-zone password rotation
+`hoppy storage-zone update` exposes 404-redirect / origin-url settings but not "reset password" / "regenerate access key." Rotation requires the dashboard. For an account where every storage zone's password is also a long-lived secret in CI, the current state is a manual chore.
+
+**Fix idea:** `hoppy storage-zone reset-password --id <id>` and `--reset-readonly-password`, returning the new value (under `--reveal`).
+
+### Friction summary (rough effort cost during iter-11)
+
+| Issue | Effort cost | Workaround |
+|---|---|---|
+| `container app get` lowercase `tcp` | 5 min + risk of leaking secrets | `--debug` body grep |
+| `pull-zone get` slim view | 10 min | `--debug` body grep |
+| Flag name inconsistency | 2 min × 3 retries each session | re-read help |
+| `--debug` bypasses redaction | secrets ended up in conversation context | manual care |
+| `db config` silent help-on-redirect | 1 min | not a real blocker |
+
+Net: hoppy is overwhelmingly the right tool for managing this account from the CLI — just needs the redact-on-debug fix and one round of enum-tolerance work to be non-foot-gun.

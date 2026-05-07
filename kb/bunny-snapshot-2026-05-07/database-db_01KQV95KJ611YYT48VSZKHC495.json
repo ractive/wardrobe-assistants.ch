@@ -1,0 +1,15 @@
+{
+  "id": "db_01KQV95KJ611YYT48VSZKHC495",
+  "name": "wa-admin-prod",
+  "url": "libsql://01KKPNWQQ846P1RP4HTN1MWQ1A-wa-admin-prod.lite.bunnydb.net/",
+  "group_id": "group_01KKPNWQQ846P1RP4HTN1MWQ1A",
+  "group_name": "",
+  "version": "0.24.27",
+  "block_reads": false,
+  "block_writes": false,
+  "allow_attach": false,
+  "is_schema": false,
+  "schema": "-",
+  "current_size": "61.4 KB",
+  "size_max": "1024.0 MB"
+}

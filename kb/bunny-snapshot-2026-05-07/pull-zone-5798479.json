@@ -1,0 +1,45 @@
+{
+  "Id": 5798479,
+  "Name": "wardrobe-assistants-ch",
+  "OriginUrl": "",
+  "OriginType": 2,
+  "StorageZoneId": 1498270,
+  "CnameDomain": "b-cdn.net",
+  "Hostnames": [
+    {
+      "Id": 9562185,
+      "Value": "wardrobe-assistants-ch.b-cdn.net",
+      "ForceSsl": false,
+      "HasCertificate": true,
+      "IsSystemHostname": true
+    },
+    {
+      "Id": 9562217,
+      "Value": "wardrobe-assistants.ch",
+      "ForceSsl": false,
+      "HasCertificate": true,
+      "IsSystemHostname": false
+    },
+    {
+      "Id": 9562218,
+      "Value": "www.wardrobe-assistants.ch",
+      "ForceSsl": false,
+      "HasCertificate": true,
+      "IsSystemHostname": false
+    }
+  ],
+  "ZoneType": null,
+  "Enabled": true,
+  "Suspended": false,
+  "MonthlyBandwidthUsed": 12225978,
+  "MonthlyBandwidthLimit": 0,
+  "CacheVersion": 55282259,
+  "CacheExpirationTime": 0,
+  "ZoneSecurityEnabled": false,
+  "EnableGeoZoneUs": false,
+  "EnableGeoZoneEu": false,
+  "EnableGeoZoneAsia": false,
+  "EnableGeoZoneSa": false,
+  "EnableGeoZoneAf": false,
+  "EdgeRules": []
+}

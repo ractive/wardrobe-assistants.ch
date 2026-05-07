@@ -1,0 +1,129 @@
+{
+  "id": "h4vme6Uhod4W3Yu",
+  "name": "wardrobe-assistants-admin",
+  "status": "active",
+  "runtimeType": "shared",
+  "regionSettings": {
+    "allowedRegionIds": [
+      "DE"
+    ],
+    "requiredRegionIds": [
+      "DE"
+    ],
+    "maxAllowedRegions": 1,
+    "provisioningType": "static"
+  },
+  "containerTemplates": [
+    {
+      "id": "h4vme6Uhod4W3Yu-63yu",
+      "name": "wardrobe-assistants-admin",
+      "packageId": "d2c1b95e-65e7-42a3-adb3-d27d9d1a4f72",
+      "image": "ractive/wardrobe-assistants-admin:8f10eabb9bef6ae087831a126437d1e876433b12",
+      "imageName": "wardrobe-assistants-admin",
+      "imageNamespace": "ractive",
+      "imageTag": "8f10eabb9bef6ae087831a126437d1e876433b12",
+      "imageRegistryId": "5602",
+      "imageDigest": "",
+      "imagePullPolicy": "ifNotPresent",
+      "entryPoint": {
+        "command": "",
+        "commandArray": [],
+        "arguments": "",
+        "argumentsArray": [],
+        "workingDirectory": ""
+      },
+      "probes": {
+        "startup": null,
+        "readiness": null,
+        "liveness": null
+      },
+      "environmentVariables": [
+        {
+          "name": "BETTER_AUTH_SECRET",
+          "value": "<set, length=44>"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "<set, length=10>"
+        },
+        {
+          "name": "EMAIL_FROM",
+          "value": "<set, length=28>"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "<set, length=66>"
+        },
+        {
+          "name": "DATABASE_AUTH_TOKEN",
+          "value": "<set, length=270>"
+        },
+        {
+          "name": "BETTER_AUTH_URL",
+          "value": "<set, length=36>"
+        },
+        {
+          "name": "RESEND_API_KEY",
+          "value": "<set, length=36>"
+        },
+        {
+          "name": "PORT",
+          "value": "<set, length=4>"
+        },
+        {
+          "name": "HOSTNAME",
+          "value": "<set, length=7>"
+        }
+      ],
+      "endpoints": [
+        {
+          "displayName": "admin-cdn",
+          "publicHost": "admin.wardrobe-assistants.ch",
+          "type": "cdn",
+          "isSslEnabled": false,
+          "pullZoneId": "5798594",
+          "portMappings": [
+            {
+              "containerPort": 3000,
+              "exposedPort": null,
+              "protocols": [
+                "Tcp"
+              ]
+            }
+          ],
+          "stickySessions": null,
+          "internalIpAddresses": null,
+          "publicIpAddresses": null
+        }
+      ],
+      "volumeMounts": []
+    }
+  ],
+  "containerInstances": [
+    {
+      "id": "docker:88ae01ce60c35c8669a1ec0b48c497cc27954e8e051c979f5bc602064945e811",
+      "templateId": "h4vme6Uhod4W3Yu-63yu",
+      "podId": "EATP3QAQze4lUn",
+      "nodeIpAddress": "79.127.216.70"
+    }
+  ],
+  "volumes": [],
+  "displayEndpoint": {
+    "id": "h4vme6Uhod4W3Yu-admin-cdn-SBfPZ5UIiZ",
+    "address": "admin.wardrobe-assistants.ch",
+    "type": "cdn"
+  },
+  "autoScaling": {
+    "min": 1,
+    "max": 1
+  },
+  "networkSettings": {
+    "ingressBandwidthLimit": 1000000000,
+    "egressBandwidthLimit": 1000000000
+  },
+  "repositorySettings": {
+    "templateRepository": null,
+    "repositoryName": null,
+    "owner": null
+  }
+}

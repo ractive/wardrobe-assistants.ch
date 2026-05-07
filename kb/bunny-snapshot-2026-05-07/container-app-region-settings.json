@@ -1,0 +1,10 @@
+{
+  "allowedRegionIds": [
+    "DE"
+  ],
+  "requiredRegionIds": [
+    "DE"
+  ],
+  "maxAllowedRegions": 1,
+  "provisioningType": "static"
+}

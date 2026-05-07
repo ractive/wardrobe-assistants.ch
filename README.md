@@ -30,6 +30,8 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run test:watch` — Vitest in watch mode
 - `npm run lint` — `biome check`
 - `npm run format` — `biome format --write`
+- `npm run verify` — quality gate: `lint && typecheck && test`. Run before any commit.
+- `npm run verify:tf` — Terraform gate: `tofu fmt -check && tofu validate` (requires `tofu init` first; only relevant when `infra/terraform/**` changed)
 - `npm run lighthouse:homepage` / `npm run lighthouse:services` — headless Lighthouse audit (see [Performance auditing](#performance-auditing))
 
 Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly with `npm -w @wardrobe-assistants/homepage run <script>`.
@@ -46,6 +48,7 @@ Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly
 - `vitest.config.ts` — root Vitest workspace config
 - `kb/` — internal knowledgebase (iteration plans, notes); markdown with YAML frontmatter, queryable via the `hyalo` CLI
 - `wardrobe-assistants.pen` — design source of truth (Pencil); see `AGENTS.md`
+- `infra/terraform/` — OpenTofu config managing the bunny.net account (DNS, pull zones, storage zones, container app, image registry, libSQL database). See [Infrastructure (OpenTofu)](#infrastructure-opentofu) below.
 - `.github/workflows/deploy.yml` — verify gate (typecheck + tests) followed by static deploy to bunny.net
 
 ## Deployment
@@ -72,6 +75,59 @@ Required CI variables:
 - `vars.ADMIN_APP_ID` — bunny Magic Container app id used in the registry tag and the deploy POST
 
 The infrastructure-provisioning playbook (Storage Zones, Pull Zones, Magic Container, DNS, TLS, decommission of the legacy container) lives in [`kb/runbook-go-live.md`](kb/runbook-go-live.md). Pre-cutover state snapshot: [`kb/runbook-go-live-pre-state.json`](kb/runbook-go-live-pre-state.json).
+
+## Infrastructure (OpenTofu)
+
+The bunny.net account backing this site is managed declaratively from `infra/terraform/`. 18 resources are imported and tracked: DNS zone + 7 records, 2 storage zones (`wardrobe-assistants-ch-homepage`, `wardrobe-assistants-terraform-state`), 2 pull zones + 3 hostnames, the admin Magic Container app + image registry, and the `wa-admin-prod` libSQL database.
+
+State lives in the bunny `wardrobe-assistants-terraform-state` storage zone via OpenTofu's `http` backend; bunny returns HTTP 201 on PUT (vs. the 200 the backend expects), so every command runs with `-lock=false`. Single-operator project — safe.
+
+### Your role
+
+Apply runs on **your laptop**, not in CI. CI only plans and reports drift. The flow is:
+
+1. Edit `infra/terraform/*.tf`, open a PR. CI runs `tofu plan` and posts the diff as a PR comment (once iter-12 lands).
+2. Review the plan. If it's what you want, merge.
+3. Pull `main` locally, `cd infra/terraform`, run `tofu apply -lock=false`. **You** are the gate that turns a merged config diff into a live change.
+4. The scheduled drift-check (also iter-12) opens an issue if anyone edits config from the bunny dashboard out-of-band.
+
+Until iter-12 ships, every step above is purely manual.
+
+### Local setup (one-time)
+
+```bash
+brew install opentofu                                                  # 1.9+
+cd infra/terraform
+TF_VAR_bunny_api_key="$BUNNY_API_KEY" tofu init \
+  -backend-config=<(printf 'headers = { AccessKey = "%s" }\n' "$TERRAFORM_STATE_STORAGE_KEY")
+```
+
+`BUNNY_API_KEY` and `TERRAFORM_STATE_STORAGE_KEY` come from `.env.local` (gitignored). The full per-shell init recipe is in [`kb/iac-runbook.md`](kb/iac-runbook.md) — that's the canonical operations doc.
+
+### Day-to-day commands
+
+```bash
+# Verify TF (fmt check + validate, no live calls)
+npm run verify:tf
+
+# See what would change
+TF_VAR_bunny_api_key="$BUNNY_API_KEY" tofu plan -lock=false -detailed-exitcode
+# exit 0 = no drift. exit 2 = drift; review and act.
+
+# Apply (only after a clean plan)
+TF_VAR_bunny_api_key="$BUNNY_API_KEY" tofu apply -lock=false
+```
+
+### Safety belts
+
+- `prevent_destroy = true` on **every** managed resource — DNS zone + 7 records, both storage zones, both pull zones, all 3 hostnames, container app + image registry, database. A `tofu destroy` (or stray `terraform destroy` in the wrong directory) hard-fails without a deliberate `lifecycle` edit in the same PR.
+- `ignore_changes = [container]` on the admin app — env vars + image tag are owned by the deploy pipeline, never enter state.
+- `ignore_changes = all` on Resend-managed DNS records (DKIM, SPF, MX, DMARC).
+- Snapshot of the live config at iter-11 lives in [`kb/bunny-snapshot-2026-05-07/`](kb/bunny-snapshot-2026-05-07/) as a manual rebuild reference if state is ever lost.
+
+### Disaster recovery
+
+If the state file is lost, every resource has documented import commands in [`kb/iac-runbook.md`](kb/iac-runbook.md) under "Re-importing resources." Database snapshots are bunny-built-in: `hoppy db versions` lists them, `hoppy db restore` rolls back.
 
 ## Performance auditing
 

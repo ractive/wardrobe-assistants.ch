@@ -1,0 +1,16 @@
+[
+  {
+    "id": "group_01KKPNWQQ846P1RP4HTN1MWQ1A",
+    "name": "",
+    "storage_region": "us-east-1",
+    "primary_regions": "DE",
+    "replicas_regions": ""
+  },
+  {
+    "id": "group_01KQV94RVZ7Z4BNZ1DH6CVE510",
+    "name": "",
+    "storage_region": "eu-west-1",
+    "primary_regions": "DE",
+    "replicas_regions": ""
+  }
+]

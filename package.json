@@ -14,6 +14,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "test:watch": "vitest",
+    "verify": "npm run lint && npm run typecheck && npm test",
+    "verify:tf": "cd infra/terraform && tofu fmt -check && tofu init -backend=false -input=false -no-color >/dev/null && tofu validate",
     "lighthouse:homepage": "node scripts/lighthouse.mjs homepage",
     "lighthouse:services": "node scripts/lighthouse.mjs services"
   },

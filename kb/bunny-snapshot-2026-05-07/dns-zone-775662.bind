@@ -1,0 +1,13 @@
+;CNAME records
+wardrobe-assistants.ch.	IN		CNAME	wardrobe-assistants-ch.b-cdn.net.	
+www.wardrobe-assistants.ch.	IN		CNAME	wardrobe-assistants-ch.b-cdn.net.	
+admin.wardrobe-assistants.ch.	IN		CNAME	mc-r6f39iacv2.b-cdn.net.	
+
+;TXT records
+resend._domainkey.wardrobe-assistants.ch.	IN		TXT	"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDs8wyg295F/MmsjS1ut706KQKhEtcn1+gkEQuyRx+SWXZAoqjOpuRY6gT5/areUNB2EAvKOT0lpHDKizBrIlZYWDIHi6tjm4cC6x6763D0l30XPJMZKMxfNNNnDFsAsofMeRi8zJnL8in6NHxOuhmY7F57zOJroJD6Y8OPvx+4jQIDAQAB"	
+send.wardrobe-assistants.ch.	IN		TXT	"v=spf1 include:amazonses.com ~all"	
+_dmarc.wardrobe-assistants.ch.	IN		TXT	"v=DMARC1; p=none;"	
+
+;MX records
+send.wardrobe-assistants.ch.	IN		MX	10	feedback-smtp.eu-west-1.amazonses.com.	
+
