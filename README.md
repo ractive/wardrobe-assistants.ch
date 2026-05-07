@@ -25,8 +25,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 npm install
-npm run db:reset:admin    # creates apps/admin/dev.db + seeds admin@example.com / dev-only-not-secure
-npm run dev:admin         # starts http://localhost:3000
+npm run db:reset:admin    # creates apps/admin/dev.db + seeds admin@localhost / dev-only-not-secure
+npm run dev:admin         # starts http://localhost:3000 (stop the homepage dev server first — both bind 3000)
 ```
 
 `db:reset:admin` is dev-only — it refuses to run when `NODE_ENV=production`, and `apps/admin/.env.local` is auto-generated on first run from `apps/admin/.env.example`.

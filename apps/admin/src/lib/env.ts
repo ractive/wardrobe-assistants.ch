@@ -16,6 +16,7 @@ import { z } from "zod";
 // some unit tests run against in-memory libSQL (`:memory:` shapes).
 
 const DEV_SECRET_PLACEHOLDER = /^replace-with/i;
+const HEX_64 = /^[0-9a-f]{64}$/i;
 
 export const envSchema = z
   .object({
@@ -56,7 +57,7 @@ export const envSchema = z
     }
 
     if (NODE_ENV === "production") {
-      if (BETTER_AUTH_SECRET.length !== 64) {
+      if (!HEX_64.test(BETTER_AUTH_SECRET)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["BETTER_AUTH_SECRET"],

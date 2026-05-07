@@ -12,6 +12,15 @@ export type SendEmailInput = {
   html?: string;
 };
 
+function maskEmail(address: string): string {
+  const at = address.indexOf("@");
+  if (at <= 0) return "[redacted]";
+  const local = address.slice(0, at);
+  const domain = address.slice(at);
+  const visible = local.slice(0, 1);
+  return `${visible}${"*".repeat(Math.max(local.length - 1, 1))}${domain}`;
+}
+
 export async function sendEmail(input: SendEmailInput): Promise<void> {
   const { to, subject, text, html } = input;
 
@@ -22,7 +31,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
     console.log(
       [
         "--- dev email (RESEND_API_KEY unset) ---",
-        `to:      ${to}`,
+        `to:      ${maskEmail(to)}`,
         `subject: ${subject}`,
         "",
         text,
@@ -44,7 +53,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
     to,
     subject,
     text,
-    html: html ?? text,
+    ...(html !== undefined ? { html } : {}),
   });
   if (error) {
     throw new Error(`Resend send failed: ${error.message}`);

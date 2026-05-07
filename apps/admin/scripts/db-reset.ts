@@ -43,7 +43,7 @@ if (!existsSync(envLocalPath)) {
       `BETTER_AUTH_SECRET=${generatedSecret}`,
     )
     .replace(/^RESEND_API_KEY=.*$/m, "RESEND_API_KEY=")
-    .replace(/^ADMIN_EMAIL=.*$/m, "ADMIN_EMAIL=admin@example.com")
+    .replace(/^ADMIN_EMAIL=.*$/m, "ADMIN_EMAIL=admin@localhost")
     .replace(/^ADMIN_PASSWORD=.*$/m, "ADMIN_PASSWORD=dev-only-not-secure");
   writeFileSync(envLocalPath, populated, { mode: 0o600 });
   console.log(`Wrote ${envLocalPath} (BETTER_AUTH_SECRET generated).`);
@@ -76,7 +76,7 @@ loadEnvFile(envLocalPath);
 
 // Defaults if .env.local existed but didn't set these (e.g. the user deleted
 // them after the initial bootstrap). seed-admin will refuse to run otherwise.
-if (!process.env.ADMIN_EMAIL) process.env.ADMIN_EMAIL = "admin@example.com";
+if (!process.env.ADMIN_EMAIL) process.env.ADMIN_EMAIL = "admin@localhost";
 if (!process.env.ADMIN_PASSWORD) {
   process.env.ADMIN_PASSWORD = "dev-only-not-secure";
 }

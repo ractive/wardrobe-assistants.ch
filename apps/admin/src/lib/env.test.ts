@@ -32,6 +32,16 @@ function firstMessageFor(
   return result.error.issues.find((i) => i.path.join(".") === path)?.message;
 }
 
+function messagesFor(
+  result: ReturnType<typeof envSchema.safeParse>,
+  path: string,
+) {
+  if (result.success) return [];
+  return result.error.issues
+    .filter((i) => i.path.join(".") === path)
+    .map((i) => i.message);
+}
+
 describe("env schema", () => {
   it("accepts a valid dev shape", () => {
     expect(envSchema.safeParse(baseDev).success).toBe(true);
@@ -67,13 +77,24 @@ describe("env schema", () => {
     expect(firstMessageFor(r, "BETTER_AUTH_SECRET")).toMatch(/64 hex chars/);
   });
 
+  it("rejects prod with a 64-char non-hex BETTER_AUTH_SECRET", () => {
+    const r = envSchema.safeParse({
+      ...baseProd,
+      BETTER_AUTH_SECRET: "z".repeat(64),
+    });
+    expect(r.success).toBe(false);
+    expect(firstMessageFor(r, "BETTER_AUTH_SECRET")).toMatch(/64 hex chars/);
+  });
+
   it("rejects prod with the .env.example placeholder secret", () => {
     const r = envSchema.safeParse({
       ...baseProd,
       BETTER_AUTH_SECRET: "replace-with-32-byte-hex".padEnd(64, "x"),
     });
     expect(r.success).toBe(false);
-    expect(firstMessageFor(r, "BETTER_AUTH_SECRET")).toMatch(/placeholder/);
+    expect(messagesFor(r, "BETTER_AUTH_SECRET")).toEqual(
+      expect.arrayContaining([expect.stringMatching(/placeholder/)]),
+    );
   });
 
   it("rejects prod missing RESEND_API_KEY", () => {
