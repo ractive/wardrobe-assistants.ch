@@ -56,3 +56,11 @@ next-env.d.ts
 # performance reports (Lighthouse, ff-rdp); cross-browser-notes.md is committed
 kb/perf-reports/*
 !kb/perf-reports/cross-browser-notes.md
+
+# OpenTofu / Terraform — never commit
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/*.tfvars
+infra/terraform/crash.log
+infra/terraform/generated.tf

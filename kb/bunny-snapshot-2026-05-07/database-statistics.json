@@ -1,0 +1,7 @@
+error: the following required arguments were not provided:
+  --from <FROM>
+  --to <TO>
+
+Usage: hoppy db statistics --id <ID> --from <FROM> --to <TO>
+
+For more information, try '--help'.

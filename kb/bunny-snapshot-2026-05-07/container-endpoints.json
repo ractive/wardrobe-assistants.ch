@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "id": "h4vme6Uhod4W3Yu-admin-cdn-SBfPZ5UIiZ",
+      "displayName": "admin-cdn",
+      "publicHost": "admin.wardrobe-assistants.ch",
+      "type": "cdn",
+      "isSslEnabled": false,
+      "pullZoneId": "5798594",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "exposedPort": null,
+          "protocols": [
+            "Tcp"
+          ]
+        }
+      ],
+      "containerName": "wardrobe-assistants-admin",
+      "containerId": "h4vme6Uhod4W3Yu-63yu",
+      "stickySessions": null,
+      "internalIpAddresses": null,
+      "publicIpAddresses": null
+    }
+  ],
+  "meta": {
+    "totalItems": 1
+  },
+  "cursor": null
+}

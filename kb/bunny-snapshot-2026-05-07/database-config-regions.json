@@ -1,0 +1,838 @@
+{
+  "storage_region_available": [
+    {
+      "id": "eu-west-1",
+      "name": "Europe",
+      "group": "EU"
+    },
+    {
+      "id": "us-east-1",
+      "name": "North America",
+      "group": "NA"
+    }
+  ],
+  "primary_regions": [
+    {
+      "id": "AMS",
+      "name": "Amsterdam",
+      "latitude": 52.370216,
+      "longitude": 4.895168,
+      "group": "EU",
+      "country": {
+        "alpha2": "NL"
+      }
+    },
+    {
+      "id": "ASB",
+      "name": "Ashburn",
+      "latitude": 39.04372,
+      "longitude": -77.48749,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "AT",
+      "name": "Vienna",
+      "latitude": 48.210033,
+      "longitude": 16.363449,
+      "group": "EU",
+      "country": {
+        "alpha2": "AT"
+      }
+    },
+    {
+      "id": "BO",
+      "name": "Boston",
+      "latitude": 42.361145,
+      "longitude": -71.057083,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "BR",
+      "name": "Sao Paulo",
+      "latitude": -23.944841,
+      "longitude": -46.330376,
+      "group": "SA",
+      "country": {
+        "alpha2": "BR"
+      }
+    },
+    {
+      "id": "BU",
+      "name": "Bucharest",
+      "latitude": 44.30588,
+      "longitude": 25.723294,
+      "group": "EU",
+      "country": {
+        "alpha2": "RO"
+      }
+    },
+    {
+      "id": "CA",
+      "name": "Toronto",
+      "latitude": 43.653908,
+      "longitude": -79.384293,
+      "group": "NA",
+      "country": {
+        "alpha2": "CA"
+      }
+    },
+    {
+      "id": "CO",
+      "name": "Bogota",
+      "latitude": 4.624335,
+      "longitude": -74.063644,
+      "group": "SA",
+      "country": {
+        "alpha2": "CO"
+      }
+    },
+    {
+      "id": "CZ",
+      "name": "Prague",
+      "latitude": 50.08804,
+      "longitude": 14.42076,
+      "group": "EU",
+      "country": {
+        "alpha2": "CZ"
+      }
+    },
+    {
+      "id": "DE",
+      "name": "Frankfurt",
+      "latitude": 50.47788,
+      "longitude": 8.682127,
+      "group": "EU",
+      "country": {
+        "alpha2": "DE"
+      }
+    },
+    {
+      "id": "DEN",
+      "name": "Denver",
+      "latitude": 39.742043,
+      "longitude": -104.991531,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "DK",
+      "name": "Copenhagen",
+      "latitude": 55.676098,
+      "longitude": 12.568337,
+      "group": "EU",
+      "country": {
+        "alpha2": "DK"
+      }
+    },
+    {
+      "id": "ES",
+      "name": "Madrid",
+      "latitude": 40.416775,
+      "longitude": -3.70379,
+      "group": "EU",
+      "country": {
+        "alpha2": "ES"
+      }
+    },
+    {
+      "id": "FR",
+      "name": "Paris",
+      "latitude": 48.864716,
+      "longitude": 2.349014,
+      "group": "EU",
+      "country": {
+        "alpha2": "FR"
+      }
+    },
+    {
+      "id": "GA",
+      "name": "Atlanta",
+      "latitude": 35.9140196,
+      "longitude": -81.5389849,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "GR",
+      "name": "Athens",
+      "latitude": 37.9838,
+      "longitude": 23.7278,
+      "group": "EU",
+      "country": {
+        "alpha2": "GR"
+      }
+    },
+    {
+      "id": "HK",
+      "name": "Hong Kong",
+      "latitude": 22.396428,
+      "longitude": 114.109497,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "HK"
+      }
+    },
+    {
+      "id": "HR",
+      "name": "Zagreb",
+      "latitude": 45.815399,
+      "longitude": 15.966568,
+      "group": "EU",
+      "country": {
+        "alpha2": "HR"
+      }
+    },
+    {
+      "id": "ID",
+      "name": "Jakarta",
+      "latitude": -6.2,
+      "longitude": 106.816666,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "ID"
+      }
+    },
+    {
+      "id": "IL",
+      "name": "Chicago",
+      "latitude": 41.881832,
+      "longitude": -87.623177,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "ISR",
+      "name": "Tel Aviv",
+      "latitude": 32.109333,
+      "longitude": 34.855499,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "IL"
+      }
+    },
+    {
+      "id": "IT",
+      "name": "Milan",
+      "latitude": 45.464211,
+      "longitude": 9.191383,
+      "group": "EU",
+      "country": {
+        "alpha2": "IT"
+      }
+    },
+    {
+      "id": "JH",
+      "name": "Johannesburg",
+      "latitude": -26.195246,
+      "longitude": 28.034088,
+      "group": "AF",
+      "country": {
+        "alpha2": "ZA"
+      }
+    },
+    {
+      "id": "JP",
+      "name": "Tokyo",
+      "latitude": 35.652832,
+      "longitude": 139.839478,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "JP"
+      }
+    },
+    {
+      "id": "LA",
+      "name": "Los Angeles",
+      "latitude": 34.0522342,
+      "longitude": -118.2436849,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "MI",
+      "name": "Miami",
+      "latitude": 25.761681,
+      "longitude": -80.191788,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "MX",
+      "name": "Mexico City",
+      "latitude": 19.432608,
+      "longitude": -99.133209,
+      "group": "SA",
+      "country": {
+        "alpha2": "MX"
+      }
+    },
+    {
+      "id": "MY",
+      "name": "Kuala Lampur",
+      "latitude": 3.140853,
+      "longitude": 101.693207,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "MY"
+      }
+    },
+    {
+      "id": "NG",
+      "name": "Lagos",
+      "latitude": 6.465422,
+      "longitude": 3.406448,
+      "group": "AF",
+      "country": {
+        "alpha2": "NG"
+      }
+    },
+    {
+      "id": "NY",
+      "name": "New York City",
+      "latitude": 40.7517,
+      "longitude": -73.9972,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "PH",
+      "name": "Manila",
+      "latitude": 14.599512,
+      "longitude": 120.984222,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "PH"
+      }
+    },
+    {
+      "id": "PL",
+      "name": "Warsaw",
+      "latitude": 52.2296756,
+      "longitude": 21.0122287,
+      "group": "EU",
+      "country": {
+        "alpha2": "PL"
+      }
+    },
+    {
+      "id": "SE",
+      "name": "Stockholm",
+      "latitude": 59.334591,
+      "longitude": 18.06324,
+      "group": "EU",
+      "country": {
+        "alpha2": "SE"
+      }
+    },
+    {
+      "id": "SG",
+      "name": "Singapore",
+      "latitude": 1.352083,
+      "longitude": 103.819836,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "SG"
+      }
+    },
+    {
+      "id": "SIL",
+      "name": "San Jose",
+      "latitude": 37.279518,
+      "longitude": -121.867905,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "SYD",
+      "name": "Sydney",
+      "latitude": -33.8674869,
+      "longitude": 151.2069902,
+      "group": "OC",
+      "country": {
+        "alpha2": "AU"
+      }
+    },
+    {
+      "id": "TH",
+      "name": "Bangkok",
+      "latitude": 13.736717,
+      "longitude": 100.523186,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "TH"
+      }
+    },
+    {
+      "id": "TR",
+      "name": "Istanbul",
+      "latitude": 41.015137,
+      "longitude": 28.97953,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "TR"
+      }
+    },
+    {
+      "id": "TX",
+      "name": "Dallas",
+      "latitude": 32.7766642,
+      "longitude": -96.7969879,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "UK",
+      "name": "London",
+      "latitude": 51.5073509,
+      "longitude": -0.127758299999982,
+      "group": "EU",
+      "country": {
+        "alpha2": "GB"
+      }
+    },
+    {
+      "id": "WA",
+      "name": "Seattle",
+      "latitude": 47.608013,
+      "longitude": -122.335167,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    }
+  ],
+  "replica_regions": [
+    {
+      "id": "AMS",
+      "name": "Amsterdam",
+      "latitude": 52.370216,
+      "longitude": 4.895168,
+      "group": "EU",
+      "country": {
+        "alpha2": "NL"
+      }
+    },
+    {
+      "id": "ASB",
+      "name": "Ashburn",
+      "latitude": 39.04372,
+      "longitude": -77.48749,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "AT",
+      "name": "Vienna",
+      "latitude": 48.210033,
+      "longitude": 16.363449,
+      "group": "EU",
+      "country": {
+        "alpha2": "AT"
+      }
+    },
+    {
+      "id": "BO",
+      "name": "Boston",
+      "latitude": 42.361145,
+      "longitude": -71.057083,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "BR",
+      "name": "Sao Paulo",
+      "latitude": -23.944841,
+      "longitude": -46.330376,
+      "group": "SA",
+      "country": {
+        "alpha2": "BR"
+      }
+    },
+    {
+      "id": "BU",
+      "name": "Bucharest",
+      "latitude": 44.30588,
+      "longitude": 25.723294,
+      "group": "EU",
+      "country": {
+        "alpha2": "RO"
+      }
+    },
+    {
+      "id": "CA",
+      "name": "Toronto",
+      "latitude": 43.653908,
+      "longitude": -79.384293,
+      "group": "NA",
+      "country": {
+        "alpha2": "CA"
+      }
+    },
+    {
+      "id": "CO",
+      "name": "Bogota",
+      "latitude": 4.624335,
+      "longitude": -74.063644,
+      "group": "SA",
+      "country": {
+        "alpha2": "CO"
+      }
+    },
+    {
+      "id": "CZ",
+      "name": "Prague",
+      "latitude": 50.08804,
+      "longitude": 14.42076,
+      "group": "EU",
+      "country": {
+        "alpha2": "CZ"
+      }
+    },
+    {
+      "id": "DE",
+      "name": "Frankfurt",
+      "latitude": 50.47788,
+      "longitude": 8.682127,
+      "group": "EU",
+      "country": {
+        "alpha2": "DE"
+      }
+    },
+    {
+      "id": "DEN",
+      "name": "Denver",
+      "latitude": 39.742043,
+      "longitude": -104.991531,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "DK",
+      "name": "Copenhagen",
+      "latitude": 55.676098,
+      "longitude": 12.568337,
+      "group": "EU",
+      "country": {
+        "alpha2": "DK"
+      }
+    },
+    {
+      "id": "ES",
+      "name": "Madrid",
+      "latitude": 40.416775,
+      "longitude": -3.70379,
+      "group": "EU",
+      "country": {
+        "alpha2": "ES"
+      }
+    },
+    {
+      "id": "FR",
+      "name": "Paris",
+      "latitude": 48.864716,
+      "longitude": 2.349014,
+      "group": "EU",
+      "country": {
+        "alpha2": "FR"
+      }
+    },
+    {
+      "id": "GA",
+      "name": "Atlanta",
+      "latitude": 35.9140196,
+      "longitude": -81.5389849,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "GR",
+      "name": "Athens",
+      "latitude": 37.9838,
+      "longitude": 23.7278,
+      "group": "EU",
+      "country": {
+        "alpha2": "GR"
+      }
+    },
+    {
+      "id": "HK",
+      "name": "Hong Kong",
+      "latitude": 22.396428,
+      "longitude": 114.109497,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "HK"
+      }
+    },
+    {
+      "id": "HR",
+      "name": "Zagreb",
+      "latitude": 45.815399,
+      "longitude": 15.966568,
+      "group": "EU",
+      "country": {
+        "alpha2": "HR"
+      }
+    },
+    {
+      "id": "ID",
+      "name": "Jakarta",
+      "latitude": -6.2,
+      "longitude": 106.816666,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "ID"
+      }
+    },
+    {
+      "id": "IL",
+      "name": "Chicago",
+      "latitude": 41.881832,
+      "longitude": -87.623177,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "ISR",
+      "name": "Tel Aviv",
+      "latitude": 32.109333,
+      "longitude": 34.855499,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "IL"
+      }
+    },
+    {
+      "id": "IT",
+      "name": "Milan",
+      "latitude": 45.464211,
+      "longitude": 9.191383,
+      "group": "EU",
+      "country": {
+        "alpha2": "IT"
+      }
+    },
+    {
+      "id": "JH",
+      "name": "Johannesburg",
+      "latitude": -26.195246,
+      "longitude": 28.034088,
+      "group": "AF",
+      "country": {
+        "alpha2": "ZA"
+      }
+    },
+    {
+      "id": "JP",
+      "name": "Tokyo",
+      "latitude": 35.652832,
+      "longitude": 139.839478,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "JP"
+      }
+    },
+    {
+      "id": "LA",
+      "name": "Los Angeles",
+      "latitude": 34.0522342,
+      "longitude": -118.2436849,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "MI",
+      "name": "Miami",
+      "latitude": 25.761681,
+      "longitude": -80.191788,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "MX",
+      "name": "Mexico City",
+      "latitude": 19.432608,
+      "longitude": -99.133209,
+      "group": "SA",
+      "country": {
+        "alpha2": "MX"
+      }
+    },
+    {
+      "id": "MY",
+      "name": "Kuala Lampur",
+      "latitude": 3.140853,
+      "longitude": 101.693207,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "MY"
+      }
+    },
+    {
+      "id": "NG",
+      "name": "Lagos",
+      "latitude": 6.465422,
+      "longitude": 3.406448,
+      "group": "AF",
+      "country": {
+        "alpha2": "NG"
+      }
+    },
+    {
+      "id": "NY",
+      "name": "New York City",
+      "latitude": 40.7517,
+      "longitude": -73.9972,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "PH",
+      "name": "Manila",
+      "latitude": 14.599512,
+      "longitude": 120.984222,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "PH"
+      }
+    },
+    {
+      "id": "PL",
+      "name": "Warsaw",
+      "latitude": 52.2296756,
+      "longitude": 21.0122287,
+      "group": "EU",
+      "country": {
+        "alpha2": "PL"
+      }
+    },
+    {
+      "id": "SE",
+      "name": "Stockholm",
+      "latitude": 59.334591,
+      "longitude": 18.06324,
+      "group": "EU",
+      "country": {
+        "alpha2": "SE"
+      }
+    },
+    {
+      "id": "SG",
+      "name": "Singapore",
+      "latitude": 1.352083,
+      "longitude": 103.819836,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "SG"
+      }
+    },
+    {
+      "id": "SIL",
+      "name": "San Jose",
+      "latitude": 37.279518,
+      "longitude": -121.867905,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "SYD",
+      "name": "Sydney",
+      "latitude": -33.8674869,
+      "longitude": 151.2069902,
+      "group": "OC",
+      "country": {
+        "alpha2": "AU"
+      }
+    },
+    {
+      "id": "TH",
+      "name": "Bangkok",
+      "latitude": 13.736717,
+      "longitude": 100.523186,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "TH"
+      }
+    },
+    {
+      "id": "TR",
+      "name": "Istanbul",
+      "latitude": 41.015137,
+      "longitude": 28.97953,
+      "group": "ASIA",
+      "country": {
+        "alpha2": "TR"
+      }
+    },
+    {
+      "id": "TX",
+      "name": "Dallas",
+      "latitude": 32.7766642,
+      "longitude": -96.7969879,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    },
+    {
+      "id": "UK",
+      "name": "London",
+      "latitude": 51.5073509,
+      "longitude": -0.127758299999982,
+      "group": "EU",
+      "country": {
+        "alpha2": "GB"
+      }
+    },
+    {
+      "id": "WA",
+      "name": "Seattle",
+      "latitude": 47.608013,
+      "longitude": -122.335167,
+      "group": "NA",
+      "country": {
+        "alpha2": "US"
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "data": null,
+  "error": {
+    "statusCode": 202,
+    "success": false,
+    "message": "Shield Zone not found or Unauthorized access.",
+    "errorKey": "not_found_or_unauthorised_access.shieldzone"
+  }
+}

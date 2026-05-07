@@ -13,7 +13,9 @@
       "!**/.next",
       "!**/dist",
       "!**/build",
-      "!**/out"
+      "!**/out",
+      "!kb/bunny-snapshot-*/**",
+      "!infra/terraform/**"
     ]
   },
   "formatter": {
