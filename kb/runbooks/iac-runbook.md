@@ -4,7 +4,7 @@ type: runbook
 status: active
 tags: [opentofu, terraform, iac, bunny, runbook]
 created: 2026-05-07
-related: [iteration-11-bunny-iac.md, bunny-snapshot-2026-05-07/SUMMARY.md, hoppy-usage-report.md, runbook-go-live.md]
+related: [iteration-11-bunny-iac.md, iteration-12-terraform-ci.md, bunny-snapshot-2026-05-07/SUMMARY.md, hoppy-usage-report.md, runbook-go-live.md]
 ---
 
 # IaC Runbook — OpenTofu + bunnynet provider
@@ -93,6 +93,108 @@ tofu apply -lock=false
 tofu fmt
 tofu validate
 ```
+
+---
+
+## CI/CD
+
+CI is **read-only**. Two GitHub Actions workflows live at
+`.github/workflows/terraform-plan.yml` and
+`.github/workflows/terraform-drift-check.yml`. Neither one ever runs `tofu
+apply` — that step stays manual on the laptop.
+
+### Why apply isn't automated
+
+- The `http` backend runs `-lock=false` (bunny PUT returns 201, OpenTofu wants
+  200). Two concurrent applies would race the state file. CI workflows share a
+  `concurrency: tofu-state` group to serialise themselves, but a CI run racing
+  a laptop apply has no protection — keeping apply manual makes the conflict
+  obvious.
+- "Merge approves the diff; running `tofu apply` is the moment of pushing it
+  live" is a clearer mental model than "merge button = production change."
+
+### Required GitHub secrets
+
+| Secret | Mirror of `.env.local` var | Purpose |
+|---|---|---|
+| `BUNNYNET_API_KEY` | `BUNNY_API_KEY` | Bunny account API key — exposed to OpenTofu as `TF_VAR_bunny_api_key`. Already used by `deploy.yml`. |
+| `TERRAFORM_STATE_STORAGE_KEY` | same name | Storage-zone password for `wardrobe-assistants-terraform-state` — written into a temp backend-config file inside the runner, never to the command line. |
+
+The naming asymmetry on the API key is intentional but easy to miss. Don't
+rename either side without updating both.
+
+### `terraform-plan.yml` — PR plan comment
+
+- **Trigger:** `pull_request` touching `infra/terraform/**` (or the workflow
+  itself).
+- **What it does:** init against the live state, `tofu plan -lock=false`, post
+  the output as a sticky PR comment (one comment per PR — re-runs replace, not
+  append).
+- **Plan size:** GitHub caps issue comments at 65 KB. The script keeps the
+  inline comment to ~60 KB and uploads the full `plan.txt` as the `tofu-plan`
+  workflow artefact (14-day retention) for download when the diff is large.
+  The binary plan (`-out=plan.bin`) is deliberately *not* generated in CI:
+  binary plans can embed `TF_VAR_*` values, and we never apply from CI.
+- **What to look for as a reviewer:** the diff lines under the `### OpenTofu
+  plan` heading. If only `ignore_changes`-covered fields show up, something is
+  wrong — paste them in the PR thread. If the comment says *failed*, click
+  through to the workflow log.
+
+### `terraform-drift-check.yml` — daily out-of-band check
+
+- **Trigger:** `schedule: '0 6 * * *'` (06:00 UTC daily) plus
+  `workflow_dispatch` for manual runs.
+- **What it does:** init against `main`, `tofu plan -lock=false
+  -detailed-exitcode`. Exit code `2` = drift → opens or appends to a `drift`-
+  labelled issue and fails the run. Exit `0` = clean.
+- **Triage when the issue fires:**
+  1. Open the issue, read the diff.
+  2. Decide: is the live change *intentional* (someone tweaking a dashboard
+     during an outage, an emergency edge rule), or *accidental*?
+  3. **Intentional** → codify it in `infra/terraform/`, open a PR, watch the
+     PR plan comment go to a no-op, merge, close the drift issue.
+  4. **Accidental** → revert the live config (dashboard or API), let the next
+     drift run go green, close the drift issue.
+  5. **Persistent / always-drifting field** (a new bunny API field that
+     fluctuates): add `ignore_changes = [<field>]` on the resource, document
+     the reason in the "Provider quirks" section above.
+
+### What "apply" looks like after merging an infra PR
+
+CI does not apply. The recipe is the same as before:
+
+```bash
+git checkout main && git pull
+cd infra/terraform
+# Build $BACKEND_HCL per "Step 1" above.
+export TF_VAR_bunny_api_key="$BUNNY_API_KEY"
+tofu init -backend-config="$BACKEND_HCL"
+tofu plan  -lock=false        # sanity check — should match the PR comment
+tofu apply -lock=false
+```
+
+If a workflow run is in flight (check the Actions tab), wait for it to finish
+or cancel it before running apply — they share the same state file with no
+locking.
+
+### OpenTofu version
+
+CI is pinned to **`1.11.6`** in both workflow files. If you upgrade locally,
+bump both workflows in the same PR — the PR plan comment is your sanity check.
+
+### Upgrade path — when to add auto-apply
+
+When more than one developer touches infra, or a formal change-control / audit
+trail is needed, add `terraform-apply.yml`:
+
+1. `push` to `main` with `paths: ['infra/terraform/**']`.
+2. `tofu plan -lock=false -out=plan.bin`, then `environment:
+   production-infra` (a GitHub Environment with required reviewer) so the
+   workflow pauses for a human click.
+3. `tofu apply -lock=false plan.bin` after approval.
+4. Same `concurrency: tofu-state` group.
+
+Half-day of work, no state-backend changes — defer until the trigger fires.
 
 ---
 

@@ -1,0 +1,144 @@
+name: Terraform Plan
+
+# Read-only plan + sticky PR comment whenever a PR touches infra/terraform.
+# Apply stays manual on the developer laptop — see kb/runbooks/iac-runbook.md.
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# Serialise any workflow that touches the bunny HTTP state file. Bunny returns
+# 201 on PUT (OpenTofu wants 200), so every plan/apply runs `-lock=false`; this
+# group is our only protection against two CI runs racing the same .tfstate.
+concurrency:
+  group: tofu-state
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.11.6
+
+      - name: Write backend-config (never on the command line)
+        env:
+          TFSTATE_KEY: ${{ secrets.TERRAFORM_STATE_STORAGE_KEY }}
+        run: |
+          # HCL needs the value double-quoted; jq -Rs handles any special chars.
+          # File lives in $RUNNER_TEMP and is wiped by the runner after the job.
+          BACKEND_HCL="$RUNNER_TEMP/backend.hcl"
+          QUOTED=$(printf '%s' "$TFSTATE_KEY" | jq -Rs '.')
+          printf 'headers = { AccessKey = %s }\n' "$QUOTED" > "$BACKEND_HCL"
+          echo "BACKEND_HCL=$BACKEND_HCL" >> "$GITHUB_ENV"
+
+      - name: tofu init
+        run: tofu init -input=false -backend-config="$BACKEND_HCL"
+
+      - name: tofu plan
+        id: plan
+        env:
+          TF_VAR_bunny_api_key: ${{ secrets.BUNNYNET_API_KEY }}
+        run: |
+          set +e
+          # No -out=plan.bin: the binary plan can embed variable values
+          # (including TF_VAR_bunny_api_key), and we never apply from CI.
+          tofu plan -lock=false -input=false -no-color > plan.txt 2>&1
+          EXIT=$?
+          set -e
+          echo "exitcode=$EXIT" >> "$GITHUB_OUTPUT"
+          cat plan.txt
+          if [ "$EXIT" -ne 0 ]; then
+            exit "$EXIT"
+          fi
+
+      - name: Upload plan text artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tofu-plan
+          path: infra/terraform/plan.txt
+          retention-days: 14
+
+      - name: Post plan as sticky PR comment
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          PLAN_EXITCODE: ${{ steps.plan.outputs.exitcode }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const marker = '<!-- tofu-plan-comment -->';
+            const planPath = path.join('infra', 'terraform', 'plan.txt');
+            let plan = '';
+            try {
+              plan = fs.readFileSync(planPath, 'utf8');
+            } catch (e) {
+              plan = `Plan output unavailable: ${e.message}`;
+            }
+
+            // GitHub caps issue comments at 65,536 chars. Leave headroom for
+            // our wrapper text so the inline comment never gets truncated.
+            const INLINE_BUDGET = 60000;
+            let truncated = false;
+            if (plan.length > INLINE_BUDGET) {
+              truncated = true;
+              plan = plan.slice(0, INLINE_BUDGET);
+            }
+
+            // Neutralise any triple-backtick run inside the plan so it can't
+            // close our ```diff fence and inject markdown.
+            const safePlan = plan.replace(/`{3,}/g, m => m.replace(/`/g, '`​'));
+
+            const exit = process.env.PLAN_EXITCODE || '?';
+            const status = exit === '0'
+              ? 'OpenTofu plan succeeded.'
+              : `OpenTofu plan failed (exit code ${exit}). See the workflow log.`;
+
+            const footer = truncated
+              ? '\n\n_Plan output exceeded 60 KB and was truncated above. Download the full output from the **tofu-plan** workflow artefact._'
+              : '';
+
+            const body = [
+              marker,
+              '### OpenTofu plan',
+              '',
+              status,
+              '',
+              '```diff',
+              safePlan,
+              '```',
+              footer,
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body,
+              });
+            }

@@ -12,13 +12,18 @@ terraform {
 
   // HTTP backend → bunny `wardrobe-assistants-terraform-state` storage zone.
   // Auth: `AccessKey` HTTP header, value = the storage-zone password
-  // (TERRAFORM_STATE_STORAGE_KEY in .env.local). Pass at init time via:
+  // (TERRAFORM_STATE_STORAGE_KEY in .env.local; mirrored as the same-named
+  // GitHub Actions secret for CI). Pass at init time via:
   //
   //   tofu init -backend-config=<temp HCL with `headers = { AccessKey = "..." }`>
   //
-  // See kb/iac-runbook.md for the full per-shell init recipe.
+  // See kb/runbooks/iac-runbook.md for the full per-shell init recipe and the
+  // CI/CD subsection covering terraform-plan.yml + terraform-drift-check.yml.
   // `-lock=false` is required everywhere because bunny returns HTTP 201 on
   // PUT (vs the 200 OpenTofu's `http` backend expects for lock acquisition).
+  // CI workflows share the `tofu-state` concurrency group so two runs cannot
+  // race the state file; laptop applies have no such protection — only run
+  // them when no infra workflow is queued.
   backend "http" {
     address        = "https://storage.bunnycdn.com/wardrobe-assistants-terraform-state/wardrobe-assistants.ch/terraform.tfstate"
     update_method  = "PUT"
