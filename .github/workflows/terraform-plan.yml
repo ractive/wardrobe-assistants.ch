@@ -53,24 +53,23 @@ jobs:
           TF_VAR_bunny_api_key: ${{ secrets.BUNNYNET_API_KEY }}
         run: |
           set +e
-          tofu plan -lock=false -input=false -no-color -out=plan.bin > plan.txt 2>&1
+          # No -out=plan.bin: the binary plan can embed variable values
+          # (including TF_VAR_bunny_api_key), and we never apply from CI.
+          tofu plan -lock=false -input=false -no-color > plan.txt 2>&1
           EXIT=$?
           set -e
           echo "exitcode=$EXIT" >> "$GITHUB_OUTPUT"
-          # Re-emit the captured output so it appears in the workflow log too.
           cat plan.txt
           if [ "$EXIT" -ne 0 ]; then
             exit "$EXIT"
           fi
 
-      - name: Upload full plan artefact
+      - name: Upload plan text artefact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tofu-plan
-          path: |
-            infra/terraform/plan.txt
-            infra/terraform/plan.bin
+          path: infra/terraform/plan.txt
           retention-days: 14
 
       - name: Post plan as sticky PR comment
@@ -101,6 +100,10 @@ jobs:
               plan = plan.slice(0, INLINE_BUDGET);
             }
 
+            // Neutralise any triple-backtick run inside the plan so it can't
+            // close our ```diff fence and inject markdown.
+            const safePlan = plan.replace(/`{3,}/g, m => m.replace(/`/g, '`​'));
+
             const exit = process.env.PLAN_EXITCODE || '?';
             const status = exit === '0'
               ? 'OpenTofu plan succeeded.'
@@ -117,7 +120,7 @@ jobs:
               status,
               '',
               '```diff',
-              plan,
+              safePlan,
               '```',
               footer,
             ].join('\n');

@@ -131,9 +131,10 @@ rename either side without updating both.
   the output as a sticky PR comment (one comment per PR — re-runs replace, not
   append).
 - **Plan size:** GitHub caps issue comments at 65 KB. The script keeps the
-  inline comment to ~60 KB and uploads the full `plan.txt` + `plan.bin` as the
-  `tofu-plan` workflow artefact (14-day retention) for download when the diff
-  is large.
+  inline comment to ~60 KB and uploads the full `plan.txt` as the `tofu-plan`
+  workflow artefact (14-day retention) for download when the diff is large.
+  The binary plan (`-out=plan.bin`) is deliberately *not* generated in CI:
+  binary plans can embed `TF_VAR_*` values, and we never apply from CI.
 - **What to look for as a reviewer:** the diff lines under the `### OpenTofu
   plan` heading. If only `ignore_changes`-covered fields show up, something is
   wrong — paste them in the PR thread. If the comment says *failed*, click
