@@ -25,5 +25,6 @@ output "admin_container_app_id" {
 
 output "database_url" {
   description = "libSQL connection URL for wa-admin-prod (auth token not managed by OpenTofu)"
-  value       = "libsql://01KKPNWQQ846P1RP4HTN1MWQ1A-wa-admin-prod.lite.bunnydb.net/"
+  value       = bunnynet_database.wa_admin_prod.url
+  sensitive   = true
 }
