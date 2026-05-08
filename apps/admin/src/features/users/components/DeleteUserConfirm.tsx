@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,25 +25,41 @@ export function DeleteUserConfirm({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
   function onConfirm() {
     setServerError(null);
     startTransition(async () => {
-      const result = await deleteUser({ userId });
-      if (result.error) {
-        setServerError(result.message);
-        toast.error(result.message);
-        return;
+      try {
+        const result = await deleteUser({ userId });
+        if (result.error) {
+          setServerError(result.message);
+          toast.error(result.message);
+          return;
+        }
+        toast.success(result.message);
+        onOpenChange(false);
+        router.refresh();
+      } catch (err) {
+        // withPermission throws on session/permission failures.
+        const message =
+          err instanceof Error ? err.message : "Could not delete user.";
+        setServerError(message);
+        toast.error(message);
       }
-      toast.success(result.message);
-      onOpenChange(false);
     });
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (isPending && !next) return;
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Delete {displayName}?</DialogTitle>

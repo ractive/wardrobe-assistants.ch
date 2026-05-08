@@ -30,7 +30,7 @@ function SidebarLink({
 export function DashboardSidebar() {
   return (
     <aside className="hidden w-48 shrink-0 border-[var(--border)] border-r px-3 py-6 md:block">
-      <nav className="flex flex-col gap-1">
+      <nav aria-label="Primary" className="flex flex-col gap-1">
         <SidebarLink href="/">Home</SidebarLink>
         {ITEMS.map((item) => (
           <HasPermission key={item.href} perm={item.perm}>

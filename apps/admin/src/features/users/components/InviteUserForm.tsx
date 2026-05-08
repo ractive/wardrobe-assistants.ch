@@ -39,15 +39,22 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const onSubmit = form.handleSubmit(async (data) => {
-    const result = await inviteUser(data);
-    if (result.error) {
-      toast.error(result.message);
-      return;
+    try {
+      const result = await inviteUser(data);
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(result.message);
+      form.reset();
+      onSuccess?.();
+      router.refresh();
+    } catch (err) {
+      // withPermission throws on session/permission failures.
+      toast.error(
+        err instanceof Error ? err.message : "Could not send invitation.",
+      );
     }
-    toast.success(result.message);
-    form.reset();
-    onSuccess?.();
-    router.refresh();
   });
 
   return (

@@ -38,7 +38,8 @@ function makeDbMock() {
   return {
     _selectResults: [] as unknown[][],
     _insertImpl: vi.fn(async () => undefined),
-    _deleteImpl: vi.fn(async () => undefined),
+    _deleteWhereCalled: vi.fn(),
+    _deleteReturning: [] as unknown[],
     select() {
       const next = (this._selectResults.shift() ?? []) as unknown[];
       return {
@@ -55,7 +56,15 @@ function makeDbMock() {
       return { values: this._insertImpl };
     },
     delete() {
-      return { where: this._deleteImpl };
+      const self = this;
+      return {
+        where(arg: unknown) {
+          self._deleteWhereCalled(arg);
+          return {
+            returning: async () => self._deleteReturning,
+          };
+        },
+      };
     },
   };
 }
@@ -70,9 +79,11 @@ const sendEmailMock = sendEmail as unknown as ReturnType<typeof vi.fn>;
 beforeEach(() => {
   dbMock._selectResults = [];
   dbMock._insertImpl = vi.fn(async () => undefined);
-  dbMock._deleteImpl = vi.fn(async () => undefined);
+  dbMock._deleteWhereCalled = vi.fn();
+  dbMock._deleteReturning = [];
   signUpMock.mockReset();
   resetMock.mockReset();
+  resetMock.mockResolvedValue(undefined);
   sendEmailMock.mockReset();
   sendEmailMock.mockResolvedValue(undefined);
 });
@@ -134,6 +145,17 @@ describe("inviteUser", () => {
     expect(dbMock._insertImpl).not.toHaveBeenCalled();
     expect(resetMock).not.toHaveBeenCalled();
   });
+
+  it("surfaces an error if requestPasswordReset throws", async () => {
+    dbMock._selectResults = [[]];
+    signUpMock.mockResolvedValue({ user: { id: "u-new" } });
+    resetMock.mockRejectedValue(new Error("smtp down"));
+    const r = await inviteUser(baseInvite);
+    expect(r.error).toBe(true);
+    if (r.error) {
+      expect(r.message).toContain("smtp down");
+    }
+  });
 });
 
 describe("deleteUser", () => {
@@ -143,13 +165,20 @@ describe("deleteUser", () => {
       error: true,
       message: "You cannot delete your own account.",
     });
-    expect(dbMock._deleteImpl).not.toHaveBeenCalled();
+    expect(dbMock._deleteWhereCalled).not.toHaveBeenCalled();
   });
 
   it("deletes a different user", async () => {
+    dbMock._deleteReturning = [{ id: "u2" }];
     const r = await deleteUser({ userId: "u2" });
     expect(r).toEqual({ error: false, message: "User deleted." });
-    expect(dbMock._deleteImpl).toHaveBeenCalledOnce();
+    expect(dbMock._deleteWhereCalled).toHaveBeenCalledOnce();
+  });
+
+  it("returns 'User not found' when no rows are affected", async () => {
+    dbMock._deleteReturning = [];
+    const r = await deleteUser({ userId: "missing" });
+    expect(r).toEqual({ error: true, message: "User not found." });
   });
 
   it("rejects empty userId", async () => {
@@ -189,5 +218,19 @@ describe("messageUser", () => {
       subject: "Welcome",
       text: "Hello there.",
     });
+  });
+
+  it("returns an error when sendEmail throws", async () => {
+    dbMock._selectResults = [[{ email: "target@example.com" }]];
+    sendEmailMock.mockRejectedValue(new Error("smtp boom"));
+    const r = await messageUser({
+      userId: "u2",
+      subject: "Welcome",
+      body: "Hello there.",
+    });
+    expect(r.error).toBe(true);
+    if (r.error) {
+      expect(r.message).toContain("smtp boom");
+    }
   });
 });

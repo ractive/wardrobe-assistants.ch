@@ -27,8 +27,10 @@ export const config = {
   // Gate everything except /login, /set-password, /api/auth/*, Next
   // internals, and static assets. Negative lookahead keeps the matcher cheap
   // at the edge. /set-password is reached via an invite-email link before
-  // the user has a session.
+  // the user has a session. The `(?:$|[/?])` boundary on path-based
+  // exclusions prevents prefix-bypass via paths like `/login-evil` or
+  // `/set-password-anything` slipping through unauthenticated.
   matcher: [
-    "/((?!login|set-password|api/auth|_next/static|_next/image|favicon.ico|robots.txt).*)",
+    "/((?!login(?:$|[/?])|set-password(?:$|[/?])|api/auth|_next/static|_next/image|favicon.ico|robots.txt).*)",
   ],
 };

@@ -49,13 +49,20 @@ export function MessageUserDialog({
   }, [open, userId, form]);
 
   const onSubmit = form.handleSubmit(async (data) => {
-    const result = await messageUser(data);
-    if (result.error) {
-      toast.error(result.message);
-      return;
+    try {
+      const result = await messageUser(data);
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(result.message);
+      onOpenChange(false);
+    } catch (err) {
+      // withPermission throws on session/permission failures.
+      toast.error(
+        err instanceof Error ? err.message : "Could not send message.",
+      );
     }
-    toast.success(result.message);
-    onOpenChange(false);
   });
 
   return (

@@ -90,10 +90,18 @@ export const inviteUser = withPermission(
     // Triggers the BA reset-password flow; the email body is sent via the
     // sendResetPassword hook in lib/auth.ts. The user clicks the link, lands
     // on /set-password?token=…, sets a real password, and signs in.
-    await auth.api.requestPasswordReset({
-      body: { email: input.email, redirectTo: "/set-password" },
-      headers: new Headers(),
-    });
+    try {
+      await auth.api.requestPasswordReset({
+        body: { email: input.email, redirectTo: "/set-password" },
+        headers: new Headers(),
+      });
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "unknown error";
+      return {
+        error: true,
+        message: `User created, but invite email could not be sent: ${detail}. Resend the invite from the user list.`,
+      };
+    }
 
     return { error: false, message: "Invitation sent." };
   },
@@ -110,7 +118,13 @@ export const deleteUser = withPermission(
       return { error: true, message: "You cannot delete your own account." };
     }
     // FK cascade on user_profile.user_id removes the profile row.
-    await db.delete(user).where(eq(user.id, parsed.data.userId));
+    const deleted = await db
+      .delete(user)
+      .where(eq(user.id, parsed.data.userId))
+      .returning({ id: user.id });
+    if (deleted.length === 0) {
+      return { error: true, message: "User not found." };
+    }
     return { error: false, message: "User deleted." };
   },
 );
@@ -137,11 +151,16 @@ export const messageUser = withPermission(
       return { error: true, message: "User not found." };
     }
 
-    await sendEmail({
-      to: target.email,
-      subject: input.subject,
-      text: input.body,
-    });
+    try {
+      await sendEmail({
+        to: target.email,
+        subject: input.subject,
+        text: input.body,
+      });
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "unknown error";
+      return { error: true, message: `Message could not be sent: ${detail}` };
+    }
     return { error: false, message: "Message sent." };
   },
 );
