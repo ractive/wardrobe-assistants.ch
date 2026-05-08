@@ -35,7 +35,7 @@ jobs:
 
       - name: Write backend-config (never on the command line)
         env:
-          TFSTATE_KEY: ${{ secrets.TERRAFORM_STATE_STORAGE_KEY }}
+          TFSTATE_KEY: ${{ secrets.TERRAFORM_STATE_STORAGE_KEY_READONLY }}
         run: |
           # HCL needs the value double-quoted; jq -Rs handles any special chars.
           # File lives in $RUNNER_TEMP and is wiped by the runner after the job.
