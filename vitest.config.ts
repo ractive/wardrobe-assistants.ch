@@ -1,8 +1,11 @@
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 // Vitest workspace config. iter-7a added apps/homepage; iter-7b adds
 // apps/admin (UI + middleware + scripts) and packages/db (schema/migrations).
+const adminSrc = fileURLToPath(new URL("./apps/admin/src", import.meta.url));
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -18,6 +21,7 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { alias: { "@": adminSrc } },
         test: {
           name: "admin",
           environment: "happy-dom",

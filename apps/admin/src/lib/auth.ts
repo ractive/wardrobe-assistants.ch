@@ -75,6 +75,26 @@ export const auth = betterAuth({
             .limit(1);
           const profile = rows[0];
           if (!profile) return { data: session };
+          // First successful sign-in after invite ⇒ flip status:invited →
+          // verified. The user just demonstrated they own the email by
+          // completing the password-reset flow that the invite triggered.
+          // Failure to write must not block sign-in: the next session will
+          // retry the flip on its own.
+          let status = profile.status;
+          if (status === "invited") {
+            try {
+              await db
+                .update(userProfile)
+                .set({ status: "verified", verifiedAt: new Date() })
+                .where(eq(userProfile.userId, session.userId));
+              status = "verified";
+            } catch (err) {
+              console.error(
+                "session.create: failed to flip status invited→verified",
+                err,
+              );
+            }
+          }
           return {
             data: {
               ...session,
@@ -82,7 +102,7 @@ export const auth = betterAuth({
               lastName: profile.lastName,
               nickname: profile.nickname ?? undefined,
               role: profile.role,
-              status: profile.status,
+              status,
             },
           };
         },
