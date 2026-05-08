@@ -1,16 +1,7 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true
+    "lib": ["ES2022"]
   },
   "include": ["src/**/*.ts", "drizzle.config.ts"],
   "exclude": ["node_modules", "migrations"]

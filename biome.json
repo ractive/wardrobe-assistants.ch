@@ -14,8 +14,9 @@
       "!**/dist",
       "!**/build",
       "!**/out",
-      "!kb/bunny-snapshot-*/**",
-      "!infra/terraform/**"
+      "!kb/bunny-snapshot-*",
+      "!infra/terraform",
+      "!apps/admin/src/components/ui"
     ]
   },
   "formatter": {
@@ -29,6 +30,9 @@
       "recommended": true,
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "style": {
+        "useImportType": "error"
       }
     },
     "domains": {
@@ -36,6 +40,32 @@
       "react": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "apps/admin/src/lib/**",
+        "apps/admin/src/components/**",
+        "apps/admin/src/hooks/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features/**"],
+                    "message": "Shared code (lib/, components/, hooks/) may not import from features/. Move the dependency the other way: features import from shared."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {

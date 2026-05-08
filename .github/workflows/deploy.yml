@@ -23,11 +23,14 @@ jobs:
       - run: npm run test
       - run: npm -w @wardrobe-assistants/homepage run build
       # Admin build needs env vars to satisfy lib/env.ts at build time.
-      # Values here are placeholders only; runtime uses container env.
+      # Values are shape-valid placeholders only (NODE_ENV=production during
+      # `next build` triggers iter-13's prod tripwires: remote-shape DATABASE_URL,
+      # 64-hex BETTER_AUTH_SECRET, RESEND_API_KEY present). Runtime uses
+      # container env — these never reach a request.
       - name: Build admin standalone
         env:
-          DATABASE_URL: file:./build.db
-          BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-at-runtime-32b
+          DATABASE_URL: libsql://ci-placeholder.invalid
+          BETTER_AUTH_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           BETTER_AUTH_URL: https://admin.wardrobe-assistants.ch
           RESEND_API_KEY: ci-placeholder
           EMAIL_FROM: admin@wardrobe-assistants.ch

@@ -55,6 +55,13 @@ Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly
   - `src/components/` — shared React components. Icons are inlined as SVG in [`icons.tsx`](apps/homepage/src/components/icons.tsx) (no `lucide-react` runtime in the homepage bundle); the file's header comment documents how to add a new one.
   - `public/` — static assets
 - `apps/admin/` — Next.js admin app (App Router) with Better Auth (email/password + TOTP). Deploys via `build-admin` as a Docker image to a bunny.net Magic Container at `admin.wardrobe-assistants.ch`.
+  - `src/app/` — routes (`/login`, `/(dashboard)/*`)
+  - `src/lib/` — cross-cutting infra: `auth.ts`, `db.ts`, `email.ts`, `env.ts`, `permissions.ts`, `utils.ts`
+  - `src/components/` — cross-feature React; shadcn/ui primitives in `src/components/ui/`
+  - `src/hooks/` — cross-feature React hooks (e.g. `use-has-permission.ts`)
+  - `src/features/<f>/` — feature-vertical slices (populated by iter-15+)
+  - Shared schema lives in `packages/db/src/schema/{auth,users,…}.ts`, re-exported by `packages/db/src/schema.ts`.
+- `kb/admin-architecture/` — architectural rules + decision log for the admin app. Read [`kb/admin-architecture/overview.md`](kb/admin-architecture/overview.md) before non-trivial work in `apps/admin/`.
 - `packages/db/` — shared libSQL/Drizzle schema and client used by `apps/admin/`
 - `tests/setup.ts` — Vitest shared setup (`@testing-library/jest-dom` matchers)
 - `vitest.config.ts` — root Vitest workspace config
