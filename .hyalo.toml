@@ -134,9 +134,12 @@ type = "string"
 
 [views]
 
-[views.stale-in-progress]
+[views.stale-implemented]
+# Iterations whose code has landed but haven't been promoted to status=done.
+# Matches the iteration schema's enum (planned/implemented/done/deferred/blocked) —
+# there is no `in-progress` value anywhere in this repo's schemas.
 fields = ["tasks"]
-properties = ["status=in-progress"]
+properties = ["status=implemented"]
 
 [views.missing-status]
 properties = ["!status"]
