@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 import { auth } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -24,6 +25,7 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
+      <Toaster />
     </div>
   );
 }
