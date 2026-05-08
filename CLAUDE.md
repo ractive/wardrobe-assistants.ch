@@ -19,7 +19,7 @@ Permissions live in `apps/admin/src/lib/permissions.ts` (catalog + `userHasPermi
 If you manage bunny.net services, use the "hoppy" CLI tool (hoppy --help) to discover and debug things.
 
 # Browser debugging
-If you need to debug something in the browser, use the ff-rdp CLI tool (ff-rdp --help) in favor of the chrome mcp server. Collect feedback about ff-rdp in the kb knowledgebase.
+Use ff-rdp (ff-rdp --help) to debug browser issues (instead of the chrome mcp server). Collect feedback (issues, quirks, improvement ideas) about ff-rdp in kb/tool-reports.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
@@ -36,6 +36,3 @@ Before any commit:
 3. `npm run verify:tf` — `tofu fmt -check && tofu validate` (only when `infra/terraform/**` changed; requires `tofu init` first).
 
 Read-only snapshot fixtures (`kb/bunny-snapshot-*/**`) and TF (`infra/terraform/**`) are excluded from Biome via `biome.json` — don't loosen the exclusions to "fix" formatter complaints.
-
-# Browser debugging
-Use ff-rdp (ff-rdp --help) to debug browser issues (instead of the chrome mcp server). Collect feedback (issues, quirks, improvement ideas) about ff-rdp in kb/tool-reports.
