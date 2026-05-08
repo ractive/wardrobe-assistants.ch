@@ -46,6 +46,29 @@ await db
   .set({ emailVerified: true, updatedAt: new Date() })
   .where(eq(schema.user.id, signUp.user.id));
 
+// Domain-side profile is required by every iter-15+ surface (permissions,
+// session enrichment, listings). Insert as ADMIN/verified so the seeded user
+// bypasses the invite flow. Idempotent: skip if a row already exists.
+const existingProfile = await db
+  .select()
+  .from(schema.userProfile)
+  .where(eq(schema.userProfile.userId, signUp.user.id))
+  .limit(1);
+if (existingProfile.length === 0) {
+  const now = new Date();
+  await db.insert(schema.userProfile).values({
+    userId: signUp.user.id,
+    firstName: "Admin",
+    lastName: "User",
+    nickname: null,
+    mobileNumber: null,
+    role: "ADMIN",
+    status: "verified",
+    invitedAt: now,
+    verifiedAt: now,
+  });
+}
+
 // Sign in to obtain a session so the next call (enableTwoFactor) is
 // authenticated. Better Auth's API requires an active session for
 // account-mutating actions; enableTwoFactor cannot be called as the unauthed

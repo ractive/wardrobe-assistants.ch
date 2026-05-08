@@ -1,0 +1,64 @@
+import { z } from "zod";
+
+// Inlined to avoid a transitive import of @/lib/permissions, which loads
+// @/lib/auth → @/lib/db → @/lib/env at module init. The catalog itself lives
+// in @/lib/permissions.ts; this is just the role enum.
+const ROLES = ["ADMIN", "SQUAD_MEMBER"] as const;
+
+export const inviteUserInput = z.object({
+  email: z.string().email().max(254),
+  firstName: z.string().trim().min(1, "First name is required").max(100),
+  lastName: z.string().trim().min(1, "Last name is required").max(100),
+  nickname: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+  mobileNumber: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+  role: z.enum(ROLES),
+});
+export type InviteUserInput = z.infer<typeof inviteUserInput>;
+
+export const messageUserInput = z.object({
+  userId: z.string().min(1),
+  subject: z.string().trim().min(1, "Subject is required").max(200),
+  body: z.string().trim().min(1, "Message body is required").max(10_000),
+});
+export type MessageUserInput = z.infer<typeof messageUserInput>;
+
+export const deleteUserInput = z.object({
+  userId: z.string().min(1),
+});
+export type DeleteUserInput = z.infer<typeof deleteUserInput>;
+
+export const userListItem = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string(),
+  role: z.enum(ROLES),
+  status: z.enum(["invited", "verified"]),
+  createdAt: z.date(),
+});
+export type UserListItem = z.infer<typeof userListItem>;
+
+export const userDetail = userListItem.extend({
+  firstName: z.string(),
+  lastName: z.string(),
+  nickname: z.string().nullable(),
+  mobileNumber: z.string().nullable(),
+  invitedAt: z.date(),
+  verifiedAt: z.date().nullable(),
+});
+export type UserDetail = z.infer<typeof userDetail>;
+
+export const actionResult = z.discriminatedUnion("error", [
+  z.object({ error: z.literal(false), message: z.string() }),
+  z.object({ error: z.literal(true), message: z.string() }),
+]);
+export type ActionResult = z.infer<typeof actionResult>;

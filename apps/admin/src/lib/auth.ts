@@ -75,6 +75,17 @@ export const auth = betterAuth({
             .limit(1);
           const profile = rows[0];
           if (!profile) return { data: session };
+          // First successful sign-in after invite ⇒ flip status:invited →
+          // verified. The user just demonstrated they own the email by
+          // completing the password-reset flow that the invite triggered.
+          let status = profile.status;
+          if (status === "invited") {
+            await db
+              .update(userProfile)
+              .set({ status: "verified", verifiedAt: new Date() })
+              .where(eq(userProfile.userId, session.userId));
+            status = "verified";
+          }
           return {
             data: {
               ...session,
@@ -82,7 +93,7 @@ export const auth = betterAuth({
               lastName: profile.lastName,
               nickname: profile.nickname ?? undefined,
               role: profile.role,
-              status: profile.status,
+              status,
             },
           };
         },
