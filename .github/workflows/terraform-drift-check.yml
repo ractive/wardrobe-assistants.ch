@@ -36,7 +36,7 @@ jobs:
 
       - name: Write backend-config (never on the command line)
         env:
-          TFSTATE_KEY: ${{ secrets.TERRAFORM_STATE_STORAGE_KEY }}
+          TFSTATE_KEY: ${{ secrets.TERRAFORM_STATE_STORAGE_KEY_READONLY }}
         run: |
           BACKEND_HCL="$RUNNER_TEMP/backend.hcl"
           QUOTED=$(printf '%s' "$TFSTATE_KEY" | jq -Rs '.')

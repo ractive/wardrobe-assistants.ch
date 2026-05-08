@@ -29,7 +29,7 @@ Required env vars in `.env.local` (gitignored):
 | Env var | Purpose |
 |---|---|
 | `BUNNY_API_KEY` | Bunny account API key — exported as `TF_VAR_bunny_api_key` |
-| `TERRAFORM_STATE_STORAGE_KEY` | Storage zone password for `wardrobe-assistants-terraform-state` (zone id `1503083`); used as the `AccessKey` HTTP header against bunny's storage API |
+| `TERRAFORM_STATE_STORAGE_KEY_FULL` | Read-write password for the `wardrobe-assistants-terraform-state` storage zone (zone id `1503083`); used as the `AccessKey` HTTP header for laptop `tofu apply`. Read-only sibling `TERRAFORM_STATE_STORAGE_KEY_READONLY` is used by CI plan/drift-check (see GitHub Actions secrets section). |
 
 ---
 
@@ -56,7 +56,7 @@ infra/terraform/
 The `http` backend needs the storage-zone password as an HTTP header. HCL needs the value double-quoted, so use `jq -Rs`:
 
 ```bash
-TFSTATE_KEY=$(grep '^TERRAFORM_STATE_STORAGE_KEY=' .env.local | cut -d= -f2-)
+TFSTATE_KEY=$(grep '^TERRAFORM_STATE_STORAGE_KEY_FULL=' .env.local | cut -d= -f2-)
 BACKEND_HCL=$(mktemp)
 trap 'rm -f "$BACKEND_HCL"' EXIT
 QUOTED=$(printf '%s' "$TFSTATE_KEY" | jq -Rs '.')
@@ -118,7 +118,7 @@ apply` — that step stays manual on the laptop.
 | Secret | Mirror of `.env.local` var | Purpose |
 |---|---|---|
 | `BUNNYNET_API_KEY` | `BUNNY_API_KEY` | Bunny account API key — exposed to OpenTofu as `TF_VAR_bunny_api_key`. Already used by `deploy.yml`. |
-| `TERRAFORM_STATE_STORAGE_KEY` | same name | Storage-zone password for `wardrobe-assistants-terraform-state` — written into a temp backend-config file inside the runner, never to the command line. |
+| `TERRAFORM_STATE_STORAGE_KEY_READONLY` | (CI-only — laptop uses `TERRAFORM_STATE_STORAGE_KEY_FULL` from `.env.local`) | Read-only password for `wardrobe-assistants-terraform-state` — written into a temp backend-config file inside the runner, never to the command line. CI workflows only `tofu plan` (with `-lock=false`) so write access is not needed; least-privilege isolates a leaked CI token from being able to corrupt state. |
 
 The naming asymmetry on the API key is intentional but easy to miss. Don't
 rename either side without updating both.
@@ -206,7 +206,7 @@ Half-day of work, no state-backend changes — defer until the trigger fires.
 | State URL | `https://storage.bunnycdn.com/wardrobe-assistants-terraform-state/wardrobe-assistants.ch/terraform.tfstate` |
 | Storage zone id | `1503083` |
 | Region | `DE` |
-| Auth | `AccessKey` HTTP header → `TERRAFORM_STATE_STORAGE_KEY` |
+| Auth | `AccessKey` HTTP header → `TERRAFORM_STATE_STORAGE_KEY_FULL` (laptop apply) or `TERRAFORM_STATE_STORAGE_KEY_READONLY` (CI plan/drift-check) |
 
 **Why `http` not `s3`:** bunny Storage doesn't expose an S3-compatible API endpoint. The `s3` backend fails with `"S3 API is not enabled for this storage zone"`. `http` uses plain GET/PUT/DELETE which maps directly onto bunny's REST storage API.
 
