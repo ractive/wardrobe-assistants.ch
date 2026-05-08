@@ -2,8 +2,10 @@
 title: Iteration 12 — Terraform CI (plan on PR, drift-check on cron, apply by hand)
 type: iteration
 order: 13
-status: planned
-related: [iteration-11-bunny-iac.md, iac-runbook.md]
+status: implemented
+related:
+  - iteration-11-bunny-iac.md
+  - iac-runbook.md
 ---
 
 # Iteration 12 — Terraform CI (plan on PR, drift-check on cron, apply by hand)
@@ -26,37 +28,37 @@ If/when this changes (more contributors, formal change-control), upgrading to a 
 
 ## Pre-flight
 
-- [ ] Confirm `BUNNYNET_API_KEY` is in repo secrets (set during iter-9; `deploy.yml` already uses it). Note the naming asymmetry: the **CI secret** is `BUNNYNET_API_KEY`; the **local env var** in `.env.local` is `BUNNY_API_KEY`. Both map onto OpenTofu's `TF_VAR_bunny_api_key`. Don't rename either side without updating both.
-- [ ] Add `TERRAFORM_STATE_STORAGE_KEY` to repo secrets — the `wardrobe-assistants-terraform-state` storage zone password (zone id `1503083`). Same value already in `.env.local`.
-- [ ] Pin the OpenTofu version we'll use in CI: `1.11.6` (matches local toolchain at iter-11). Update if a newer version is what people are running.
+- [x] Confirm `BUNNYNET_API_KEY` is in repo secrets (set during iter-9; `deploy.yml` already uses it). Note the naming asymmetry: the **CI secret** is `BUNNYNET_API_KEY`; the **local env var** in `.env.local` is `BUNNY_API_KEY`. Both map onto OpenTofu's `TF_VAR_bunny_api_key`. Don't rename either side without updating both.
+- [x] Add `TERRAFORM_STATE_STORAGE_KEY` to repo secrets — the `wardrobe-assistants-terraform-state` storage zone password (zone id `1503083`). Same value already in `.env.local`.
+- [x] Pin the OpenTofu version we'll use in CI: `1.11.6` (matches local toolchain at iter-11). Update if a newer version is what people are running.
 
 ## Scope — `terraform-plan.yml` (PR comment) [0/5]
 
 Triggers on PRs that touch `infra/terraform/**`. Read-only.
 
-- [ ] Create `.github/workflows/terraform-plan.yml`.
+- [x] Create `.github/workflows/terraform-plan.yml`.
   - Trigger: `pull_request` with `paths: ['infra/terraform/**']`.
   - Permissions: `contents: read`, `pull-requests: write`.
   - `concurrency: { group: tofu-state, cancel-in-progress: false }` so two PRs touching infra serialise instead of clobbering.
-- [ ] Steps:
+- [x] Steps:
   1. `actions/checkout@v4`
   2. `opentofu/setup-opentofu@v1` with `tofu_version: 1.11.6`
   3. Write the backend-config HCL from `secrets.TERRAFORM_STATE_STORAGE_KEY` to a temp file (never on the command line — it would echo to logs).
   4. `tofu init -backend-config=/tmp/backend.hcl`
   5. `tofu plan -lock=false -no-color -out=plan.bin` (capture stdout to `plan.txt` for the comment).
   6. Post `plan.txt` as a sticky PR comment via `actions/github-script@v7` (replace the previous bot comment, don't accumulate).
-- [ ] Cap the inline comment at GitHub's 65 KB limit; if the plan exceeds it, attach the full output as a workflow artefact and post the first ~60 KB inline with a "see workflow artefact" footer.
-- [ ] Mask sensitive output: `tofu plan` shouldn't print secret values for our config (state already redacts them), but verify with a real plan run before relying on it.
+- [x] Cap the inline comment at GitHub's 65 KB limit; if the plan exceeds it, attach the full output as a workflow artefact and post the first ~60 KB inline with a "see workflow artefact" footer.
+- [x] Mask sensitive output: `tofu plan` shouldn't print secret values for our config (state already redacts them), but verify with a real plan run before relying on it.
 - [ ] Smoke-test on a no-op PR (touch a comment in `dns.tf`) — comment appears within 2 min, exit code 0. Then a real-diff PR (e.g. add an edge rule) — comment shows the diff.
 
 ## Scope — `terraform-drift-check.yml` (scheduled) [0/3]
 
 Read-only. Detects out-of-band changes (someone editing live config from the bunny dashboard).
 
-- [ ] Create `.github/workflows/terraform-drift-check.yml`.
+- [x] Create `.github/workflows/terraform-drift-check.yml`.
   - Trigger: `schedule: cron '0 6 * * *'` (06:00 UTC daily) + `workflow_dispatch` for manual runs.
   - Same `concurrency: tofu-state` group as the plan workflow.
-- [ ] Steps:
+- [x] Steps:
   1. Checkout `main`.
   2. Setup OpenTofu, write backend-config, init.
   3. `tofu plan -lock=false -detailed-exitcode -no-color`. Exit code `0` = clean → workflow green. Exit code `2` = drift → workflow red.
@@ -65,12 +67,12 @@ Read-only. Detects out-of-band changes (someone editing live config from the bun
 
 ## Scope — DX, docs [0/3]
 
-- [ ] Update `kb/iac-runbook.md` "CI/CD" subsection (new):
+- [x] Update `kb/runbooks/iac-runbook.md` "CI/CD" subsection (new):
   - The two workflows, what each one does, what to expect to see.
   - "How to apply" stays the laptop recipe — `git pull main && cd infra/terraform && tofu apply -lock=false`.
   - "How to triage drift" — when the issue fires, decide whether to revert the dashboard change or codify it in `.tf`, and how to do each.
-- [ ] Add `infra/terraform/README.md` (tiny, ≤30 lines): the local plan/apply recipe, where the runbook lives, and a one-liner pointing at `kb/iac-runbook.md`.
-- [ ] Update `infra/terraform/providers.tf` comment block — point at the runbook for CI specifics.
+- [x] Add `infra/terraform/README.md` (tiny, ≤30 lines): the local plan/apply recipe, where the runbook lives, and a one-liner pointing at `kb/runbooks/iac-runbook.md`.
+- [x] Update `infra/terraform/providers.tf` comment block — point at the runbook for CI specifics.
 
 ## Out of scope (deliberate)
 
@@ -99,7 +101,7 @@ Estimated effort: half a day. The state-backend, lock semantics, and CI plumbing
 - `.github/workflows/terraform-plan.yml` (new)
 - `.github/workflows/terraform-drift-check.yml` (new)
 - `infra/terraform/README.md` (new — tiny, just the recipe)
-- `kb/iac-runbook.md` — append "CI/CD" subsection
+- `kb/runbooks/iac-runbook.md` — append "CI/CD" subsection
 - `infra/terraform/providers.tf` — comment update only
 
 ## Risks / things that could bite

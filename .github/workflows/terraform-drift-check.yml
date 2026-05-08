@@ -1,0 +1,137 @@
+name: Terraform Drift Check
+
+# Daily plan against main. Exit 2 from `tofu plan -detailed-exitcode` means the
+# live config has drifted from the .tf — we open or update a `drift`-labelled
+# issue. Read-only: the workflow never applies. See kb/runbooks/iac-runbook.md.
+
+on:
+  schedule:
+    # 06:00 UTC daily. UTC, not local time — adjust if you want Europe hours.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+# Same group as terraform-plan.yml so we never race the bunny state file.
+concurrency:
+  group: tofu-state
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.11.6
+
+      - name: Write backend-config (never on the command line)
+        env:
+          TFSTATE_KEY: ${{ secrets.TERRAFORM_STATE_STORAGE_KEY }}
+        run: |
+          BACKEND_HCL="$RUNNER_TEMP/backend.hcl"
+          QUOTED=$(printf '%s' "$TFSTATE_KEY" | jq -Rs '.')
+          printf 'headers = { AccessKey = %s }\n' "$QUOTED" > "$BACKEND_HCL"
+          echo "BACKEND_HCL=$BACKEND_HCL" >> "$GITHUB_ENV"
+
+      - name: tofu init
+        run: tofu init -input=false -backend-config="$BACKEND_HCL"
+
+      - name: tofu plan -detailed-exitcode
+        id: plan
+        env:
+          TF_VAR_bunny_api_key: ${{ secrets.BUNNYNET_API_KEY }}
+        run: |
+          set +e
+          tofu plan -lock=false -detailed-exitcode -input=false -no-color > plan.txt 2>&1
+          EXIT=$?
+          set -e
+          echo "exitcode=$EXIT" >> "$GITHUB_OUTPUT"
+          cat plan.txt
+          # Exit codes: 0 = clean, 1 = error, 2 = drift detected.
+          # Don't fail the step on 2 — we want to handle it via the issue
+          # opener below and still surface the workflow as red at the end.
+          if [ "$EXIT" -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Open or update drift issue
+        if: steps.plan.outputs.exitcode == '2'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const marker = '<!-- tofu-drift-issue -->';
+            const planPath = path.join('infra', 'terraform', 'plan.txt');
+            let plan = '';
+            try {
+              plan = fs.readFileSync(planPath, 'utf8');
+            } catch (e) {
+              plan = `Plan output unavailable: ${e.message}`;
+            }
+
+            const INLINE_BUDGET = 60000;
+            let truncated = false;
+            if (plan.length > INLINE_BUDGET) {
+              truncated = true;
+              plan = plan.slice(0, INLINE_BUDGET);
+            }
+
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const stamp = new Date().toISOString();
+            const footer = truncated
+              ? '\n\n_Plan output exceeded 60 KB and was truncated above. Open the workflow run for the full log._'
+              : '';
+
+            const body = [
+              marker,
+              `**Drift detected at ${stamp}.** Workflow run: ${runUrl}`,
+              '',
+              '```diff',
+              plan,
+              '```',
+              footer,
+              '',
+              '<sub>Triage: revert the dashboard change, or codify it in `infra/terraform/`. See `kb/runbooks/iac-runbook.md`.</sub>',
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+
+            // One open `drift` issue at a time — append a comment if one
+            // already exists, otherwise open a fresh issue.
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'drift', per_page: 50,
+            });
+            const existing = open.find(i =>
+              !i.pull_request && i.body && i.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: existing.number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner, repo,
+                title: `Terraform drift detected (${stamp.slice(0, 10)})`,
+                body,
+                labels: ['drift'],
+              });
+            }
+
+      - name: Fail the workflow if drift detected
+        if: steps.plan.outputs.exitcode == '2'
+        run: |
+          echo "::error::Drift detected — see the issue opened by the previous step."
+          exit 1
