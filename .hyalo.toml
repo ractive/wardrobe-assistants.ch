@@ -131,3 +131,24 @@ type = "string"
 
 [schema.types.legal-draft.properties.title]
 type = "string"
+
+[views]
+
+[views.stale-in-progress]
+fields = ["tasks"]
+properties = ["status=in-progress"]
+
+[views.missing-status]
+properties = ["!status"]
+
+[views.missing-type]
+properties = ["!type"]
+
+[views.orphans]
+fields = ["backlinks"]
+orphan = true
+
+[views.completed-with-todos]
+fields = ["tasks"]
+properties = ["status=done"]
+task = "todo"

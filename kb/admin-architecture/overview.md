@@ -47,7 +47,7 @@ The [decision log](decision-log.md) records the *why* behind each architectural 
 
 ## Iteration sequence
 
-This architecture lands across iter-14 (foundation) and is exercised by iter-15..iter-18 (one feature per iteration). Subsequent iterations (auth/MFA, email senders, SMS/WhatsApp, deeper invoice flow) layer on top. See `kb/iteration-14-foundation.md` and following.
+This architecture lands across iter-14 (foundation) and is exercised by iter-15..iter-18 (one feature per iteration). Subsequent iterations (auth/MFA, email senders, SMS/WhatsApp, deeper invoice flow) layer on top. See `kb/iterations/iteration-14-foundation.md` and following.
 
 ## When to update this doc
 
