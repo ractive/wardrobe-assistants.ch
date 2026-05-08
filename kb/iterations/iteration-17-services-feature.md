@@ -49,7 +49,7 @@ ADMIN gets these automatically (`new Set(PERMISSIONS)`); SQUAD_MEMBER does not.
 ## Scope — Zod schemas [0/2]
 
 - [ ] `serviceInput`: name (≥1), description (≥1), priceType (enum), priceCents (positive integer), currency (default "CHF").
-- [ ] `serviceListItem` output: id, name, description, priceType, priceCents, currency, archived, createdAt + computed `priceFormatted` (e.g. "CHF 25.00" or "CHF 25.00/hr") via the [type-contract pattern](admin-architecture/data-layer.md).
+- [ ] `serviceListItem` output: id, name, description, priceType, priceCents, currency, archived, createdAt + computed `priceFormatted` (e.g. "CHF 25.00" or "CHF 25.00/hr") via the [type-contract pattern](../admin-architecture/data-layer.md).
 
 ## Scope — CRUD [0/4]
 

@@ -2,7 +2,7 @@
 title: Iteration 12 — Terraform CI (plan on PR, drift-check on cron, apply by hand)
 type: iteration
 order: 13
-status: implemented
+status: done
 related:
   - iteration-11-bunny-iac.md
   - iac-runbook.md

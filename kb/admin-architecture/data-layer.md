@@ -157,6 +157,6 @@ After this hook, `session.user.role` is available everywhere. Permissions are co
 
 ## What's NOT in scope of the data layer doc
 
-- **Migrations workflow** — covered in `kb/iac-runbook.md` (prod) and `apps/admin/scripts/migrate.ts` (local).
+- **Migrations workflow** — covered in `kb/runbooks/iac-runbook.md` (prod) and `apps/admin/scripts/migrate.ts` (local).
 - **Seed data** — covered by `apps/admin/scripts/seed-admin.ts` and `db-reset.ts` (planned in iter-13).
 - **Connection lifecycle** — single client per process via `lib/db.ts` (existing).

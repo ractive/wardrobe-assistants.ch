@@ -22,7 +22,7 @@
     "lighthouse:services": "node scripts/lighthouse.mjs services"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {
     "zod": "^4.4.3"
