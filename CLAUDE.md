@@ -7,6 +7,8 @@ When working in `apps/admin/` or `packages/db/`, read [`kb/admin-architecture/ov
 
 **Adding a new feature slice** (events, services, etc.) — follow [`kb/admin-architecture/feature-slice-template.md`](kb/admin-architecture/feature-slice-template.md). It's a concrete file-by-file checklist that iter-16 onward copy from. Smoke tests (`apps/admin/src/test/http-harness.ts` + `*.smoke.test.ts`) against the real auth + Drizzle path are mandatory per slice (the iter-15b/iter-15c motivation).
 
+**Building UI** — read [`kb/admin-architecture/design-system.md`](kb/admin-architecture/design-system.md) first. It's the contract for tokens, breakpoints (mobile-first; admin must work at 375px), forms, tables, dialogs/sheets, icons, animation, and the a11y baseline (`vitest-axe` per interactive component). The slice template links here for UI conventions.
+
 **Audit findings** (security + frontend) live in [`kb/audits/`](kb/audits/). Before any UI or security work, check [`kb/audits/findings-index.md`](kb/audits/findings-index.md) — it maps every consolidated finding ID (`C-SEC-XX`, `F-FE-XX`) to its target iteration with live status. The post-iter-16 hardening sequence (iter-16b..16g) closes most of them; don't bypass unless the finding is explicitly marked deferred or accepted.
 
 The shared layers are:
