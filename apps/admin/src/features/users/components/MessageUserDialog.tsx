@@ -69,7 +69,7 @@ export function MessageUserDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form method="post" onSubmit={onSubmit} className="space-y-4">
             <FormField
               control={form.control}
               name="subject"

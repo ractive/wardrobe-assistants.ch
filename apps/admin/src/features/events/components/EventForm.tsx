@@ -115,7 +115,7 @@ export function EventForm(props: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form method="post" onSubmit={onSubmit} className="space-y-4">
         <FormField
           control={form.control}
           name="name"

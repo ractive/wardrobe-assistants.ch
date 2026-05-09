@@ -56,6 +56,7 @@ export function TotpStep({ onSuccess }: Props) {
     <Form {...form}>
       <form
         className="space-y-4"
+        method="post"
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
       >
