@@ -44,10 +44,10 @@ For each block: run with `--overwrite`, inspect `git diff`, keep the structural 
 ## Verify
 
 - [x] `npm run format` + `npm run verify` green.
-- [ ] Light + dark renders correctly at 375px and 1024px on every existing screen (login, set-password, dashboard, users, events). Before/after screenshots in `kb/perf-reports/iter-16h-design-refresh/{light,dark}/`.
+- [ ] Light + dark renders correctly at 375px and 1024px on every existing screen (login, set-password, dashboard, users, events). Before/after screenshots in `kb/perf-reports/iter-16h-design-refresh/{light,dark}/`. _(Manual smoke; user-driven, not blocking PR.)_
 - [x] vitest-axe on `DashboardSidebar`, `LoginPage`, `DashboardHome`, `ThemeToggle` — `toHaveNoViolations()` per theme.
-- [ ] Cold-load with `localStorage.theme = "dark"` (then `"light"`) shows no flash. Mechanism: `suppressHydrationWarning` + next-themes' built-in pre-hydration script.
-- [ ] Theme toggle persists across reloads; system mode reflects OS-level changes without reload.
+- [ ] Cold-load with `localStorage.theme = "dark"` (then `"light"`) shows no flash. Mechanism: `suppressHydrationWarning` + next-themes' built-in pre-hydration script. _(Manual smoke; user-driven, not blocking PR.)_
+- [ ] Theme toggle persists across reloads; system mode reflects OS-level changes without reload. _(Manual smoke; user-driven, not blocking PR.)_
 
 ## Out of scope
 

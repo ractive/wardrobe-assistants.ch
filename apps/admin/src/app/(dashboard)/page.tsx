@@ -4,7 +4,7 @@ import {
   events,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
-import { count, gte, inArray, sql } from "drizzle-orm";
+import { count, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { CalendarClock, MailPlus, Receipt, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import { HasPermission } from "@/components/HasPermission";
@@ -20,13 +20,25 @@ import {
 } from "@/components/ui/empty";
 import { getCachedSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { userHasPermission } from "@/lib/permissions";
+
+const VALID_STATUSES = ["draft", "published", "cancelled", "done"] as const;
+type EventStatus = (typeof VALID_STATUSES)[number];
+
+function parseEventStatus(value: string): EventStatus {
+  if (!VALID_STATUSES.includes(value as EventStatus)) {
+    throw new Error(`Unexpected event status: ${value}`);
+  }
+  return value as EventStatus;
+}
 
 async function fetchUpcomingEventCount(): Promise<number> {
-  const now = new Date();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
   const rows = await db
     .select({ count: count() })
     .from(events)
-    .where(gte(events.date, now));
+    .where(gte(events.date, startOfToday));
   return rows[0]?.count ?? 0;
 }
 
@@ -51,14 +63,14 @@ async function fetchRecentEvents() {
       )`,
     })
     .from(events)
-    .orderBy(sql`${events.date} desc`)
+    .orderBy(desc(events.date))
     .limit(5);
 
   return rows.map((r) => ({
     id: r.id,
     title: r.name,
     startAt: r.date,
-    status: r.status as "draft" | "published" | "cancelled" | "done",
+    status: parseEventStatus(r.status),
     assigneeCount: Number(r.assigneeCount ?? 0),
   }));
 }
@@ -91,17 +103,23 @@ export default async function DashboardHome() {
       lastName: userProfile.lastName,
     })
     .from(userProfile)
-    .where(sql`${userProfile.userId} = ${session.user.id}`)
+    .where(eq(userProfile.userId, session.user.id))
     .limit(1);
 
   const profile = profileRows[0] ?? null;
   const greeting = buildGreeting(profile, session.user.email);
 
-  // Fetch KPI data and recent events in parallel.
+  // Fetch KPI data and recent events in parallel, gated by permission so users
+  // who lack the relevant permission don't trigger unused DB reads.
+  const [canViewEvents, canInviteUsers] = await Promise.all([
+    userHasPermission("EVENT_VIEW"),
+    userHasPermission("USER_INVITE"),
+  ]);
+
   const [upcomingCount, squadCount, recentEvents] = await Promise.all([
-    fetchUpcomingEventCount(),
-    fetchActiveSquadCount(),
-    fetchRecentEvents(),
+    canViewEvents ? fetchUpcomingEventCount() : Promise.resolve(null),
+    canInviteUsers ? fetchActiveSquadCount() : Promise.resolve(null),
+    canViewEvents ? fetchRecentEvents() : Promise.resolve(null),
   ]);
 
   return (
@@ -113,7 +131,7 @@ export default async function DashboardHome() {
         <HasPermission perm="EVENT_VIEW">
           <KpiCard
             title="Upcoming events"
-            value={upcomingCount}
+            value={upcomingCount ?? "—"}
             icon={CalendarClock}
             description="Events scheduled from today"
           />
@@ -122,7 +140,7 @@ export default async function DashboardHome() {
         <HasPermission perm="USER_INVITE">
           <KpiCard
             title="Active squad"
-            value={squadCount}
+            value={squadCount ?? "—"}
             icon={Users}
             description="Admins and squad members"
           />
@@ -170,7 +188,7 @@ export default async function DashboardHome() {
           <h2 id="recent-events-heading" className="mb-4 text-lg font-semibold">
             Recent events
           </h2>
-          <RecentEventsTable events={recentEvents} />
+          <RecentEventsTable events={recentEvents ?? []} />
         </section>
       </HasPermission>
     </section>
