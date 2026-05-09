@@ -57,6 +57,7 @@ export function MessageAssigneesDialog({
   const submit = useFormAction(messageEventAssignees, {
     onSuccess: () => onOpenChange(false),
     refresh: false,
+    fallbackErrorMessage: "Could not send.",
   });
 
   const onSubmit = form.handleSubmit((data) => submit(data));

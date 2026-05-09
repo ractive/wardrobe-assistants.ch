@@ -111,11 +111,11 @@ function SetPasswordInner() {
               </FormItem>
             )}
           />
-          <div role="alert" aria-live="assertive">
-            {serverError ? (
-              <p className="text-[var(--destructive)] text-sm">{serverError}</p>
-            ) : null}
-          </div>
+          {serverError ? (
+            <p role="alert" className="text-[var(--destructive)] text-sm">
+              {serverError}
+            </p>
+          ) : null}
           <Button
             type="submit"
             className="w-full"

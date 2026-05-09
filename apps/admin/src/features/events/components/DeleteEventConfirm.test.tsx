@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
@@ -16,7 +16,12 @@ vi.mock("sonner", () => ({
 
 import { DeleteEventConfirm } from "./DeleteEventConfirm";
 
+// Vitest is not running with `globals: true`, so RTL's auto-cleanup hook
+// doesn't fire. Without explicit cleanup, Radix Dialog portals from earlier
+// tests stack onto document.body and the axe(baseElement) check trips on
+// stale aria-hidden dialogs.
 afterEach(() => {
+  cleanup();
   deleteEvent.mockReset();
   refresh.mockReset();
   toastError.mockReset();
@@ -59,7 +64,8 @@ describe("DeleteEventConfirm", () => {
       }),
     );
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
-    expect(toastSuccess).toHaveBeenCalledWith("Deleted.");
+    await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith("Deleted."));
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it("renders an error live region when the action returns error: true", async () => {
@@ -110,10 +116,16 @@ describe("DeleteEventConfirm", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
     resolve({ error: false, message: "Deleted." });
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it("is axe-clean in the open + idle state", async () => {
-    const { container } = render(
+    // DialogContent renders through a Radix portal under document.body, so
+    // axe(container) misses the dialog markup. baseElement walks the full
+    // tree including portals. We disable `aria-hidden-focus` because Radix's
+    // focus-trap guards are aria-hidden+tabindex=0 by design — axe flags them
+    // but the pattern is intentional and accepted upstream.
+    const { baseElement } = render(
       <DeleteEventConfirm
         eventId="evt_1"
         eventName="Curtain Up"
@@ -121,6 +133,10 @@ describe("DeleteEventConfirm", () => {
         onOpenChange={() => {}}
       />,
     );
-    expect(await axe(container)).toHaveNoViolations();
+    expect(
+      await axe(baseElement, {
+        rules: { "aria-hidden-focus": { enabled: false } },
+      }),
+    ).toHaveNoViolations();
   });
 });

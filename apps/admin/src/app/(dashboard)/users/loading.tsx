@@ -2,7 +2,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UsersLoading() {
   return (
-    <section className="flex flex-col gap-6">
+    <section
+      className="flex flex-col gap-6"
+      aria-busy="true"
+      aria-label="Loading users"
+    >
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-8 w-32 md:h-9 md:w-40" />

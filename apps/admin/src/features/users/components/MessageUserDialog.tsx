@@ -54,6 +54,7 @@ export function MessageUserDialog({
   const submit = useFormAction(messageUser, {
     onSuccess: () => onOpenChange(false),
     refresh: false,
+    fallbackErrorMessage: "Could not send message.",
   });
 
   const onSubmit = form.handleSubmit((data) => submit(data));

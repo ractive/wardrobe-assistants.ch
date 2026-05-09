@@ -26,11 +26,18 @@ export function LinkButton({
       "border border-[var(--border)] text-[var(--muted-foreground)] shadow-[0_1px_1.75px_rgba(0,0,0,0.05)]",
   };
 
+  // Block window.opener / referrer leak when opening in a new tab.
+  const rel =
+    props.target === "_blank"
+      ? [props.rel, "noopener", "noreferrer"].filter(Boolean).join(" ")
+      : props.rel;
+
   return (
     <a
       href={href}
       className={`${base} ${variants[variant]} ${className ?? ""}`}
       {...props}
+      rel={rel}
     >
       {children}
     </a>

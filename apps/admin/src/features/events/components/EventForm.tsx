@@ -98,12 +98,17 @@ export function EventForm(props: Props) {
         if (!isEdit) form.reset();
         props.onSuccess?.();
       },
+      fallbackErrorMessage: isEdit
+        ? "Could not update event."
+        : "Could not create event.",
     },
   );
 
-  // The resolver guarantees a real Date when handleSubmit calls our callback.
+  // The resolver guarantees a real Date when handleSubmit fires, so parsing
+  // is just the type-safe boundary — narrows `FormValues` (date optional) to
+  // `CreateEventInput` (date required) at runtime instead of via cast.
   const onSubmit = form.handleSubmit((data) =>
-    submit(data as CreateEventInput),
+    submit(createEventInput.parse(data)),
   );
 
   const submitLabel = isEdit ? "Save changes" : "Create event";

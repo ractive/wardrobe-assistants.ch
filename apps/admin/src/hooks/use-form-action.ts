@@ -19,28 +19,35 @@ type ActionResult = { error?: unknown; message?: string };
  */
 export function useFormAction<I, R extends ActionResult>(
   action: (input: I) => Promise<R>,
-  opts?: { onSuccess?: (result: R) => void; refresh?: boolean },
+  opts?: {
+    onSuccess?: (result: R) => void;
+    refresh?: boolean;
+    // Used for non-Error throws and as the result-error fallback when the
+    // action returns no `message`. Each form keeps action-specific copy
+    // ("Could not send invitation.") instead of the generic default.
+    fallbackErrorMessage?: string;
+  },
 ): (input: I) => Promise<void> {
   const router = useRouter();
   const onSuccess = opts?.onSuccess;
   const refresh = opts?.refresh ?? true;
+  const fallbackErrorMessage =
+    opts?.fallbackErrorMessage ?? "Something went wrong.";
   return useCallback(
     async (input: I) => {
       try {
         const result = await action(input);
         if (result.error) {
-          toast.error(result.message ?? "Something went wrong.");
+          toast.error(result.message ?? fallbackErrorMessage);
           return;
         }
         toast.success(result.message ?? "Done.");
         onSuccess?.(result);
         if (refresh) router.refresh();
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Something went wrong.",
-        );
+        toast.error(err instanceof Error ? err.message : fallbackErrorMessage);
       }
     },
-    [action, onSuccess, refresh, router],
+    [action, onSuccess, refresh, router, fallbackErrorMessage],
   );
 }

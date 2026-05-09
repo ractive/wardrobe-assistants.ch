@@ -41,6 +41,7 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
       form.reset();
       onSuccess?.();
     },
+    fallbackErrorMessage: "Could not send invitation.",
   });
 
   const onSubmit = form.handleSubmit((data) => submit(data));
