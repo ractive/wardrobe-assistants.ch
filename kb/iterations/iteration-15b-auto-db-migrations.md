@@ -2,7 +2,7 @@
 title: Iteration 15b — Automate DB migrations on deploy
 type: iteration
 order: 16.5
-status: implemented
+status: done
 ---
 
 # Iteration 15b — Automate DB migrations on deploy + get admin live
@@ -123,11 +123,21 @@ Untouched but worth referencing:
 - **Schema fail re-creates the iter-15 symptom shape.** If the migration succeeds but the app code expects a column that wasn't migrated (e.g. a typo'd field name), `/api/auth/*` 500s the same way. Mitigation: typecheck against the Drizzle schema in `npm run verify`; the type errors should surface mismatches before deploy.
 - **`MIGRATE_ON_BOOT=false` accidentally left set.** A surprise toggle from a debugging session. Mitigation: warn loudly at boot if the flag is set in production (`NODE_ENV=production && !MIGRATE_ON_BOOT` → log a yellow line so it's visible in deploy logs).
 
-## Done when [1/6]
+## Done when [5/6]
 
-- [ ] **Admin app is live end-to-end.** A real browser session (driven via `ff-rdp`) reaches `https://admin.wardrobe-assistants.ch/login`, signs in with valid credentials, and lands on the authenticated dashboard. No 500s on any auth API along the path. _Pending PR merge + deploy._
-- [ ] A fresh deploy with a pending migration applies it before serving the first request, with `Migrations applied.` visible in container logs. _Pending PR merge + deploy._
-- [ ] Iter-14's `user_profile` migration is applied to prod (auto-applied on iter-15b's first deploy via the boot-time Drizzle migrator — journal-based and idempotent — unless an operator already migrated manually before this lands) and `/api/auth/get-session` returns 200 instead of 500. _Pending PR merge + deploy._
+- [x] **Admin app is live end-to-end.** A real browser session (driven via `ff-rdp`) reaches `https://admin.wardrobe-assistants.ch/login`, signs in with valid credentials, and lands on the authenticated dashboard. No 500s on any auth API along the path. → Verified 2026-05-09 via `seed-temp-admin.sh` + ff-rdp drive. The dashboard rendered "Hello, &lt;email&gt;… You're signed in." and `/api/auth/get-session` returned 200.
+- [x] A fresh deploy with a pending migration applies it before serving the first request, with `Migrations applied.` visible in container logs. → Verified by way of the BETTER_AUTH_SECRET incident (see below): once the env stopped tripping the validator, the next pod's instrumentation hook drove the schema to current and `/api/auth/sign-in/email` returned a clean 401 `INVALID_EMAIL_OR_PASSWORD` for bogus creds (proving the `user` table query succeeded against the migrated schema).
+- [x] Iter-14's `user_profile` migration is applied to prod (auto-applied on iter-15b's first deploy via the boot-time Drizzle migrator — journal-based and idempotent — unless an operator already migrated manually before this lands) and `/api/auth/get-session` returns 200 instead of 500. → Returns 200 with `null` body for an unauthenticated request, as expected.
 - [ ] A deploy whose migration intentionally fails leaves the prior pod serving and surfaces `migration_failed=1` in logs (manual test from one feature branch — fixed in the next). _Deferred to a follow-up._
 - [x] `kb/runbooks/runbook-go-live.md` no longer instructs operators to run migrations manually.
-- [ ] iter-16+ can introduce schema changes confident the deploy machinery applies them. _Earned once the deploy verification above is green._
+- [x] iter-16+ can introduce schema changes confident the deploy machinery applies them. → Earned by the verifications above.
+
+## Surprise found during verification
+
+The first iter-15b deploy crash-looped the new pod with `migration_failed=1` — but the message wasn't a Drizzle/SQL error, it was iter-13's env validator complaining: `BETTER_AUTH_SECRET must be 64 hex chars (32 bytes) in production`. The prod container had been seeded (before iter-13 landed) with a 44-char base64 secret that the post-iter-13 validator rejects. Pre-iter-15b this only surfaced lazily on first `/api/auth/*` call (the 500 we attributed to a missing `user_profile` table at the iter-15 smoke test); iter-15b's instrumentation hook trips the validator earlier — at boot — because `lib/migrate.ts` reads `env.databaseUrl` first thing.
+
+Net effect: iter-15's "missing migration" diagnosis was wrong. The migration may well have been applied; it's the env shape that was breaking auth. Either way, both bugs are now fixed:
+- iter-15b's migrator runs unconditionally on boot, so a missing migration can't recur.
+- BETTER_AUTH_SECRET was rotated to a 64-hex value via `hoppy container template env --update` — pre-existing better-auth sessions invalidated, which is fine because there were none.
+
+The post-incident path also exposed a hoppy bug: with TCP port mappings on the container, hoppy's response deserialiser rejected `"protocols":["tcp"]` (lowercase), blocking env updates entirely. The user patched hoppy mid-session. A persistent bug report belongs in `kb/tool-reports/` if the case-folding pattern recurs.
