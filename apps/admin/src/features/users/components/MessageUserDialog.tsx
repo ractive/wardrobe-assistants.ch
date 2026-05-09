@@ -39,7 +39,7 @@ export function MessageUserDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const form = useForm<MessageUserInput>({
+  const form = useForm({
     resolver: zodResolver(messageUserInput),
     defaultValues: { userId, subject: "", body: "" },
   });

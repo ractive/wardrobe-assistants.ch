@@ -22,7 +22,7 @@ type Props = {
 
 export function TotpStep({ onSuccess }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const form = useForm<TotpInput>({
+  const form = useForm({
     resolver: zodResolver(totpSchema),
     defaultValues: { code: "" },
   });
