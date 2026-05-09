@@ -2,7 +2,7 @@
 title: Iteration 16b — Edge & supply-chain hardening (audit Group 1)
 type: iteration
 order: 17.3
-status: in-progress
+status: done
 ---
 
 # Iteration 16b — Edge & supply-chain hardening
