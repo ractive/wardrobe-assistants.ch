@@ -1,0 +1,40 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { NoPermissionCard } from "@/components/NoPermissionCard";
+import { CreateEventDialog } from "@/features/events/components/EventDialog";
+import { EventsTable } from "@/features/events/components/EventsTable";
+import { listEvents } from "@/features/events/server/queries";
+import { auth } from "@/lib/auth";
+import { userHasPermission } from "@/lib/permissions";
+
+export default async function EventsPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/login");
+
+  const allowed = await userHasPermission("EVENT_CREATE");
+  if (!allowed) {
+    return (
+      <section className="flex flex-col gap-4">
+        <h1 className="font-semibold text-3xl">Events</h1>
+        <NoPermissionCard />
+      </section>
+    );
+  }
+
+  const events = await listEvents();
+
+  return (
+    <section className="flex flex-col gap-6">
+      <header className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="font-semibold text-3xl">Events</h1>
+          <p className="text-[var(--muted-foreground)]">
+            Schedule events, assign squad members, and message assignees.
+          </p>
+        </div>
+        <CreateEventDialog />
+      </header>
+      <EventsTable events={events} />
+    </section>
+  );
+}
