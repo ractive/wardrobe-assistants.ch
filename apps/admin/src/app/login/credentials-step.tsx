@@ -29,20 +29,24 @@ export function CredentialsStep({ onSuccess }: Props) {
 
   async function onSubmit(values: CredentialsInput) {
     setServerError(null);
-    const { data, error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-    });
-    if (error) {
-      setServerError(error.message ?? "Invalid email or password");
-      return;
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+      });
+      if (error) {
+        setServerError(error.message ?? "Invalid email or password");
+        return;
+      }
+      // twoFactorRedirect: true means TOTP enrollment is required to complete sign-in.
+      if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) {
+        onSuccess("totp");
+        return;
+      }
+      onSuccess("done");
+    } catch {
+      setServerError("Network error. Please try again.");
     }
-    // twoFactorRedirect: true means TOTP enrollment is required to complete sign-in.
-    if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) {
-      onSuccess("totp");
-      return;
-    }
-    onSuccess("done");
   }
 
   return (

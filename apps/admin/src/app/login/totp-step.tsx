@@ -38,14 +38,18 @@ export function TotpStep({ onSuccess }: Props) {
 
   async function onSubmit(values: TotpInput) {
     setServerError(null);
-    const { error } = await authClient.twoFactor.verifyTotp({
-      code: values.code,
-    });
-    if (error) {
-      setServerError(error.message ?? "Invalid code");
-      return;
+    try {
+      const { error } = await authClient.twoFactor.verifyTotp({
+        code: values.code,
+      });
+      if (error) {
+        setServerError(error.message ?? "Invalid code");
+        return;
+      }
+      onSuccess();
+    } catch {
+      setServerError("Network error. Please try again.");
     }
-    onSuccess();
   }
 
   return (
