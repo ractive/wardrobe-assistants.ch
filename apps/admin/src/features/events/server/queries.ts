@@ -7,6 +7,7 @@ import {
 } from "@wardrobe-assistants/db/schema";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { assertPermission } from "@/lib/permissions";
 import {
   type AssignableUser,
   assignableUser,
@@ -26,6 +27,8 @@ function buildDisplayName(input: {
 }
 
 export async function listEvents() {
+  // iter-16f / C-SEC-09: query is a security boundary on its own.
+  await assertPermission("EVENT_VIEW");
   const rows = await db
     .select({
       id: events.id,
@@ -56,6 +59,7 @@ export async function listEvents() {
 }
 
 export async function getEventById(id: string): Promise<EventDetail | null> {
+  await assertPermission("EVENT_VIEW");
   const rows = await db.select().from(events).where(eq(events.id, id)).limit(1);
   const row = rows[0];
   if (!row) return null;
@@ -98,6 +102,7 @@ export async function getEventById(id: string): Promise<EventDetail | null> {
 }
 
 export async function listAssignableUsers(): Promise<AssignableUser[]> {
+  await assertPermission("EVENT_ASSIGN");
   const rows = await db
     .select({
       id: user.id,

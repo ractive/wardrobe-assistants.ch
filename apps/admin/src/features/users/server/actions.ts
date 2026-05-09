@@ -3,10 +3,12 @@
 import { randomBytes } from "node:crypto";
 import { user, userProfile } from "@wardrobe-assistants/db/schema";
 import { eq } from "drizzle-orm";
+import { recordAudit } from "@/lib/audit-log";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { withPermission } from "@/lib/permissions";
+import { consume, RATE_LIMITS } from "@/lib/rate-limit";
 import {
   type ActionResult,
   type DeleteUserInput,
@@ -27,9 +29,24 @@ function nameForAuth(input: InviteUserInput): string {
   return `${input.firstName} ${input.lastName}`.trim();
 }
 
+// iter-16f: error messages from these throw sites used to propagate to
+// the user-facing toast via `useFormAction`'s catch path. Replace with
+// generic strings + a correlation ID, and log the underlying error
+// server-side. The `[ref ID]` lets support cross-reference an audit-log
+// row.
+function sanitizedFailure(
+  scope: string,
+  err: unknown,
+  correlationId: string,
+  fallback: string,
+): ActionResult {
+  console.error(`[${scope}] action failed`, { correlationId, err });
+  return { error: true, message: `${fallback} (ref ${correlationId})` };
+}
+
 export const inviteUser = withPermission(
   "USER_INVITE",
-  async (_actorId, raw: InviteUserInput): Promise<ActionResult> => {
+  async (actorId, raw: InviteUserInput): Promise<ActionResult> => {
     const parsed = inviteUserInput.safeParse(raw);
     if (!parsed.success) {
       return {
@@ -38,6 +55,15 @@ export const inviteUser = withPermission(
       };
     }
     const input = parsed.data;
+
+    // iter-16f / C-SEC-02: cap invites per admin per hour.
+    const rl = consume(`invite:${actorId}`, RATE_LIMITS.invite);
+    if (!rl.allowed) {
+      return {
+        error: true,
+        message: "Invite limit reached. Try again later.",
+      };
+    }
 
     const existing = await db
       .select({ id: user.id })
@@ -82,9 +108,19 @@ export const inviteUser = withPermission(
       } catch {
         // Swallow — primary failure is reported below.
       }
-      const message =
-        err instanceof Error ? err.message : "Failed to create user profile.";
-      return { error: true, message };
+      const correlationId = await recordAudit({
+        actorUserId: actorId,
+        action: "user.invite",
+        targetType: "user",
+        targetId: signUp.user.id,
+        metadata: { email: input.email, outcome: "profile_insert_failed" },
+      });
+      return sanitizedFailure(
+        "users.inviteUser",
+        err,
+        correlationId,
+        "Failed to create user profile.",
+      );
     }
 
     // Triggers the BA reset-password flow; the email body is sent via the
@@ -96,13 +132,30 @@ export const inviteUser = withPermission(
         headers: new Headers(),
       });
     } catch (err) {
-      const detail = err instanceof Error ? err.message : "unknown error";
+      const correlationId = await recordAudit({
+        actorUserId: actorId,
+        action: "user.invite",
+        targetType: "user",
+        targetId: signUp.user.id,
+        metadata: { email: input.email, outcome: "invite_email_failed" },
+      });
+      console.error("[users.inviteUser] invite email failed", {
+        correlationId,
+        err,
+      });
       return {
         error: true,
-        message: `User created, but invite email could not be sent: ${detail}. Resend the invite from the user list.`,
+        message: `User created, but invite email could not be sent. Resend the invite from the user list. (ref ${correlationId})`,
       };
     }
 
+    await recordAudit({
+      actorUserId: actorId,
+      action: "user.invite",
+      targetType: "user",
+      targetId: signUp.user.id,
+      metadata: { email: input.email, role: input.role },
+    });
     return { error: false, message: "Invitation sent." };
   },
 );
@@ -125,13 +178,19 @@ export const deleteUser = withPermission(
     if (deleted.length === 0) {
       return { error: true, message: "User not found." };
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "user.delete",
+      targetType: "user",
+      targetId: parsed.data.userId,
+    });
     return { error: false, message: "User deleted." };
   },
 );
 
 export const messageUser = withPermission(
   "USER_MESSAGE",
-  async (_actorId, raw: MessageUserInput): Promise<ActionResult> => {
+  async (actorId, raw: MessageUserInput): Promise<ActionResult> => {
     const parsed = messageUserInput.safeParse(raw);
     if (!parsed.success) {
       return {
@@ -158,9 +217,26 @@ export const messageUser = withPermission(
         text: input.body,
       });
     } catch (err) {
-      const detail = err instanceof Error ? err.message : "unknown error";
-      return { error: true, message: `Message could not be sent: ${detail}` };
+      const correlationId = await recordAudit({
+        actorUserId: actorId,
+        action: "user.message",
+        targetType: "user",
+        targetId: input.userId,
+        metadata: { outcome: "send_failed" },
+      });
+      return sanitizedFailure(
+        "users.messageUser",
+        err,
+        correlationId,
+        "Failed to send message.",
+      );
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "user.message",
+      targetType: "user",
+      targetId: input.userId,
+    });
     return { error: false, message: "Message sent." };
   },
 );

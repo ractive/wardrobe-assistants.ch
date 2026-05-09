@@ -120,7 +120,8 @@ describe("inviteUser", () => {
     const r = await inviteUser(baseInvite);
     expect(r).toEqual({ error: false, message: "Invitation sent." });
     expect(signUpMock).toHaveBeenCalledOnce();
-    expect(dbMock._insertImpl).toHaveBeenCalledOnce();
+    // 2 inserts: user_profile (the invite) + audit_log (iter-16f).
+    expect(dbMock._insertImpl).toHaveBeenCalledTimes(2);
     expect(resetMock).toHaveBeenCalledWith({
       body: { email: baseInvite.email, redirectTo: "/set-password" },
       headers: expect.any(Headers),
@@ -146,14 +147,19 @@ describe("inviteUser", () => {
     expect(resetMock).not.toHaveBeenCalled();
   });
 
-  it("surfaces an error if requestPasswordReset throws", async () => {
+  it("surfaces a generic error + correlation ID if requestPasswordReset throws", async () => {
     dbMock._selectResults = [[]];
     signUpMock.mockResolvedValue({ user: { id: "u-new" } });
     resetMock.mockRejectedValue(new Error("smtp down"));
     const r = await inviteUser(baseInvite);
     expect(r.error).toBe(true);
     if (r.error) {
-      expect(r.message).toContain("smtp down");
+      // iter-16f / C-SEC-08: do not propagate the underlying error
+      // text. The user-facing message is generic; the correlation ID
+      // (`ref ...`) cross-references the audit-log row + server logs.
+      expect(r.message).not.toContain("smtp down");
+      expect(r.message).toMatch(/invite email could not be sent/i);
+      expect(r.message).toMatch(/ref [0-9A-Z]{20,}/);
     }
   });
 });
@@ -220,7 +226,7 @@ describe("messageUser", () => {
     });
   });
 
-  it("returns an error when sendEmail throws", async () => {
+  it("returns a sanitized error + correlation ID when sendEmail throws", async () => {
     dbMock._selectResults = [[{ email: "target@example.com" }]];
     sendEmailMock.mockRejectedValue(new Error("smtp boom"));
     const r = await messageUser({
@@ -230,7 +236,11 @@ describe("messageUser", () => {
     });
     expect(r.error).toBe(true);
     if (r.error) {
-      expect(r.message).toContain("smtp boom");
+      // iter-16f / C-SEC-08: generic message + correlation ID, not the
+      // raw Resend / nodemailer error text.
+      expect(r.message).not.toContain("smtp boom");
+      expect(r.message).toMatch(/Failed to send message/);
+      expect(r.message).toMatch(/ref [0-9A-Z]{20,}/);
     }
   });
 });

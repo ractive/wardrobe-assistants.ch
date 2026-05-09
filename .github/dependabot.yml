@@ -1,0 +1,48 @@
+# iter-16f / audit C-SEC-12: weekly dependency updates for npm
+# (root + workspaces) and GitHub Actions. Catching transitive CVEs in
+# Better Auth, Drizzle, Next.js, etc., before a CodeQL scan does keeps
+# the surface area honest with low review tax.
+#
+# All ecosystems share a single weekly cadence so a stack of small PRs
+# arrives together — easier to triage as a batch than scattered through
+# the week.
+version: 2
+updates:
+  # Root package + workspaces. The root npm install drives everything;
+  # Dependabot will surface workspace-scoped updates as well.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      # Group dev-only and minor/patch updates so the PR list isn't
+      # one row per package.
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      runtime-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - automated
+
+  # Workflows themselves. Catches `actions/checkout`-style updates and
+  # any third-party action drift. Pinned-by-SHA actions still get PRs
+  # via the `version` label even though the literal pin is a SHA.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - automated
+      - github-actions

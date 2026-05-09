@@ -4,6 +4,7 @@ import { eventAssignments, events, user } from "@wardrobe-assistants/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { ulid } from "ulid";
+import { recordAudit } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { withPermission } from "@/lib/permissions";
@@ -48,6 +49,12 @@ export const createEvent = withPermission(
       createdAt: now,
       updatedAt: now,
     });
+    await recordAudit({
+      actorUserId: actorId,
+      action: "event.create",
+      targetType: "event",
+      targetId: id,
+    });
     revalidatePath("/events");
     return { error: false, message: "Event created." };
   },
@@ -55,7 +62,7 @@ export const createEvent = withPermission(
 
 export const updateEvent = withPermission(
   "EVENT_CREATE",
-  async (_actorId, raw: UpdateEventInput): Promise<ActionResult> => {
+  async (actorId, raw: UpdateEventInput): Promise<ActionResult> => {
     const parsed = updateEventInput.safeParse(raw);
     if (!parsed.success) {
       return {
@@ -79,6 +86,12 @@ export const updateEvent = withPermission(
     if (updated.length === 0) {
       return { error: true, message: "Event not found." };
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "event.update",
+      targetType: "event",
+      targetId: input.eventId,
+    });
     revalidatePath("/events");
     revalidatePath(`/events/${input.eventId}`);
     return { error: false, message: "Event updated." };
@@ -87,7 +100,7 @@ export const updateEvent = withPermission(
 
 export const deleteEvent = withPermission(
   "EVENT_DELETE",
-  async (_actorId, raw: DeleteEventInput): Promise<ActionResult> => {
+  async (actorId, raw: DeleteEventInput): Promise<ActionResult> => {
     const parsed = deleteEventInput.safeParse(raw);
     if (!parsed.success) {
       return { error: true, message: "Invalid input" };
@@ -99,6 +112,12 @@ export const deleteEvent = withPermission(
     if (deleted.length === 0) {
       return { error: true, message: "Event not found." };
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "event.delete",
+      targetType: "event",
+      targetId: parsed.data.eventId,
+    });
     revalidatePath("/events");
     return { error: false, message: "Event deleted." };
   },
@@ -106,7 +125,7 @@ export const deleteEvent = withPermission(
 
 export const assignUser = withPermission(
   "EVENT_ASSIGN",
-  async (_actorId, raw: AssignUserInput): Promise<ActionResult> => {
+  async (actorId, raw: AssignUserInput): Promise<ActionResult> => {
     const parsed = assignUserInput.safeParse(raw);
     if (!parsed.success) {
       return { error: true, message: "Invalid input" };
@@ -151,6 +170,13 @@ export const assignUser = withPermission(
       revalidatePath(`/events/${eventId}`);
       return { error: false, message: "User was already assigned." };
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "event.assign",
+      targetType: "event",
+      targetId: eventId,
+      metadata: { userId },
+    });
 
     // Best-effort notification: a transient SMTP failure must not roll back
     // the assignment row — the assignment is the source of truth, the email
@@ -186,7 +212,7 @@ export const assignUser = withPermission(
 
 export const unassignUser = withPermission(
   "EVENT_ASSIGN",
-  async (_actorId, raw: UnassignUserInput): Promise<ActionResult> => {
+  async (actorId, raw: UnassignUserInput): Promise<ActionResult> => {
     const parsed = unassignUserInput.safeParse(raw);
     if (!parsed.success) {
       return { error: true, message: "Invalid input" };
@@ -204,6 +230,13 @@ export const unassignUser = withPermission(
     if (deleted.length === 0) {
       return { error: true, message: "Assignment not found." };
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "event.unassign",
+      targetType: "event",
+      targetId: eventId,
+      metadata: { userId },
+    });
     revalidatePath(`/events/${eventId}`);
     return { error: false, message: "User unassigned." };
   },
@@ -211,7 +244,7 @@ export const unassignUser = withPermission(
 
 export const messageEventAssignees = withPermission(
   "EVENT_MESSAGE_ASSIGNED",
-  async (_actorId, raw: MessageEventAssigneesInput): Promise<ActionResult> => {
+  async (actorId, raw: MessageEventAssigneesInput): Promise<ActionResult> => {
     const parsed = messageEventAssigneesInput.safeParse(raw);
     if (!parsed.success) {
       return {
@@ -265,8 +298,25 @@ export const messageEventAssignees = withPermission(
     }
 
     if (sent === 0) {
-      return { error: true, message: "Could not send to any assignee." };
+      const correlationId = await recordAudit({
+        actorUserId: actorId,
+        action: "event.message_assignees",
+        targetType: "event",
+        targetId: input.eventId,
+        metadata: { sent, failed, outcome: "all_failed" },
+      });
+      return {
+        error: true,
+        message: `Could not send to any assignee. (ref ${correlationId})`,
+      };
     }
+    await recordAudit({
+      actorUserId: actorId,
+      action: "event.message_assignees",
+      targetType: "event",
+      targetId: input.eventId,
+      metadata: { sent, failed },
+    });
     if (failed > 0) {
       return {
         error: false,

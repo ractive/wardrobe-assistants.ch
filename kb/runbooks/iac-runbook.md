@@ -367,6 +367,6 @@ This is the project's primary DR primitive — no external `.dump` script needed
 - **Edge scripts, shield zones** — none configured today; will land via dedicated iterations when needed.
 - **Secret values** — env vars on the admin app, image registry token, storage-zone passwords. All flow through `.env.local` / GitHub Actions secrets / dashboard, never state.
 - **DB auth tokens** — minted via `hoppy db token mint`, not via the provider.
-- **DB schema / migrations** — Drizzle migrations in `packages/db`, run by the admin runtime on boot.
+- **DB schema / migrations** — Drizzle migrations in `packages/db`, run by the admin runtime on boot. See [`migration-recovery.md`](migration-recovery.md) when a boot-time migration fails.
 - **Storage zone *contents*** — the homepage build is uploaded by the deploy workflow.
 - **Image build/push** — built and pushed by GitHub Actions; the container app's `ignore_changes = [container]` keeps OpenTofu out of image-tag rotation.

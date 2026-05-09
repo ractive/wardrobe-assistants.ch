@@ -140,6 +140,23 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:latest
 
+      # iter-16f / audit C-SEC-12: scan the freshly-pushed image for
+      # known CVEs. Fails the deploy on any HIGH/CRITICAL finding so a
+      # vulnerable base image can't roll to prod silently.
+      # Pinned to a SHA per the iter-16b convention (audit C-SEC-03).
+      # SHA: aquasecurity/trivy-action @ 57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+      # (tag v0.35.0).
+      - name: Scan admin image for vulnerabilities (Trivy)
+        if: steps.changes.outputs.app == 'true'
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
       - name: Roll admin Magic Container to new image
         if: steps.changes.outputs.app == 'true'
         # iter-16b supply-chain hardening (audit C-SEC-03): third-party Action

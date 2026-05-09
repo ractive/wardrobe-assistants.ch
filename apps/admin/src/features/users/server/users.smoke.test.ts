@@ -74,7 +74,7 @@ describe("users feature — smoke", () => {
     );
     expect(result.error, JSON.stringify(result)).toBe(false);
 
-    const list = await listUsers();
+    const list = await harness.runAs(admin.cookies, () => listUsers());
     const emails = list.map((u) => u.email);
     expect(emails).toContain("admin1@smoke.local");
     expect(emails).toContain("invitee1@smoke.local");
@@ -117,7 +117,7 @@ describe("users feature — smoke", () => {
       deleteUser({ userId: target.userId }),
     );
     expect(result.error).toBe(false);
-    const list = await listUsers();
+    const list = await harness.runAs(admin.cookies, () => listUsers());
     expect(list.map((u) => u.email)).not.toContain("target2@smoke.local");
   });
 
@@ -167,6 +167,63 @@ describe("users feature — smoke", () => {
     const subjectArg = sendMock.mock.calls[0]?.[0]?.subject;
     expect(subjectArg).toBeDefined();
     expect(subjectArg).not.toMatch(/[\r\n]/);
+  });
+
+  // iter-16f / C-SEC-09: query-level authz. listUsers / getUserById are
+  // now security boundaries on their own — calling them without the
+  // right perm throws.
+  it("listUsers throws without sign-in (UnauthenticatedError)", async () => {
+    const { listUsers } = await import("./queries");
+    await expect(listUsers()).rejects.toMatchObject({
+      name: "UnauthenticatedError",
+    });
+  });
+
+  it("listUsers throws for squad member (PermissionError)", async () => {
+    const sm = await harness.seedSquadMember({
+      email: "sm-q@smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const { listUsers } = await import("./queries");
+    await expect(
+      harness.runAs(sm.cookies, () => listUsers()),
+    ).rejects.toMatchObject({ name: "PermissionError" });
+  });
+
+  // iter-16f / C-SEC-10: every gated mutation lands one audit_log row.
+  it("inviteUser writes an audit_log row", async () => {
+    const admin = await harness.seedAdmin({
+      email: "admin-audit@smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const { inviteUser } = await import("./actions");
+    const result = await harness.runAs(admin.cookies, () =>
+      inviteUser({
+        email: "invitee-audit@smoke.local",
+        firstName: "A",
+        lastName: "B",
+        nickname: undefined,
+        mobileNumber: undefined,
+        role: "SQUAD_MEMBER",
+      }),
+    );
+    expect(result.error, JSON.stringify(result)).toBe(false);
+
+    const { auditLog } = await import("@wardrobe-assistants/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const rows = await harness.db
+      .select()
+      .from(auditLog)
+      .where(eq(auditLog.action, "user.invite"));
+    const ours = rows.find((r) => {
+      if (!r.metadata) return false;
+      const m = JSON.parse(r.metadata) as { email?: string };
+      return m.email === "invitee-audit@smoke.local";
+    });
+    expect(ours).toBeDefined();
+    expect(ours?.actorUserId).toBe(admin.userId);
+    expect(ours?.targetType).toBe("user");
+    expect(ours?.targetId).toBeTruthy();
   });
 
   it("admin cannot delete their own account", async () => {

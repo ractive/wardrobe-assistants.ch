@@ -143,7 +143,8 @@ describe("createEvent", () => {
   it("inserts and returns success", async () => {
     const r = await createEvent(valid);
     expect(r).toEqual({ error: false, message: "Event created." });
-    expect(dbMock._insertImpl).toHaveBeenCalledOnce();
+    // 2 inserts: events row + audit_log row (iter-16f).
+    expect(dbMock._insertImpl).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -303,10 +304,13 @@ describe("messageEventAssignees", () => {
       subject: "Hi",
       body: "Hello.",
     });
-    expect(r).toEqual({
-      error: true,
-      message: "Could not send to any assignee.",
-    });
+    expect(r.error).toBe(true);
+    if (r.error) {
+      // iter-16f / C-SEC-08+10: generic message + correlation ID
+      // (`ref ...`) tying the toast to an audit-log row.
+      expect(r.message).toMatch(/Could not send to any assignee/);
+      expect(r.message).toMatch(/ref [0-9A-Z]{20,}/);
+    }
   });
 
   it("returns 'event not found' when the event id is bogus", async () => {

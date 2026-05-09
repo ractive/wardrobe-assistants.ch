@@ -2,6 +2,7 @@ import "server-only";
 import { user, userProfile } from "@wardrobe-assistants/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { assertPermission } from "@/lib/permissions";
 import { type UserDetail, userDetail, userListItem } from "../schema";
 
 function buildDisplayName(input: {
@@ -15,6 +16,11 @@ function buildDisplayName(input: {
 }
 
 export async function listUsers() {
+  // iter-16f / C-SEC-09: query is now a security boundary on its own.
+  // Routes already gate on USER_INVITE for the user-management surface;
+  // mirroring it here makes a future caller (RPC handler, a fresh page)
+  // safe-by-default.
+  await assertPermission("USER_INVITE");
   const rows = await db
     .select({
       id: user.id,
@@ -47,6 +53,7 @@ export async function listUsers() {
 }
 
 export async function getUserById(id: string): Promise<UserDetail | null> {
+  await assertPermission("USER_INVITE");
   const rows = await db
     .select({
       id: user.id,

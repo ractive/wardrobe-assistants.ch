@@ -51,7 +51,7 @@ describe("events feature — smoke", () => {
     );
     expect(result.error, JSON.stringify(result)).toBe(false);
 
-    const list = await listEvents();
+    const list = await harness.runAs(admin.cookies, () => listEvents());
     expect(list.map((e) => e.name)).toContain("Spring kickoff");
   });
 
@@ -101,9 +101,9 @@ describe("events feature — smoke", () => {
         status: "draft",
       }),
     );
-    const eventRow = (await listEvents()).find(
-      (e) => e.name === "Idempotent test",
-    );
+    const eventRow = (
+      await harness.runAs(admin.cookies, () => listEvents())
+    ).find((e) => e.name === "Idempotent test");
     expect(eventRow).toBeDefined();
     if (!eventRow) return;
 
@@ -122,7 +122,9 @@ describe("events feature — smoke", () => {
     }
     expect(sendMock).toHaveBeenCalledTimes(1);
 
-    const detail = await getEventById(eventRow.id);
+    const detail = await harness.runAs(admin.cookies, () =>
+      getEventById(eventRow.id),
+    );
     expect(detail?.assignees).toHaveLength(1);
   });
 
@@ -157,7 +159,9 @@ describe("events feature — smoke", () => {
         status: "published",
       }),
     );
-    const event = (await listEvents()).find((e) => e.name === "Fanout test");
+    const event = (await harness.runAs(admin.cookies, () => listEvents())).find(
+      (e) => e.name === "Fanout test",
+    );
     expect(event).toBeDefined();
     if (!event) return;
 
@@ -207,7 +211,9 @@ describe("events feature — smoke", () => {
         status: "published",
       }),
     );
-    const event = (await listEvents()).find((e) => e.name === "CRLF guard");
+    const event = (await harness.runAs(admin.cookies, () => listEvents())).find(
+      (e) => e.name === "CRLF guard",
+    );
     expect(event).toBeDefined();
     if (!event) return;
 
@@ -252,7 +258,9 @@ describe("events feature — smoke", () => {
         status: "draft",
       }),
     );
-    const event = (await listEvents()).find((e) => e.name === "To be deleted");
+    const event = (await harness.runAs(admin.cookies, () => listEvents())).find(
+      (e) => e.name === "To be deleted",
+    );
     expect(event).toBeDefined();
     if (!event) return;
 
@@ -265,9 +273,13 @@ describe("events feature — smoke", () => {
     );
     expect(r.error).toBe(false);
 
-    expect(await getEventById(event.id)).toBeNull();
-    expect((await listEvents()).map((e) => e.id).includes(event.id)).toBe(
-      false,
-    );
+    expect(
+      await harness.runAs(admin.cookies, () => getEventById(event.id)),
+    ).toBeNull();
+    expect(
+      (await harness.runAs(admin.cookies, () => listEvents()))
+        .map((e) => e.id)
+        .includes(event.id),
+    ).toBe(false);
   });
 });
