@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import Link from "next/link";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
   Table,
   TableBody,
@@ -9,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { EventListItem } from "../schema";
-import { EventStatusBadge } from "./EventStatusBadge";
 
 export function EventsTable({ events }: { events: EventListItem[] }) {
   if (events.length === 0) {
@@ -35,7 +35,7 @@ export function EventsTable({ events }: { events: EventListItem[] }) {
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="font-medium text-base">{event.name}</span>
-                <EventStatusBadge status={event.status} />
+                <StatusBadge kind="event" status={event.status} />
               </div>
               <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
                 <dt className="text-[var(--muted-foreground)]">Date</dt>
@@ -78,7 +78,7 @@ export function EventsTable({ events }: { events: EventListItem[] }) {
                 <TableCell>{format(event.date, "yyyy-MM-dd")}</TableCell>
                 <TableCell>{event.venue}</TableCell>
                 <TableCell>
-                  <EventStatusBadge status={event.status} />
+                  <StatusBadge kind="event" status={event.status} />
                 </TableCell>
                 <TableCell className="text-[var(--muted-foreground)]">
                   {event.assigneesCount}

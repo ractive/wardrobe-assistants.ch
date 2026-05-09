@@ -101,9 +101,11 @@ export default function LoginPage() {
               </span>
             )}
           </label>
-          {serverError && (
-            <p className="text-[var(--destructive)] text-sm">{serverError}</p>
-          )}
+          <div role="alert" aria-live="assertive">
+            {serverError && (
+              <p className="text-[var(--destructive)] text-sm">{serverError}</p>
+            )}
+          </div>
           <button
             type="submit"
             disabled={credentialsForm.formState.isSubmitting}
@@ -135,9 +137,11 @@ export default function LoginPage() {
               </span>
             )}
           </label>
-          {serverError && (
-            <p className="text-[var(--destructive)] text-sm">{serverError}</p>
-          )}
+          <div role="alert" aria-live="assertive">
+            {serverError && (
+              <p className="text-[var(--destructive)] text-sm">{serverError}</p>
+            )}
+          </div>
           <button
             type="submit"
             disabled={totpForm.formState.isSubmitting}

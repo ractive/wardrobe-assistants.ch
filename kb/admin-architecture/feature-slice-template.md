@@ -161,6 +161,7 @@ Every iteration plan's `Verify` section appends the following. Takes ~60 seconds
   - [ ] Create one of <feature> via the UI
   - [ ] See it in the list / detail page
   - [ ] Sign out
+- [ ] **Axe-clean**: every interactive component added in this slice has a `vitest-axe` assertion in its `*.test.tsx` (`expect(await axe(container)).toHaveNoViolations()`). The reference is `apps/admin/src/components/StatusBadge.test.tsx` (iter-16e).
 ```
 
 ## Cross-feature isolation

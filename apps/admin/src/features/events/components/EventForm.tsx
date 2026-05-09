@@ -3,9 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -30,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormAction } from "@/hooks/use-form-action";
 import { cn } from "@/lib/utils";
 import {
   type CreateEventInput,
@@ -58,48 +57,54 @@ type Props =
   | { mode: "create"; defaults?: undefined; onSuccess?: () => void }
   | { mode: "edit"; defaults: EditDefaults; onSuccess?: () => void };
 
+// While the user fills in the form, `date` may be undefined; the resolver
+// rejects submit if the user never picks one. This typed form-value shape
+// replaces the previous `undefined as unknown as Date` cast.
+type FormValues = {
+  name: string;
+  date: Date | undefined;
+  venue: string;
+  notes?: string;
+  status: (typeof EVENT_STATUSES)[number];
+};
+
 // Both modes drive the same set of input fields. We use the create input
 // schema for client validation and pass the eventId through closure when in
 // edit mode — keeps the form a single component without `any` gymnastics.
 export function EventForm(props: Props) {
-  const router = useRouter();
   const isEdit = props.mode === "edit";
   const defaults = isEdit ? props.defaults : undefined;
 
-  const form = useForm<CreateEventInput>({
-    resolver: zodResolver(createEventInput),
+  const form = useForm<FormValues>({
+    // Resolver enforces the parsed `CreateEventInput` shape (date required)
+    // even though the form-state type permits `date: undefined` mid-edit.
+    resolver: zodResolver(createEventInput) as never,
     defaultValues: {
       name: defaults?.name ?? "",
-      date: defaults?.date ?? (undefined as unknown as Date),
+      date: defaults?.date,
       venue: defaults?.venue ?? "",
       notes: defaults?.notes ?? "",
       status: defaults?.status ?? "draft",
     },
   });
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    try {
-      const result = defaults
-        ? await updateEvent({ ...data, eventId: defaults.eventId })
-        : await createEvent(data);
-      if (result.error) {
-        toast.error(result.message);
-        return;
-      }
-      toast.success(result.message);
-      if (!isEdit) form.reset();
-      props.onSuccess?.();
-      router.refresh();
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : isEdit
-            ? "Could not update event."
-            : "Could not create event.",
-      );
-    }
-  });
+  const submit = useFormAction(
+    async (data: CreateEventInput) =>
+      defaults
+        ? updateEvent({ ...data, eventId: defaults.eventId })
+        : createEvent(data),
+    {
+      onSuccess: () => {
+        if (!isEdit) form.reset();
+        props.onSuccess?.();
+      },
+    },
+  );
+
+  // The resolver guarantees a real Date when handleSubmit calls our callback.
+  const onSubmit = form.handleSubmit((data) =>
+    submit(data as CreateEventInput),
+  );
 
   const submitLabel = isEdit ? "Save changes" : "Create event";
 

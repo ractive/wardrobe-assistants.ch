@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormAction } from "@/hooks/use-form-action";
 import {
   type MessageEventAssigneesInput,
   messageEventAssigneesInput,
@@ -54,19 +54,12 @@ export function MessageAssigneesDialog({
     if (open) form.reset({ eventId, subject: "", body: "" });
   }, [open, eventId]);
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    try {
-      const result = await messageEventAssignees(data);
-      if (result.error) {
-        toast.error(result.message);
-        return;
-      }
-      toast.success(result.message);
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send.");
-    }
+  const submit = useFormAction(messageEventAssignees, {
+    onSuccess: () => onOpenChange(false),
+    refresh: false,
   });
+
+  const onSubmit = form.handleSubmit((data) => submit(data));
 
   return (
     <Dialog

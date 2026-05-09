@@ -3,10 +3,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { NoPermissionCard } from "@/components/NoPermissionCard";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { AssigneesPicker } from "@/features/events/components/AssigneesPicker";
 import { EventDetailActions } from "@/features/events/components/EventDetailActions";
-import { EventStatusBadge } from "@/features/events/components/EventStatusBadge";
 import {
   getEventById,
   listAssignableUsers,
@@ -56,7 +56,7 @@ export default async function EventDetailPage({
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-semibold text-2xl md:text-3xl">{event.name}</h1>
-            <EventStatusBadge status={event.status} />
+            <StatusBadge kind="event" status={event.status} />
           </div>
           <p className="text-[var(--muted-foreground)] text-sm">
             {format(event.date, "EEEE, d MMMM yyyy")} · {event.venue}

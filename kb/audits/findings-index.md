@@ -40,7 +40,7 @@ Source: [audit-2026-05-09-consolidated.md](audit-2026-05-09-consolidated.md)
 | C-SEC-11 | Outdated transitive deps (esbuild, postcss) | — | ⚪ Track upstream (better-auth, Next 16.x) |
 | C-SEC-12 | No automated security scanning (Dependabot/CodeQL/Trivy) | 16f | 🟡 |
 | C-SEC-13 | Missing `user_profile` silently denies all permissions | 16f | 🟡 |
-| C-NXT-01 | No `error.tsx` / `not-found.tsx` boundaries | 16e | 🟡 |
+| C-NXT-01 | No `error.tsx` / `not-found.tsx` boundaries | 16e | 🟢 |
 | C-INF-01 | No down-migration / rollback runbook | 16f | 🟡 |
 | C-TST-01 | `messageUser`/`messageEventAssignees` happy-paths not in smoke | 16b | 🟡 (rides with C-SEC-07 fix) |
 
@@ -55,7 +55,7 @@ Source: [audit-2026-05-09-consolidated.md](audit-2026-05-09-consolidated.md)
 | C-A11Y-01 | Mobile-nav `aria-expanded` not synced (homepage) | — | ⚪ Working today |
 | C-DEP-01 | Easy patch bumps (react 19.2.6, tailwind 4.3.0, resend 6.12.3) | 16f | 🟡 (rides with security scanning) |
 | C-TS-01 | `skipLibCheck: true` hides upstream type bugs | — | ⚪ Optional weekly job |
-| C-TS-02 | `EventForm` `undefined as unknown as Date` cast | 16e | 🟡 (= F-FE-12) |
+| C-TS-02 | `EventForm` `undefined as unknown as Date` cast | 16e | 🟢 (= F-FE-12) |
 | C-MONO-02 | `zod` not declared in `packages/db` | 16f | 🟡 (rides with security scanning) |
 | C-SEC-14 | No Better Auth `trustedOrigins` | 16f | 🟡 |
 | C-SEC-15 | Min password length 8 → 12 | 16f | 🟡 |
@@ -70,21 +70,21 @@ Source: [audit-2026-05-09-frontend-consolidated.md](audit-2026-05-09-frontend-co
 | ID | Title | Iter | Status |
 |---|---|---|---|
 | F-FE-01 | Login page bypasses shadcn `<Form>`/`<Input>` | 16g | 🟡 |
-| F-FE-02 | No `role="alert"` / `aria-live` on form-level server errors | 16e | 🟡 |
+| F-FE-02 | No `role="alert"` / `aria-live` on form-level server errors | 16e | 🟢 |
 | F-FE-03 | TanStack Table loaded for read-only tables | 16d | 🟢 |
-| F-FE-04 | No `loading.tsx` / `error.tsx` / `not-found.tsx` | 16e | 🟡 |
+| F-FE-04 | No `loading.tsx` / `error.tsx` / `not-found.tsx` | 16e | 🟢 |
 | F-FE-05 | Admin sidebar `hidden md:block`; no mobile nav | 16d | 🟢 |
 | F-FE-06 | No `aria-current="page"` on active sidebar links | 16d | 🟢 |
-| F-FE-07 | Homepage `<Button>` always renders `<a>`; `href` not required | 16e | 🟡 (rename → `LinkButton`) |
+| F-FE-07 | Homepage `<Button>` always renders `<a>`; `href` not required | 16e | 🟢 (renamed → `LinkButton`) |
 | F-FE-08 | `EVENT_CREATE` gates event-detail viewing | 16d | 🟢 (`EVENT_VIEW` added) |
-| F-FE-09 | Zero React component tests | 16e + 16g | 🟡 (16e: small; 16g: load-bearing trio) |
+| F-FE-09 | Zero React component tests | 16e + 16g | 🟡 (16e: small ✅; 16g: load-bearing trio) |
 | F-FE-10 | Manual `useMemo` contradicts React Compiler | 16d | 🟢 |
 | F-FE-11 | Login two-step doesn't move focus to TOTP | 16g | 🟡 |
-| F-FE-12 | EventForm `undefined as unknown as Date` cast | 16e | 🟡 |
+| F-FE-12 | EventForm `undefined as unknown as Date` cast | 16e | 🟢 |
 | F-FE-13 | Homepage Footer + ServiceCard hardcoded hex | 16d | 🟢 |
 | F-FE-14 | Homepage mobile-nav checkbox-hack | — | ⚪ Working; defer |
-| F-FE-15 | Submit-pattern duplicated 4× → `useFormAction()` | 16e | 🟡 |
-| F-FE-16 | EventStatusBadge / users StatusBadge drift | 16e | 🟡 |
+| F-FE-15 | Submit-pattern duplicated 4× → `useFormAction()` | 16e | 🟢 |
+| F-FE-16 | EventStatusBadge / users StatusBadge drift | 16e | 🟢 |
 | F-FE-17 | SignOutButton manual `useState`; failures silent | 16d | 🟢 |
 | F-FE-18 | EventsTable redundant "Open" column | 16d | 🟢 |
 | F-FE-19 | Dead `<Check opacity-0>` in AssigneesPicker | 16d | 🟢 |

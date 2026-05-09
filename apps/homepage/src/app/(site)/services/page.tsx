@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { contactEmail, siteName, siteUrl } from "@/app/site-config";
-import { Button } from "@/components/Button";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
 import {
   ClipboardList,
@@ -10,6 +9,7 @@ import {
   Shirt,
   Truck,
 } from "@/components/icons";
+import { LinkButton } from "@/components/LinkButton";
 
 const pageTitle = "Wardrobe Assistants in Switzerland — Services";
 const pageDescription =
@@ -330,10 +330,12 @@ export default function ServicesPage() {
           and the moments where it actually matters.
         </p>
         <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
-          <Button href={`mailto:${contactEmail}`}>Request a quote</Button>
-          <Button variant="outline" href="/#services">
+          <LinkButton href={`mailto:${contactEmail}`}>
+            Request a quote
+          </LinkButton>
+          <LinkButton variant="outline" href="/#services">
             Back to overview
-          </Button>
+          </LinkButton>
         </div>
       </section>
 
@@ -462,10 +464,12 @@ export default function ServicesPage() {
             the run.
           </p>
           <div className="flex flex-col gap-3 pt-3 sm:flex-row sm:items-center">
-            <Button href={`mailto:${contactEmail}`}>Request a quote</Button>
-            <Button variant="outline" href="/#contact">
+            <LinkButton href={`mailto:${contactEmail}`}>
+              Request a quote
+            </LinkButton>
+            <LinkButton variant="outline" href="/#contact">
               Back to homepage
-            </Button>
+            </LinkButton>
           </div>
         </div>
       </section>

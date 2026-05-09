@@ -1,9 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,11 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormAction } from "@/hooks/use-form-action";
 import { type InviteUserInput, inviteUserInput } from "../schema";
 import { inviteUser } from "../server/actions";
 
 export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
-  const router = useRouter();
   const form = useForm<InviteUserInput>({
     resolver: zodResolver(inviteUserInput),
     defaultValues: {
@@ -38,24 +36,14 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
     },
   });
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    try {
-      const result = await inviteUser(data);
-      if (result.error) {
-        toast.error(result.message);
-        return;
-      }
-      toast.success(result.message);
+  const submit = useFormAction(inviteUser, {
+    onSuccess: () => {
       form.reset();
       onSuccess?.();
-      router.refresh();
-    } catch (err) {
-      // withPermission throws on session/permission failures.
-      toast.error(
-        err instanceof Error ? err.message : "Could not send invitation.",
-      );
-    }
+    },
   });
+
+  const onSubmit = form.handleSubmit((data) => submit(data));
 
   return (
     <Form {...form}>
