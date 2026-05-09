@@ -2,7 +2,7 @@
 title: Iteration 16d — UI cleanup pass 1 (navigation + data display)
 type: iteration
 order: 17.5
-status: implemented
+status: done
 ---
 
 # Iteration 16d — UI cleanup pass 1: navigation + data display
