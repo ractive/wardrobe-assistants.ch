@@ -43,7 +43,14 @@ ENV HOSTNAME=0.0.0.0
 # needed. Create the user *before* the COPY commands so the chown flag on
 # COPY hits a known UID/GID — chowning afterwards would double the layer
 # size for the .next/standalone tree.
-RUN addgroup -S app && adduser -S app -G app
+#
+# Strip the npm CLI from the runtime image — server.js boots Node directly
+# and never invokes npm. The bundled npm carries its own tinyglobby +
+# picomatch, which is where Trivy flagged CVE-2026-33671 (picomatch 4.0.3)
+# even though our app's picomatch is already 4.0.4. Removing npm fixes the
+# scan and shrinks the runtime layer.
+RUN addgroup -S app && adduser -S app -G app \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Standalone output: server.js + bundled deps under .next/standalone.
 COPY --from=builder --chown=app:app /repo/apps/admin/.next/standalone ./
