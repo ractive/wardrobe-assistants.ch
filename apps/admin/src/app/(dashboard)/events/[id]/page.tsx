@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { headers } from "next/headers";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { NoPermissionCard } from "@/components/NoPermissionCard";
@@ -11,7 +11,7 @@ import {
   getEventById,
   listAssignableUsers,
 } from "@/features/events/server/queries";
-import { auth } from "@/lib/auth";
+import { getCachedSession } from "@/lib/auth";
 import { userHasPermission } from "@/lib/permissions";
 
 export default async function EventDetailPage({
@@ -20,14 +20,14 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCachedSession();
   if (!session) redirect("/login");
 
-  const canView = await userHasPermission("EVENT_CREATE");
+  const canView = await userHasPermission("EVENT_VIEW");
   if (!canView) {
     return (
       <section className="flex flex-col gap-4">
-        <h1 className="font-semibold text-3xl">Event</h1>
+        <h1 className="font-semibold text-2xl md:text-3xl">Event</h1>
         <NoPermissionCard />
       </section>
     );
@@ -47,16 +47,18 @@ export default async function EventDetailPage({
     <section className="flex flex-col gap-6">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-3">
-          <Link href="/events">← All events</Link>
+          <Link href="/events">
+            <ArrowLeft className="size-4" aria-hidden="true" /> All events
+          </Link>
         </Button>
       </div>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="font-semibold text-3xl">{event.name}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-semibold text-2xl md:text-3xl">{event.name}</h1>
             <EventStatusBadge status={event.status} />
           </div>
-          <p className="text-[var(--muted-foreground)]">
+          <p className="text-[var(--muted-foreground)] text-sm">
             {format(event.date, "EEEE, d MMMM yyyy")} · {event.venue}
           </p>
         </div>

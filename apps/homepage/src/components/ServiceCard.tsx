@@ -14,7 +14,7 @@ export function ServiceCard({
   return (
     <div className="flex flex-col gap-5 rounded-[20px] border border-[var(--border)] bg-[var(--accent)]/80 p-7">
       <div className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--secondary)]">
-        <Icon className="h-[22px] w-[22px] text-[#B8B3AC]" />
+        <Icon className="h-[22px] w-[22px] text-[var(--muted-foreground)]" />
       </div>
       <h3 className="font-primary text-[20px] font-bold leading-[1.2] text-[var(--foreground)]">
         {title}

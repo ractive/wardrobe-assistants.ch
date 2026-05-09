@@ -1,46 +1,56 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { HasPermission } from "@/components/HasPermission";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
-type Item = {
-  href: string;
-  label: string;
-  perm: Parameters<typeof HasPermission>[0]["perm"];
-};
-
-const ITEMS: Item[] = [
-  { href: "/users", label: "Users", perm: "USER_INVITE" },
-  { href: "/events", label: "Events", perm: "EVENT_CREATE" },
-];
-
-function SidebarLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) {
+export function DashboardSidebar({ children }: { children: ReactNode }) {
   return (
-    <Link
-      href={href}
-      className="block rounded-md px-3 py-2 text-sm hover:bg-[var(--secondary)]"
-    >
-      {children}
-    </Link>
+    <Sidebar collapsible="offcanvas">
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <NavLink href="/" label="Home" />
+              {children}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }
 
-export function DashboardSidebar() {
+export function NavLink({ href, label }: { href: string; label: string }) {
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+  const active =
+    href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(`${href}/`);
   return (
-    <aside className="hidden w-48 shrink-0 border-[var(--border)] border-r px-3 py-6 md:block">
-      <nav aria-label="Primary" className="flex flex-col gap-1">
-        <SidebarLink href="/">Home</SidebarLink>
-        {ITEMS.map((item) => (
-          <HasPermission key={item.href} perm={item.perm}>
-            <SidebarLink href={item.href}>{item.label}</SidebarLink>
-          </HasPermission>
-        ))}
-      </nav>
-    </aside>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={active}>
+        <Link
+          href={href}
+          aria-current={active ? "page" : undefined}
+          onClick={() => {
+            if (isMobile) setOpenMobile(false);
+          }}
+        >
+          {label}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }

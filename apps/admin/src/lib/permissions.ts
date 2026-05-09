@@ -9,6 +9,7 @@ export const PERMISSIONS = [
   "USER_DELETE",
   "USER_MESSAGE",
   // Events
+  "EVENT_VIEW",
   "EVENT_CREATE",
   "EVENT_DELETE",
   "EVENT_ASSIGN",
@@ -23,6 +24,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 export const ROLE_PERMISSIONS = {
   ADMIN: new Set<Permission>(PERMISSIONS),
   SQUAD_MEMBER: new Set<Permission>([
+    "EVENT_VIEW",
     "SQUAD_VIEW_ASSIGNED",
     "SQUAD_REQUEST_PARTICIPATION",
   ]),

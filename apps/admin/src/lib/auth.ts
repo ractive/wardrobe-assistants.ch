@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { cache } from "react";
 import { db } from "./db";
 import { sendEmail } from "./email";
 import { env } from "./env";
@@ -99,12 +100,20 @@ export const auth = betterAuth({
 
 export type Session = typeof auth.$Infer.Session;
 
+// Per-request cached wrapper around getSession. React's `cache()` dedupes
+// identical calls within a single server request — multiple components in the
+// same RSC render tree (layout + page + permission gates) all resolve from
+// one underlying Better Auth call instead of N.
+export const getCachedSession = cache(async () => {
+  return auth.api.getSession({ headers: await headers() });
+});
+
 // Reads the current user's role by joining the active session to
 // user_profile. Lives in lib/auth.ts so lib/permissions.ts can call it
 // without importing from features/users — preserves the lib/ ⇏ features/
 // Biome boundary.
 export async function getCurrentUserRole(): Promise<Role | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCachedSession();
   if (!session) return null;
   return roleForUserId(session.user.id);
 }

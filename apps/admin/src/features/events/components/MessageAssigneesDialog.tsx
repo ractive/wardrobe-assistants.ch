@@ -47,9 +47,12 @@ export function MessageAssigneesDialog({
     defaultValues: { eventId, subject: "", body: "" },
   });
 
+  // Reset only when the dialog transitions open. eventId is stable for the
+  // dialog's lifetime; depending on `form` would re-fire on every render.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: see comment
   useEffect(() => {
     if (open) form.reset({ eventId, subject: "", body: "" });
-  }, [open, eventId, form]);
+  }, [open]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
