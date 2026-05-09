@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormAction } from "@/hooks/use-form-action";
 import { type MessageUserInput, messageUserInput } from "../schema";
 import { messageUser } from "../server/actions";
 
@@ -51,22 +51,13 @@ export function MessageUserDialog({
     if (open) form.reset({ userId, subject: "", body: "" });
   }, [open, userId]);
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    try {
-      const result = await messageUser(data);
-      if (result.error) {
-        toast.error(result.message);
-        return;
-      }
-      toast.success(result.message);
-      onOpenChange(false);
-    } catch (err) {
-      // withPermission throws on session/permission failures.
-      toast.error(
-        err instanceof Error ? err.message : "Could not send message.",
-      );
-    }
+  const submit = useFormAction(messageUser, {
+    onSuccess: () => onOpenChange(false),
+    refresh: false,
+    fallbackErrorMessage: "Could not send message.",
   });
+
+  const onSubmit = form.handleSubmit((data) => submit(data));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -112,7 +112,7 @@ function SetPasswordInner() {
             )}
           />
           {serverError ? (
-            <p className="text-[var(--destructive)] text-sm" role="alert">
+            <p role="alert" className="text-[var(--destructive)] text-sm">
               {serverError}
             </p>
           ) : null}

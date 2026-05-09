@@ -49,9 +49,11 @@ Closes **C-SEC-09**. Defense-in-depth — currently auth gating is route-only.
 
 Closes **C-SEC-08**. The `err.message` exposure in user-facing action results and `lib/email.ts`.
 
+iter-16e added a `fallbackErrorMessage` option to `useFormAction` (the form-side toast path), so the **server side is the only remaining gap**: once thrown errors carry generic strings, the hook's `err.message` display becomes safe by construction. Don't change `useFormAction` again here — fix the throw sites.
+
 - [ ] In `apps/admin/src/lib/email.ts:54`, replace `throw new Error(\`Resend send failed: ${error.message}\`)` with a generic message; log the full error server-side.
 - [ ] In `apps/admin/src/features/users/server/actions.ts` lines 86, 99, 161, replace `err.message` propagation with generic strings (`"Failed to update profile"`, `"Failed to send message"`); log the underlying error server-side.
-- [ ] Pair with audit-log: include a correlation ID in the audit-log row + the server-side log; expose that ID in the user-facing toast so support can find the entry.
+- [ ] Pair with audit-log: include a correlation ID in the audit-log row + the server-side log; expose that ID in the user-facing toast so support can find the entry. _Leave the intentional `withPermission`-thrown `PermissionError` / `UnauthenticatedError` messages alone — those are user-facing by design._
 
 ## Scope — missing-`user_profile` regression test [0/1]
 

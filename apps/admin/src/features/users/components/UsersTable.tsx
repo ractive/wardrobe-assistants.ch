@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
   Table,
   TableBody,
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/table";
 import type { UserListItem } from "../schema";
 import { RoleBadge } from "./RoleBadge";
-import { StatusBadge } from "./StatusBadge";
 import { UserActionsMenu } from "./UserActionsMenu";
 
 export function UsersTable({
@@ -54,7 +54,7 @@ export function UsersTable({
               </dd>
               <dt className="text-[var(--muted-foreground)]">Status</dt>
               <dd>
-                <StatusBadge status={user.status} />
+                <StatusBadge kind="user" status={user.status} />
               </dd>
             </dl>
           </li>
@@ -87,7 +87,7 @@ export function UsersTable({
                   <RoleBadge role={user.role} />
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={user.status} />
+                  <StatusBadge kind="user" status={user.status} />
                 </TableCell>
                 <TableCell className="text-[var(--muted-foreground)]">
                   {format(user.createdAt, "yyyy-MM-dd")}

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/Button";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
 import {
   ClipboardList,
@@ -9,6 +8,7 @@ import {
   Shirt,
   Truck,
 } from "@/components/icons";
+import { LinkButton } from "@/components/LinkButton";
 import { ServiceCard } from "@/components/ServiceCard";
 
 const servicesRow1 = [
@@ -74,10 +74,10 @@ export default function Home() {
           changes from call to curtain.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button href="#contact">Book the squad</Button>
-          <Button variant="outline" href="#services">
+          <LinkButton href="#contact">Book the squad</LinkButton>
+          <LinkButton variant="outline" href="#services">
             See services
-          </Button>
+          </LinkButton>
         </div>
       </section>
 
@@ -135,9 +135,9 @@ export default function Home() {
             it all and dressed it all.
           </p>
           <div className="pt-3">
-            <Button href="mailto:hello@wardrobe-assistants.ch">
+            <LinkButton href="mailto:hello@wardrobe-assistants.ch">
               Request a quote
-            </Button>
+            </LinkButton>
           </div>
         </div>
       </section>
