@@ -36,12 +36,12 @@ export default async function EventDetailPage({
   const event = await getEventById(id);
   if (!event) notFound();
 
-  const [canAssign, canDelete, canMessage, candidates] = await Promise.all([
+  const [canAssign, canDelete, canMessage] = await Promise.all([
     userHasPermission("EVENT_ASSIGN"),
     userHasPermission("EVENT_DELETE"),
     userHasPermission("EVENT_MESSAGE_ASSIGNED"),
-    listAssignableUsers(),
   ]);
+  const candidates = canAssign ? await listAssignableUsers() : [];
 
   return (
     <section className="flex flex-col gap-6">
@@ -57,7 +57,7 @@ export default async function EventDetailPage({
             <EventStatusBadge status={event.status} />
           </div>
           <p className="text-[var(--muted-foreground)]">
-            {format(event.date, "EEEE, d MMMM yyyy 'at' HH:mm")} · {event.venue}
+            {format(event.date, "EEEE, d MMMM yyyy")} · {event.venue}
           </p>
         </div>
         <EventDetailActions

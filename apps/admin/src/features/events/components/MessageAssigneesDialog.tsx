@@ -66,7 +66,13 @@ export function MessageAssigneesDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (form.formState.isSubmitting && !next) return;
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Message assignees of {eventName}</DialogTitle>

@@ -40,7 +40,7 @@ export function EventsTable({ events }: { events: EventListItem[] }) {
         accessorKey: "date",
         header: "Date",
         cell: ({ row }) => (
-          <span>{format(row.original.date, "yyyy-MM-dd HH:mm")}</span>
+          <span>{format(row.original.date, "yyyy-MM-dd")}</span>
         ),
       },
       {

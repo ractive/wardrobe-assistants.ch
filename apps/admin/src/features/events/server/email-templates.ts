@@ -11,7 +11,7 @@ export function assignmentEmail(input: AssignmentEmailInput): {
   subject: string;
   text: string;
 } {
-  const dateStr = format(input.date, "EEEE, d MMMM yyyy 'at' HH:mm");
+  const dateStr = format(input.date, "EEEE, d MMMM yyyy");
   const lines = [
     `You've been assigned to "${input.eventName}".`,
     "",

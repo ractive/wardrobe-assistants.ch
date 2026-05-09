@@ -257,7 +257,10 @@ export const messageEventAssignees = withPermission(
         sent += 1;
       } catch (err) {
         failed += 1;
-        console.error(`messageEventAssignees: send to ${r.email} failed`, err);
+        console.error(
+          "messageEventAssignees: send failed for a recipient",
+          err,
+        );
       }
     }
 
