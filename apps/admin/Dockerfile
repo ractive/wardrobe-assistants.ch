@@ -32,36 +32,31 @@ ENV DATABASE_URL=libsql://build-placeholder.invalid \
     EMAIL_FROM=admin@wardrobe-assistants.ch
 RUN npm -w apps/admin run build
 
-FROM node:24-alpine AS runner
+# Distroless runtime: no shell, no apk, no npm — just a pinned Node binary
+# and our standalone bundle. This eliminates the recurring "vulnerable CLI
+# bundled with the base image" class of Trivy findings (e.g. CVE-2026-33671
+# in picomatch 4.0.3 inside npm's tinyglobby on node:24-alpine), since
+# distroless ships nothing we don't need at runtime. server.js boots Node
+# directly via the image's ENTRYPOINT.
+FROM gcr.io/distroless/nodejs24-debian12 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# iter-16b container hardening (audit C-SEC-06): drop root. The standalone
-# server binds to PORT=3000 (above 1024) so no CAP_NET_BIND_SERVICE is
-# needed. Create the user *before* the COPY commands so the chown flag on
-# COPY hits a known UID/GID — chowning afterwards would double the layer
-# size for the .next/standalone tree.
-#
-# Strip the npm CLI from the runtime image — server.js boots Node directly
-# and never invokes npm. The bundled npm carries its own tinyglobby +
-# picomatch, which is where Trivy flagged CVE-2026-33671 (picomatch 4.0.3)
-# even though our app's picomatch is already 4.0.4. Removing npm fixes the
-# scan and shrinks the runtime layer.
-RUN addgroup -S app && adduser -S app -G app \
-    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
-
-# Standalone output: server.js + bundled deps under .next/standalone.
-COPY --from=builder --chown=app:app /repo/apps/admin/.next/standalone ./
-COPY --from=builder --chown=app:app /repo/apps/admin/.next/static ./apps/admin/.next/static
-COPY --from=builder --chown=app:app /repo/apps/admin/public ./apps/admin/public
+# iter-16b container hardening (audit C-SEC-06): drop root. Distroless ships
+# a baked-in `nonroot` user (UID/GID 65532) so we just chown the COPY layers
+# to it and switch USER below — no addgroup/adduser step (and no shell to
+# run one in). Chowning at COPY-time avoids a duplicate-layer chown after.
+COPY --from=builder --chown=nonroot:nonroot /repo/apps/admin/.next/standalone ./
+COPY --from=builder --chown=nonroot:nonroot /repo/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=builder --chown=nonroot:nonroot /repo/apps/admin/public ./apps/admin/public
 # Drizzle migration journal + SQL files. apps/admin/src/lib/migrate.ts
 # resolves the migrations folder relative to cwd at boot — keep this layout
 # in sync with resolveMigrationsFolder()'s candidate list.
-COPY --from=builder --chown=app:app /repo/packages/db/migrations ./packages/db/migrations
+COPY --from=builder --chown=nonroot:nonroot /repo/packages/db/migrations ./packages/db/migrations
 
-USER app
+USER nonroot
 
 EXPOSE 3000
 # Migrations apply automatically on container boot via Next's instrumentation
@@ -72,4 +67,7 @@ EXPOSE 3000
 #
 # Set MIGRATE_ON_BOOT=false to bring up a container without touching schema
 # (operator escape hatch for post-failure triage).
-CMD ["node", "apps/admin/server.js"]
+#
+# CMD is just args here — the distroless image's ENTRYPOINT is `node`, so
+# the runtime invocation is effectively `node apps/admin/server.js`.
+CMD ["apps/admin/server.js"]
