@@ -162,6 +162,12 @@ Every iteration plan's `Verify` section appends the following. Takes ~60 seconds
   - [ ] See it in the list / detail page
   - [ ] Sign out
 - [ ] **Axe-clean**: every interactive component added in this slice has a `vitest-axe` assertion in its `*.test.tsx` (`expect(await axe(container)).toHaveNoViolations()`). The reference is `apps/admin/src/components/StatusBadge.test.tsx` (iter-16e).
+- [ ] **Load-bearing component test**: the canonical examples for "what a feature's component test looks like" landed in iter-16g:
+  - `apps/admin/src/app/login/login.test.tsx` — coordinator + step transitions + focus management + axe.
+  - `apps/admin/src/features/events/components/EventForm.test.tsx` — RHF + zodResolver form, `useFormAction()` boundary mocked via `next/navigation` + `sonner`, calendar primitive interaction, axe.
+  - `apps/admin/src/features/events/components/AssigneesPicker.test.tsx` — popover + cmdk type-to-search, optimistic-style `useTransition` action wiring, axe.
+
+  Copy the pattern: `vi.hoisted(() => vi.fn())` for action/router/toast spies, `vi.mock("../server/actions", () => ({...}))`, `cleanup()` in `afterEach` (the suite is not running with `globals: true`, so RTL's auto-cleanup does not fire — Radix portals stack across tests and trip axe otherwise).
 ```
 
 ## Cross-feature isolation
