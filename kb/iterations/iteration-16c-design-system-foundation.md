@@ -19,7 +19,7 @@ The design-system doc must treat **mobile/responsive as a first-class concern**:
 - [x] [Frontend audit consolidated](../audits/audit-2026-05-09-frontend-consolidated.md) re-read.
 - [x] Confirm: stay on stock shadcn/ui; do not adopt community shadcn extensions (Origin UI, Cult UI, Aceternity, etc.). Reference research in §6 of the consolidated audit.
 
-## Scope — `kb/admin-architecture/design-system.md` [0/14]
+## Scope — `kb/admin-architecture/design-system.md` [14/14]
 
 The doc covers each topic with a mobile-first answer + a desktop answer + a "don't do this" anti-pattern. Concrete code snippets where they help.
 
@@ -38,7 +38,7 @@ The doc covers each topic with a mobile-first answer + a desktop answer + a "don
 - [x] **Animation.** Document `transition-colors duration-200` as the default; reserve longer / fancier transitions for one-off cases. Wrap in `motion-safe:`.
 - [x] **Anti-patterns** section listing things specifically forbidden: `<div onClick>`, hardcoded hex literals in `apps/admin/src/`, `useMemo`/`useCallback` for cheap derivations (Compiler handles them), Unicode dingbats, raw HTML inputs in forms, TanStack Table for read-only data, manual focus rings (`focus-visible:` is shadcn-built-in), reusing write permissions to gate reads.
 
-## Scope — vendor primitives needed by iter-16d/e [0/4]
+## Scope — vendor primitives needed by iter-16d/e [4/4]
 
 Install (vendor) the shadcn primitives the cleanup iterations will use. `npx shadcn add` writes them into `apps/admin/src/components/ui/` (Biome already excludes that directory from lint).
 
@@ -47,20 +47,20 @@ Install (vendor) the shadcn primitives the cleanup iterations will use. `npx sha
 - [x] `npx shadcn add skeleton` — used in `loading.tsx` files added by iter-16e.
 - [x] Smoke check: `npm run verify` still green; no app code references the new primitives yet.
 
-## Scope — dev tooling for component tests [0/2]
+## Scope — dev tooling for component tests [2/2]
 
 Sets up the tooling iter-16e/g need. No tests written here.
 
 - [x] Add `vitest-axe` to `apps/admin` devDependencies.
 - [x] Wire into the admin vitest project (extend `expect` with axe matchers in `tests/setup.ts`). Add a single placeholder smoke that imports vitest-axe to confirm it resolves; remove or leave as the harness self-test.
 
-## Scope — cross-links [0/3]
+## Scope — cross-links [3/3]
 
 - [x] Update `kb/admin-architecture/overview.md` "Start here" table to add a "Design system" row pointing at the new doc.
 - [x] Update `kb/admin-architecture/feature-slice-template.md` to say "UI conventions: see [`design-system.md`](design-system.md)" — that line replaces any previously inline UI guidance.
 - [x] Update `CLAUDE.md` (admin section) to point at `design-system.md` alongside the slice template.
 
-## Verify [0/4]
+## Verify [4/4]
 
 - [x] `npm run verify` — green.
 - [x] `npm run verify:tf` — green (no infra changes here, but confirm).
@@ -90,7 +90,7 @@ Edited:
 - `kb/admin-architecture/feature-slice-template.md` (cross-link)
 - `CLAUDE.md` (cross-link)
 
-## Done when [0/3]
+## Done when [3/3]
 
 - [x] `design-system.md` is the single contract for "how to build UI here", and iter-16d/e/g/17 can reference it as a complete instruction.
 - [x] Mobile/responsive is treated as a primitive, not a polish step — every section of the doc has a mobile-first answer.
