@@ -25,6 +25,7 @@ export default defineConfig({
         test: {
           name: "admin",
           environment: "happy-dom",
+          setupFiles: ["./tests/setup.ts", "./apps/admin/src/test/setup.ts"],
           include: [
             "apps/admin/src/**/*.{test,spec}.{ts,tsx}",
             "apps/admin/middleware.test.ts",

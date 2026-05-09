@@ -16,8 +16,7 @@
       "!**/out",
       "!kb/bunny-snapshot-*",
       "!infra/terraform",
-      "!apps/admin/src/components/ui",
-      "!apps/admin/src/hooks/use-mobile.ts"
+      "!apps/admin/src/components/ui"
     ]
   },
   "formatter": {

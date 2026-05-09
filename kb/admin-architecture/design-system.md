@@ -41,7 +41,7 @@ The admin's brand palette lives in `apps/admin/src/app/globals.css` as CSS varia
 **Desktop answer:** identical.
 
 **Don't:**
-- Hex literals (`#…`) anywhere under `apps/admin/src/`. Always `var(--…)` or a Tailwind-mapped token (`bg-card`, `text-muted-foreground`, etc.). Vendored shadcn files in `components/ui/` are exempt — Biome already excludes that path.
+- Hex literals (`#…`) in components or pages under `apps/admin/src/`. Always `var(--…)` or a Tailwind-mapped token (`bg-card`, `text-muted-foreground`, etc.). The token *definitions* in `apps/admin/src/app/globals.css` are the only allowed hex literals — that's where the palette lives. Vendored shadcn files in `components/ui/` are also exempt (Biome already excludes that path).
 - Inventing new tokens. If you need a colour that isn't covered, raise it in the decision log and add a token; don't inline a hex.
 
 **Contrast note (F-FE-27):** `--muted-foreground` (`#b8b3ac`) on `--background` (`#1a1816`) is borderline WCAG AA at small sizes. Reserve `text-muted-foreground` for help/caption (`text-xs`/`text-sm` non-essential). Do not use it for body copy that conveys primary information; use `--foreground` instead.
@@ -50,12 +50,12 @@ The admin's brand palette lives in `apps/admin/src/app/globals.css` as CSS varia
 
 Tailwind defaults: `sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px. **Admin must work at 375px width (iPhone SE class) and up.**
 
-**Mobile-first answer:** write base classes for the 375–640px range, then add wider-screen variants. `text-base lg:text-sm` is correct; `text-sm lg:text-base` is wrong because the small base hits the smallest screens. Touch targets are ≥ 44×44 px (Tailwind `min-h-11 min-w-11`).
+**Mobile-first answer:** write base classes for the 375–640px range, then add wider-screen variants. The cascade direction is the rule, not specific class pairs: write the mobile baseline first, then narrow/widen at `md:` / `lg:`. e.g. `flex-col md:flex-row` (mobile stacks, desktop inlines), `w-full md:w-auto` (full-width button on mobile, intrinsic on desktop), `grid-cols-1 md:grid-cols-2`. Touch targets are ≥ 44×44 px (Tailwind `min-h-11 min-w-11`).
 
 **Desktop answer:** progressively widen with `md:` and `lg:` variants. The single column on mobile becomes a two-column grid at `md:`; the bottom-stack action row becomes inline at `md:`.
 
 **Don't:**
-- `text-sm lg:text-base` (desktop-first) — inverts the intended cascade.
+- `md:flex-col` paired with a base `flex-row` (desktop-first) — inverts the intended cascade. Always start at mobile and add `md:`/`lg:` to widen, never the other way around.
 - Anything that's only legible above `md`. If you can't see it on iPhone SE, it's broken.
 - Touch targets below 44×44 — fingers aren't pixels.
 
@@ -320,7 +320,7 @@ Permission keys are entity-scoped:
 | Touch targets | ≥ 44×44 px on every interactive element |
 | Reduced motion | Wrap CSS transitions in `motion-safe:` |
 | Focus visible | `focus-visible:` ring is shadcn's default — don't override |
-| Colour contrast | Tokens already meet WCAG AA on `--background` — don't fight them with custom tints |
+| Colour contrast | Core text tokens (`--foreground`, `--primary-foreground`) meet WCAG AA on `--background` — don't fight them with custom tints. **Exception:** `--muted-foreground` is borderline AA at small sizes; reserve it for non-essential help/captions per the contrast note in §1. |
 
 ```tsx
 // vitest-axe smoke shape
