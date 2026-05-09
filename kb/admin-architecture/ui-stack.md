@@ -48,6 +48,8 @@ shadcn components read these CSS variables — they auto-skin to the brand witho
 
 ## shadcn install workflow
 
+> **Use the `shadcn` skill (Claude Code Skill tool) instead of running the CLI from memory.** The skill knows our `components.json` (new-york style, RSC, `@/` alias, CSS vars), reads the live registry, and handles add/search/fix/compose tasks. It also provides up-to-date per-component docs and examples that supersede this section. The raw commands below are kept as a fallback reference only.
+
 One-time:
 ```bash
 npx shadcn@latest init

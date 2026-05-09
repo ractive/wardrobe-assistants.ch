@@ -12,6 +12,8 @@ The audience is admins managing events from their phones — **mobile is the pri
 
 Companion docs: [`overview.md`](overview.md) (architecture rules), [`feature-slice-template.md`](feature-slice-template.md) (file-by-file checklist), [`ui-stack.md`](ui-stack.md) (library inventory).
 
+> **Tooling note for Claude:** for any shadcn/ui task in `apps/admin/` (adding, searching, debugging, or composing primitives), invoke the `shadcn` Skill via Claude Code's Skill tool rather than running `npx shadcn@latest …` from memory or guessing component shapes. The skill reads the live registry and our `components.json`, so it stays current as shadcn evolves. This document still owns the *conventions* (tokens, spacing, a11y, etc.) — the skill owns *how to bring components in*.
+
 ## 1. Tokens
 
 The admin's brand palette lives in `apps/admin/src/app/globals.css` as CSS variables. shadcn primitives read these — they auto-skin to the brand without modification.
