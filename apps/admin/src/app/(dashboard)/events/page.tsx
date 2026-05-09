@@ -10,8 +10,8 @@ export default async function EventsPage() {
   const session = await getCachedSession();
   if (!session) redirect("/login");
 
-  const allowed = await userHasPermission("EVENT_CREATE");
-  if (!allowed) {
+  const canView = await userHasPermission("EVENT_VIEW");
+  if (!canView) {
     return (
       <section className="flex flex-col gap-4">
         <h1 className="font-semibold text-2xl md:text-3xl">Events</h1>
@@ -20,6 +20,7 @@ export default async function EventsPage() {
     );
   }
 
+  const canCreate = await userHasPermission("EVENT_CREATE");
   const events = await listEvents();
 
   return (
@@ -31,7 +32,7 @@ export default async function EventsPage() {
             Schedule events, assign squad members, and message assignees.
           </p>
         </div>
-        <CreateEventDialog />
+        {canCreate && <CreateEventDialog />}
       </header>
       <EventsTable events={events} />
     </section>

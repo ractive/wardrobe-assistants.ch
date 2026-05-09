@@ -44,12 +44,12 @@ export function MessageUserDialog({
     defaultValues: { userId, subject: "", body: "" },
   });
 
-  // Reset only when the dialog transitions open. userId is stable for the
-  // dialog's lifetime; depending on `form` would re-fire on every render.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: see comment
+  // Reset on open or userId change. `form` is omitted because it's stable
+  // from useForm and depending on it would re-fire on every render.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: form is stable
   useEffect(() => {
     if (open) form.reset({ userId, subject: "", body: "" });
-  }, [open]);
+  }, [open, userId]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
