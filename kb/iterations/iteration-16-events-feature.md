@@ -2,7 +2,7 @@
 title: Iteration 16 — Events feature (CRUD, assignment, message-all-assigned)
 type: iteration
 order: 17
-status: implemented
+status: done
 ---
 
 # Iteration 16 — Events feature
