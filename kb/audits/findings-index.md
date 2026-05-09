@@ -69,7 +69,7 @@ Source: [audit-2026-05-09-frontend-consolidated.md](audit-2026-05-09-frontend-co
 
 | ID | Title | Iter | Status |
 |---|---|---|---|
-| F-FE-01 | Login page bypasses shadcn `<Form>`/`<Input>` | 16g | 🟡 |
+| F-FE-01 | Login page bypasses shadcn `<Form>`/`<Input>` | 16g | 🟢 |
 | F-FE-02 | No `role="alert"` / `aria-live` on form-level server errors | 16e | 🟢 |
 | F-FE-03 | TanStack Table loaded for read-only tables | 16d | 🟢 |
 | F-FE-04 | No `loading.tsx` / `error.tsx` / `not-found.tsx` | 16e | 🟢 |
@@ -77,9 +77,9 @@ Source: [audit-2026-05-09-frontend-consolidated.md](audit-2026-05-09-frontend-co
 | F-FE-06 | No `aria-current="page"` on active sidebar links | 16d | 🟢 |
 | F-FE-07 | Homepage `<Button>` always renders `<a>`; `href` not required | 16e | 🟢 (renamed → `LinkButton`) |
 | F-FE-08 | `EVENT_CREATE` gates event-detail viewing | 16d | 🟢 (`EVENT_VIEW` added) |
-| F-FE-09 | Zero React component tests | 16e + 16g | 🟡 (16e: small ✅; 16g: load-bearing trio) |
+| F-FE-09 | Zero React component tests | 16e + 16g | 🟢 (16e: small ✅; 16g: load-bearing trio ✅) |
 | F-FE-10 | Manual `useMemo` contradicts React Compiler | 16d | 🟢 |
-| F-FE-11 | Login two-step doesn't move focus to TOTP | 16g | 🟡 |
+| F-FE-11 | Login two-step doesn't move focus to TOTP | 16g | 🟢 |
 | F-FE-12 | EventForm `undefined as unknown as Date` cast | 16e | 🟢 |
 | F-FE-13 | Homepage Footer + ServiceCard hardcoded hex | 16d | 🟢 |
 | F-FE-14 | Homepage mobile-nav checkbox-hack | — | ⚪ Working; defer |
@@ -94,7 +94,7 @@ Source: [audit-2026-05-09-frontend-consolidated.md](audit-2026-05-09-frontend-co
 | F-FE-23 | Unicode `←` arrow vs `<ArrowLeft />` | 16d | 🟢 |
 | F-FE-24 | Tokens duplicated across admin + homepage | — | ⚪ Defer until 3rd surface appears |
 | F-FE-25 | MessageDialog form-reset dep array (unstable `form`) | 16d | 🟢 |
-| F-FE-26 | Login page muxes credentials+TOTP; should split | 16g | 🟡 |
+| F-FE-26 | Login page muxes credentials+TOTP; should split | 16g | 🟢 |
 | F-FE-27 | `--muted-foreground` contrast borderline AA | — | ⚪ Run contrast checker first; iter-16c notes it |
 | F-FE-28 | Destructive dialogs disable Esc-to-close during pending | — | ⚪ Documented intentional |
 | F-FE-29 | EyebrowBadge string-template ternary vs `cn()` | 16d | 🟢 |

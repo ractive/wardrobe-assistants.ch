@@ -2,7 +2,7 @@
 title: Iteration 16g — Login redesign + load-bearing component tests
 type: iteration
 order: 17.8
-status: planned
+status: implemented
 ---
 
 # Iteration 16g — Login redesign + load-bearing component tests
