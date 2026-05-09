@@ -91,6 +91,23 @@ Cheap rides. Closes **C-SEC-14** and **C-SEC-15**.
 - [ ] CodeQL workflow passes; Dependabot opens at least one PR within a week of merge.
 - [x] `kb/runbooks/migration-recovery.md` is complete and cross-linked.
 
+## Deferred (genuinely incomplete at merge)
+
+Code-side scope is complete. The unchecked items above are deferred by
+nature, not skipped:
+
+- **GitHub repo settings: secret scanning + push protection** — repo
+  admin UI toggle, not code. Tracked separately; flip immediately
+  post-merge. Doesn't block the code-side closing of C-SEC-12 (the
+  scanning *workflows* are live).
+- **Manual verify: failing email send shows generic toast + correlation
+  ID** — runtime check that needs a real Resend failure to observe
+  end-to-end. Pre-merge unit/smoke coverage already pins the throw-site
+  contract; the manual pass is a follow-up.
+- **CodeQL workflow passes; Dependabot opens at least one PR** —
+  weekly cadence; first run lands after merge by definition. Workflow
+  files are in place and validated by `npm run verify`.
+
 ## Out of scope (deliberate)
 
 - **`error.tsx` / `not-found.tsx` / `loading.tsx` boundaries.** Those are UI; iter-16e.
