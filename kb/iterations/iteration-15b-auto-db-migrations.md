@@ -5,9 +5,11 @@ order: 16.5
 status: planned
 ---
 
-# Iteration 15b — Automate DB migrations on deploy
+# Iteration 15b — Automate DB migrations on deploy + get admin live
 
 The current model from iter-09 is operator-driven: migrations are applied by hand from a workstation before each release that needs them. This iteration lifts that step out of the operator's hands so a deploy that introduces a schema change can never reach production code without the matching schema applied.
+
+**Primary goal: the admin app is up and running on prod end-to-end.** Today `/api/auth/*` returns 500 because iter-14's `user_profile` migration was never applied. Iter-15b's first deploy must auto-apply that pending migration via the boot-time migrator, with verification going beyond a curl 200 — successful sign-in flow tested in a real browser via `ff-rdp` proves the runtime path is fully wired.
 
 ## Context — why now
 
@@ -121,10 +123,11 @@ Untouched but worth referencing:
 - **Schema fail re-creates the iter-15 symptom shape.** If the migration succeeds but the app code expects a column that wasn't migrated (e.g. a typo'd field name), `/api/auth/*` 500s the same way. Mitigation: typecheck against the Drizzle schema in `npm run verify`; the type errors should surface mismatches before deploy.
 - **`MIGRATE_ON_BOOT=false` accidentally left set.** A surprise toggle from a debugging session. Mitigation: warn loudly at boot if the flag is set in production (`NODE_ENV=production && !MIGRATE_ON_BOOT` → log a yellow line so it's visible in deploy logs).
 
-## Done when [0/5]
+## Done when [0/6]
 
+- [ ] **Admin app is live end-to-end.** A real browser session (driven via `ff-rdp`) reaches `https://admin.wardrobe-assistants.ch/login`, signs in with valid credentials, and lands on the authenticated dashboard. No 500s on any auth API along the path.
 - [ ] A fresh deploy with a pending migration applies it before serving the first request, with `Migrations applied.` visible in container logs.
-- [ ] A deploy whose migration intentionally fails leaves the prior pod serving and surfaces `migration_failed=1` in logs (manual test from one feature branch — fixed in the next).
 - [ ] Iter-14's `user_profile` migration is applied to prod (auto-applied on iter-15b's first deploy via the boot-time Drizzle migrator — journal-based and idempotent — unless an operator already migrated manually before this lands) and `/api/auth/get-session` returns 200 instead of 500.
+- [ ] A deploy whose migration intentionally fails leaves the prior pod serving and surfaces `migration_failed=1` in logs (manual test from one feature branch — fixed in the next). _May be deferred to a follow-up if it proves disruptive to set up safely._
 - [ ] `kb/runbooks/runbook-go-live.md` no longer instructs operators to run migrations manually.
 - [ ] iter-16+ can introduce schema changes confident the deploy machinery applies them.
