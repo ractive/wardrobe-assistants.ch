@@ -24,7 +24,7 @@ import { type InviteUserInput, inviteUserInput } from "../schema";
 import { inviteUser } from "../server/actions";
 
 export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
-  const form = useForm<InviteUserInput>({
+  const form = useForm({
     resolver: zodResolver(inviteUserInput),
     defaultValues: {
       email: "",

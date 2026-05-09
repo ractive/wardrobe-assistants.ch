@@ -22,7 +22,15 @@ type Props = {
 
 export function CredentialsStep({ onSuccess }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const form = useForm<CredentialsInput>({
+  // No explicit generic on useForm — let TS infer the field-values type
+  // from `zodResolver(schema)`. With @hookform/resolvers v5 + zod v4 the
+  // resolver returns `z.input<typeof schema>` (optional properties), and
+  // our `*Input = z.infer<...>` aliases use `z.output` (required props
+  // with `| undefined`), so passing them as the form generic would
+  // disagree with the resolver. TS inference picks the correct input
+  // shape automatically. Same pattern applied to every `useForm` in
+  // the admin app.
+  const form = useForm({
     resolver: zodResolver(credentialsSchema),
     defaultValues: { email: "", password: "" },
   });
@@ -75,6 +83,13 @@ export function CredentialsStep({ onSuccess }: Props) {
                   autoComplete="email"
                   autoFocus
                   className="h-11 w-full md:h-9"
+                  // Password managers (Enpass, 1Password, LastPass, …) inject
+                  // attributes like data-enpassusermodified onto credential
+                  // inputs *after* SSR, *before* React hydrates. Suppress the
+                  // hydration warning here so the dev console isn't drowned
+                  // in noise on every login render. The mismatch is confined
+                  // to extension-injected attributes; React's tree is fine.
+                  suppressHydrationWarning
                   {...field}
                 />
               </FormControl>
@@ -93,6 +108,7 @@ export function CredentialsStep({ onSuccess }: Props) {
                   type="password"
                   autoComplete="current-password"
                   className="h-11 w-full md:h-9"
+                  suppressHydrationWarning
                   {...field}
                 />
               </FormControl>

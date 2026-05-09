@@ -75,7 +75,7 @@ export function EventForm(props: Props) {
   const isEdit = props.mode === "edit";
   const defaults = isEdit ? props.defaults : undefined;
 
-  const form = useForm<FormValues>({
+  const form = useForm({
     // Resolver enforces the parsed `CreateEventInput` shape (date required)
     // even though the form-state type permits `date: undefined` mid-edit.
     resolver: zodResolver(createEventInput) as never,

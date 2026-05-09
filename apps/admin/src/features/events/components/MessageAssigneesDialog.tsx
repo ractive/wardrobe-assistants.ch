@@ -42,7 +42,7 @@ export function MessageAssigneesDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const form = useForm<MessageEventAssigneesInput>({
+  const form = useForm({
     resolver: zodResolver(messageEventAssigneesInput),
     defaultValues: { eventId, subject: "", body: "" },
   });

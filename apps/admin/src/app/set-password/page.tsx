@@ -37,7 +37,7 @@ function SetPasswordInner() {
   const token = params.get("token");
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const form = useForm<FormValues>({
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { newPassword: "", confirmPassword: "" },
   });
@@ -89,6 +89,7 @@ function SetPasswordInner() {
                   <Input
                     type="password"
                     autoComplete="new-password"
+                    suppressHydrationWarning
                     {...field}
                   />
                 </FormControl>
@@ -110,6 +111,7 @@ function SetPasswordInner() {
                   <Input
                     type="password"
                     autoComplete="new-password"
+                    suppressHydrationWarning
                     {...field}
                   />
                 </FormControl>
