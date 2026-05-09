@@ -20,45 +20,36 @@ status: current
 | Validation | `zod` | Same schemas used server-side for `action.parse(unsafe)` |
 | Tables | `@tanstack/react-table` | Headless; shadcn has a copy-paste data-table recipe built on it |
 | Toasts | `sonner` | shadcn-recommended toast |
+| Theme switching | `next-themes` `^0.4.6` | Light / dark / system; see `design-system.md` §16 |
 | Date helpers | `date-fns` | Add when first needed |
 | Date picker | `react-day-picker` | Comes via `npx shadcn add calendar` |
 
-## Brand tokens (already wired)
+## Brand tokens
 
-`apps/admin/src/app/globals.css` defines shadcn-shaped CSS variables tinted to the wardrobe-assistants brand:
+Tokens are sourced from `@shadcn/theme-neutral` (oklch, light + dark, full semantic set). `apps/admin/src/app/globals.css` is the verbatim output of:
 
-```css
-:root {
-  --background: #1a1816;       /* dark theme by default */
-  --foreground: #edeae4;
-  --card: #26231f;
-  --primary: #b5564f;          /* Bordeaux brand */
-  --secondary: #2e2b28;
-  --muted: #1f1d1b;
-  --muted-foreground: #b8b3ac;
-  --destructive: #e53e3e;
-  --border: #3a3734;
-  --input: #3a3734;
-  --ring: #b5564f;
-  --radius-m: 16px;
-}
+```bash
+npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite
 ```
 
-shadcn components read these CSS variables — they auto-skin to the brand without modification.
+No project-specific token overrides exist yet. Bordeaux brand re-application on `--primary` and derivatives is planned for iter-16i. See [`design-system.md §1`](design-system.md) for the full override surface.
 
 ## shadcn install workflow
 
-> **Use the `shadcn` skill (Claude Code Skill tool) instead of running the CLI from memory.** The skill knows our `components.json` (new-york style, RSC, `@/` alias, CSS vars), reads the live registry, and handles add/search/fix/compose tasks. It also provides up-to-date per-component docs and examples that supersede this section. The raw commands below are kept as a fallback reference only.
+**MCP-first** — use the shadcn MCP server registered in `.mcp.json` for all registry research:
 
-One-time:
+1. `mcp__shadcn__list_items_in_registries` / `view_items_in_registries` / `get_item_examples_from_registries` — research before you add.
+2. Commit any pending working-tree changes first so `git diff` becomes the review surface.
+3. `npx shadcn@latest add <item> -c apps/admin --dry-run --yes` — preview what will change.
+4. Run for real only if the dry-run doesn't overwrite customized files (login coordinator, permission gates, server-action wiring).
+5. Cherry-pick via `git restore` for any unwanted overwrites.
+
+> The raw `npx shadcn@latest add …` command is the execution layer; the MCP tools are the research layer. Always research first.
+
+One-time init (already done):
 ```bash
 npx shadcn@latest init
-# components.json points to: components/ui, lib/utils, "@/" alias, RSC mode, CSS vars
-```
-
-Per component, on demand:
-```bash
-npx shadcn@latest add button input label form dialog table dropdown-menu select textarea checkbox switch sonner
+# components.json: new-york style, RSC, "@/" alias, CSS vars
 ```
 
 Components land in `apps/admin/src/components/ui/`. `lib/utils.ts` gets the `cn()` helper. shadcn auto-detects Tailwind v4 and uses v4-compatible templates.
@@ -173,6 +164,18 @@ The `app/(dashboard)/layout.tsx` already exists (iter-7b). For iter-14+, add a s
 - `components/DashboardSidebar.tsx` — links to Users / Events / Services, gated by `<HasPermission>` per link.
 - Sidebar layout uses shadcn's `Sheet` for mobile + a static aside for desktop.
 - Active link via `usePathname()` + `cn()` conditional class.
+
+## Blocks
+
+Shadcn blocks adopted from [`https://ui.shadcn.com/blocks`](https://ui.shadcn.com/blocks). See [`design-system.md §15`](design-system.md) for usage detail per block.
+
+| Block | Status | Notes |
+|---|---|---|
+| `@shadcn/sidebar-07` | Vendored (iter-16h) | Grafted into `DashboardSidebar.tsx` |
+| `@shadcn/login-03` | Vendored (iter-16h) | Chrome only; form bodies are iter-16g coordinator |
+| `@shadcn/dashboard-01` | Reference only | Layout shape hand-written; deps bundle not pulled |
+| `@shadcn/mode-toggle` | Vendored (iter-16h) | `components/ThemeToggle.tsx` |
+| `@shadcn/empty` | Vendored (iter-16h) | `components/ui/empty.tsx` |
 
 ## What's NOT in the stack
 

@@ -98,6 +98,9 @@ Source: [audit-2026-05-09-frontend-consolidated.md](audit-2026-05-09-frontend-co
 | F-FE-27 | `--muted-foreground` contrast borderline AA | — | ⚪ Run contrast checker first; iter-16c notes it |
 | F-FE-28 | Destructive dialogs disable Esc-to-close during pending | — | ⚪ Documented intentional |
 | F-FE-29 | EyebrowBadge string-template ternary vs `cn()` | 16d | 🟢 |
+| F-FE-30 | Missing semantic shadcn tokens (`--popover`, `--accent`, `--destructive-foreground`) | 16h | 🟢 (`@shadcn/theme-neutral` wholesale; all semantic tokens now declared) |
+| F-FE-31 | User menu missing from sidebar | 16h | 🟢 (`UserMenu` in sidebar footer via `@shadcn/sidebar-07` graft) |
+| F-FE-32 | No visual hierarchy on dashboard home | 16h | 🟢 (KPI grid + chart placeholder + recent-events per `dashboard-01` layout shape) |
 
 ## Iteration-by-iteration summary
 
@@ -109,6 +112,7 @@ Source: [audit-2026-05-09-frontend-consolidated.md](audit-2026-05-09-frontend-co
 | [16e](../iterations/iteration-16e-ui-cleanup-forms-boundaries.md) | 17.6 | UI cleanup pass 2 (forms, boundaries, first tests) | F-FE-02/04/07/12/15/16, C-NXT-01, C-TS-02 |
 | [16f](../iterations/iteration-16f-defense-in-depth.md) | 17.7 | Defense-in-depth security | C-SEC-02/08/09/10/12/13/14/15, C-INF-01, C-AUTH-01, C-MONO-02, C-DEP-01 |
 | [16g](../iterations/iteration-16g-login-redesign.md) | 17.8 | Login redesign + load-bearing tests | F-FE-01/09/11/26 |
+| [16h](../iterations/iteration-16h-design-refresh.md) | 17.9 | Design refresh — shadcn new-york + theme-neutral + blocks | F-FE-30/31/32 |
 | [17](../iterations/iteration-17-services-feature.md) | 18 | Services feature (existing plan; inherits everything above) | — |
 
 Findings deliberately deferred or accepted: C-SEC-11 (track upstream), C-NXT-02, C-MONO-01, C-AUTHZ-01, C-A11Y-01, C-TS-01, C-OPS-01, C-SEO-01, S-28, F-FE-14, F-FE-24, F-FE-27, F-FE-28.

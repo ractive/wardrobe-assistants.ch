@@ -16,37 +16,31 @@ Companion docs: [`overview.md`](overview.md) (architecture rules), [`feature-sli
 
 ## 1. Tokens
 
-The admin's brand palette lives in `apps/admin/src/app/globals.css` as CSS variables. shadcn primitives read these — they auto-skin to the brand without modification.
+Tokens are sourced from **`@shadcn/theme-neutral`** (oklch, light + dark, full semantic set including chart palette and `--radius`). To re-sync after a theme-neutral release, re-run:
 
-| Token | Value | Use for |
-|---|---|---|
-| `--background` | `#1a1816` | Page background |
-| `--foreground` | `#edeae4` | Body text |
-| `--card` | `#26231f` | `<Card>`, raised surfaces, sheets, popovers |
-| `--card-foreground` | `#edeae4` | Text on cards |
-| `--primary` | `#b5564f` | Brand colour — primary buttons, focus ring, active nav |
-| `--primary-foreground` | `#edeae4` | Text on `--primary` fills |
-| `--secondary` | `#2e2b28` | Secondary buttons, hover states |
-| `--secondary-foreground` | `#edeae4` | Text on `--secondary` fills |
-| `--muted` | `#1f1d1b` | Empty-state surfaces, inactive tabs |
-| `--muted-foreground` | `#b8b3ac` | Help text, captions, "5 results" rows |
-| `--destructive` | `#e53e3e` | Delete buttons, error toasts, validation messages |
-| `--border` | `#3a3734` | All borders by default |
-| `--input` | `#3a3734` | Form-field borders specifically |
-| `--ring` | `#b5564f` | Focus ring (matches `--primary` by design) |
-| `--sidebar`, `--sidebar-*` | aliases of the above | shadcn `Sidebar` primitive — kept as aliases so the dark-only palette stays in lockstep with the rest of the tokens |
+```bash
+npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite
+```
 
-`--radius-m: 16px` is **adopted** as the radius for cards and large surfaces; shadcn's default `rounded-md` (6px) stays for buttons and inputs. Use `style={{ borderRadius: "var(--radius-m)" }}` only when shadcn's default doesn't fit; prefer the Tailwind `rounded-*` utilities.
+This overwrites `apps/admin/src/app/globals.css` wholesale. The admin ships light + dark + system (driven by `next-themes`; see §16).
 
-**Mobile-first answer:** identical — there is one palette and it's dark.
+**Project-specific overrides** land in **iter-16i** (Bordeaux re-application on `--primary` and derivatives) — currently none. The override surface iter-16i will touch:
 
-**Desktop answer:** identical.
+| Token | Planned override |
+|---|---|
+| `--primary` | Bordeaux (`oklch(…)`) |
+| `--primary-foreground` | Light neutral for contrast on Bordeaux |
+| `--ring` | Match `--primary` |
+| `--sidebar-primary` | Match `--primary` |
+| `--sidebar-primary-foreground` | Match `--primary-foreground` |
+
+Until iter-16i lands, all of these are the `@shadcn/theme-neutral` defaults.
 
 **Don't:**
 - Hex literals (`#…`) in components or pages under `apps/admin/src/`. Always `var(--…)` or a Tailwind-mapped token (`bg-card`, `text-muted-foreground`, etc.). The token *definitions* in `apps/admin/src/app/globals.css` are the only allowed hex literals — that's where the palette lives. Vendored shadcn files in `components/ui/` are also exempt (Biome already excludes that path).
-- Inventing new tokens. If you need a colour that isn't covered, raise it in the decision log and add a token; don't inline a hex.
+- Inventing new tokens. If you need a colour not covered by `@shadcn/theme-neutral`, raise it in the decision log and add a token; don't inline a hex.
 
-**Contrast note (F-FE-27):** `--muted-foreground` (`#b8b3ac`) on `--background` (`#1a1816`) is borderline WCAG AA at small sizes. Reserve `text-muted-foreground` for help/caption (`text-xs`/`text-sm` non-essential). Do not use it for body copy that conveys primary information; use `--foreground` instead.
+**Contrast note (F-FE-27):** `--muted-foreground` on `--background` is borderline WCAG AA at small sizes. Reserve `text-muted-foreground` for help/caption (`text-xs`/`text-sm` non-essential). Do not use it for body copy that conveys primary information; use `--foreground` instead.
 
 ## 2. Breakpoints + responsive baseline
 
@@ -106,7 +100,7 @@ Font is `Inter, ui-sans-serif, system-ui, sans-serif` — already wired in `glob
 
 ## 5. Layout primitives (signatures)
 
-Built lazily — the first slice that needs each primitive lifts it from inline code. Documented here so the shape is fixed before the first implementation. **Implementation lands in iter-16d/e**, not here.
+Built lazily — the first slice that needs each primitive lifts it from inline code. Documented here so the shape is fixed before the first implementation.
 
 ```tsx
 // PageHeader — every dashboard page top
@@ -119,24 +113,19 @@ type PageHeaderProps = {
 // Section — wraps a logical block under a PageHeader
 type SectionProps = { title?: string; children: React.ReactNode };
 
-// EmptyState — replaces an empty list/table
-type EmptyStateProps = {
-  icon?: LucideIcon;
-  title: string;
-  description?: string;
-  action?: React.ReactNode; // primary CTA
-};
-
 // TableSkeleton — used by loading.tsx alongside data tables
 type TableSkeletonProps = { rows?: number; columns?: number };
 ```
 
-**Mobile-first answer:** `<PageHeader>` stacks `actions` below the title at base width, inlines them at `md:`. `<EmptyState>` centres its content; CTA is full-width on mobile.
+**Empty state:** use the canonical **`@shadcn/empty`** primitive vendored in iter-16h as `apps/admin/src/components/ui/empty.tsx`. Registry source: [`https://ui.shadcn.com/r/empty`](https://ui.shadcn.com/r/empty). The hand-rolled `<EmptyState>` signature planned earlier is replaced by `<Empty>` from this component. Used by the dashboard chart placeholder and the recent-events empty state.
 
-**Desktop answer:** `actions` floats right of the title; `<EmptyState>` keeps centred content but caps width.
+**Mobile-first answer:** `<PageHeader>` stacks `actions` below the title at base width, inlines them at `md:`. `<Empty>` centres its content; CTA is full-width on mobile.
+
+**Desktop answer:** `actions` floats right of the title; `<Empty>` keeps centred content but caps width.
 
 **Don't:**
 - Building these primitives until a slice needs them — premature.
+- Hand-rolling an empty-state component — use `<Empty>` from `@/components/ui/empty`.
 - Inventing alternative slot names — stick to `title / description / actions / icon / action`.
 
 ## 6. Forms
@@ -381,3 +370,42 @@ A condensed list of things the rest of the doc forbids — useful in code review
 | Form on `Dialog` on mobile | Soft keyboard + small dialog = unusable; use `Sheet side="bottom"` |
 | Animating without `motion-safe:` | Ignores `prefers-reduced-motion` |
 | Per-feature duplicate badges (`RoleBadge` etc.) | Use the shared `<StatusBadge kind status>` |
+
+## 15. Blocks adopted
+
+Shadcn blocks vendored or referenced in iter-16h. See [ui-stack.md §Blocks](ui-stack.md) and [`https://ui.shadcn.com/blocks`](https://ui.shadcn.com/blocks).
+
+| Block | How used |
+|---|---|
+| `@shadcn/sidebar-07` | Grafted into `apps/admin/src/components/DashboardSidebar.tsx` — icon-collapse on desktop, offcanvas on mobile, footer with user menu + theme toggle, grouped nav. `<HasPermission>` gates preserved around each link. |
+| `@shadcn/login-03` | Chrome only: muted-bg full-screen flex shell, `max-w-sm` column, `<BrandBadge>` above the form. Form bodies remain the iter-16g `credentials-step.tsx` + `totp-step.tsx` — those were not overwritten. |
+| `@shadcn/dashboard-01` | Layout reference only; not vendored. Hand-written `(dashboard)/page.tsx` matches its KPI grid (1×4 mobile → 2×2 `md:` → 4×1 `xl:`) + chart placeholder + recent-events split, without pulling in the `@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul` bundle. |
+| `@shadcn/mode-toggle` | Vendored as `components/ThemeToggle.tsx` (renamed to PascalCase convention). Anchored in the sidebar footer. |
+| `@shadcn/empty` | Vendored as `components/ui/empty.tsx`. Used by the dashboard chart placeholder and the recent-events empty state. Replaces the planned hand-rolled `<EmptyState>` (see §5). |
+
+## 16. Theme switcher
+
+The admin ships **light / dark / system** mode toggle:
+
+- Toggle component: `<ThemeToggle />` (`components/ThemeToggle.tsx`), vendored from `@shadcn/mode-toggle`. Anchored in the `DashboardSidebar` footer.
+- Provider: `components/ThemeProvider.tsx` — thin wrapper around `NextThemesProvider` from `next-themes` (`^0.4.6`).
+- Root layout wiring:
+  ```tsx
+  // apps/admin/src/app/layout.tsx
+  <html lang="en" suppressHydrationWarning>
+    <body>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
+    </body>
+  </html>
+  ```
+- `suppressHydrationWarning` on `<html>` prevents React from complaining about the class mismatch between server (no theme class) and client (theme class injected by `next-themes`).
+- **No custom inline pre-hydration script** — `next-themes` injects its own when `attribute="class"`.
+- **Client-only persistence** — theme is stored in `localStorage`; no server round-trip, no cookie.
+- System mode reflects OS-level changes in real time without a page reload.

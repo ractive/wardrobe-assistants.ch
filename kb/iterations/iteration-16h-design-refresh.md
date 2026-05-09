@@ -2,7 +2,7 @@
 title: Iteration 16h — Adopt canonical shadcn (new-york + theme-neutral)
 type: iteration
 order: 17.9
-status: planned
+status: done
 ---
 
 # Iteration 16h — Adopt canonical shadcn (new-york + theme-neutral)
@@ -15,37 +15,37 @@ The admin still looks like a wireframe. Stop inventing tokens and chrome — ado
 
 ## Pre-flight
 
-- [ ] iter-16c/d/e/g merged. Login coordinator (`credentials-step.tsx`, `totp-step.tsx`) from iter-16g must survive — anything written under `src/app/login/` by `add login-03` gets cherry-picked, not kept wholesale.
-- [ ] Working tree clean before each `add` so `git diff` shows exactly what landed.
+- [x] iter-16c/d/e/g merged. Login coordinator (`credentials-step.tsx`, `totp-step.tsx`) from iter-16g must survive — anything written under `src/app/login/` by `add login-03` gets cherry-picked, not kept wholesale.
+- [x] Working tree clean before each `add` so `git diff` shows exactly what landed.
 
 ## Scope — theme
 
-- [ ] `npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite --yes`. Accept the canonical light + dark oklch palette wholesale into `globals.css`. No Bordeaux override block.
-- [ ] Add `next-themes` and wire per shadcn's [Next.js dark-mode guide](https://ui.shadcn.com/docs/dark-mode/next):
+- [x] `npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite --yes`. Accept the canonical light + dark oklch palette wholesale into `globals.css`. No Bordeaux override block.
+- [x] Add `next-themes` and wire per shadcn's [Next.js dark-mode guide](https://ui.shadcn.com/docs/dark-mode/next):
   - `components/ThemeProvider.tsx` — thin wrapper around `NextThemesProvider`.
   - `app/layout.tsx` — `<html lang="en" suppressHydrationWarning>`, `<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>`. No custom inline script — `next-themes` injects its own when `attribute="class"`.
-- [ ] `npx shadcn@latest add @shadcn/mode-toggle -c apps/admin`. Rename to `components/ThemeToggle.tsx` for our PascalCase convention. Anchor in the sidebar footer.
+- [x] `npx shadcn@latest add @shadcn/mode-toggle -c apps/admin`. Rename to `components/ThemeToggle.tsx` for our PascalCase convention. Anchor in the sidebar footer.
 
 ## Scope — blocks (cherry-pick workflow)
 
 For each block: run with `--overwrite`, inspect `git diff`, keep the structural improvements, `git restore` files that regress our customizations (login coordinator, permission gates, server-action wiring).
 
-- [ ] **`@shadcn/sidebar-07`** → graft icon-collapse + footer pattern into our `DashboardSidebar.tsx`. Keep our `<HasPermission>` gates around each NavLink. Add the user menu and theme toggle to the footer.
-- [ ] **`@shadcn/login-03`** → keep only the chrome: muted-bg full-screen flex shell, `max-w-sm` form column, brand-badge link above the form. **Restore** `src/app/login/page.tsx` to the iter-16g coordinator after the add (`git restore src/app/login/page.tsx`); the new chrome wraps it. Do not vendor `login-03/components/login-form.tsx` (uses `Field` primitives + social-login buttons we don't support).
-- [ ] **`@shadcn/dashboard-01`** → reference only. The `--dry-run` showed it pulls 14 deps (`@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul`) we don't want yet. Run `add` against a scratch branch if you want to see the structure live; otherwise read the source via `mcp__shadcn__get_item_examples_from_registries`. Hand-write `(dashboard)/page.tsx` matching its layout: page header → 4-up KPI grid (1×4 mobile, 2×2 md:, 4×1 xl:) → chart placeholder (use `@shadcn/empty`) → recent-events mini-table (cards on mobile, table on desktop per `design-system.md` §7).
-- [ ] `npx shadcn@latest add @shadcn/empty -c apps/admin`. Single new file; replaces the planned hand-rolled `<EmptyState>` from `design-system.md` §5.
+- [x] **`@shadcn/sidebar-07`** → graft icon-collapse + footer pattern into our `DashboardSidebar.tsx`. Keep our `<HasPermission>` gates around each NavLink. Add the user menu and theme toggle to the footer.
+- [x] **`@shadcn/login-03`** → keep only the chrome: muted-bg full-screen flex shell, `max-w-sm` form column, brand-badge link above the form. **Restore** `src/app/login/page.tsx` to the iter-16g coordinator after the add (`git restore src/app/login/page.tsx`); the new chrome wraps it. Do not vendor `login-03/components/login-form.tsx` (uses `Field` primitives + social-login buttons we don't support).
+- [x] **`@shadcn/dashboard-01`** → reference only. The `--dry-run` showed it pulls 14 deps (`@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul`) we don't want yet. Run `add` against a scratch branch if you want to see the structure live; otherwise read the source via `mcp__shadcn__get_item_examples_from_registries`. Hand-write `(dashboard)/page.tsx` matching its layout: page header → 4-up KPI grid (1×4 mobile, 2×2 md:, 4×1 xl:) → chart placeholder (use `@shadcn/empty`) → recent-events mini-table (cards on mobile, table on desktop per `design-system.md` §7).
+- [x] `npx shadcn@latest add @shadcn/empty -c apps/admin`. Single new file; replaces the planned hand-rolled `<EmptyState>` from `design-system.md` §5.
 
 ## Scope — KB updates
 
-- [ ] `design-system.md` §1 — replace the hex tokens table with "Tokens are sourced from `@shadcn/theme-neutral`. To re-sync, re-run `npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite`." Drop "dark-only" language throughout (admin now ships light + dark + system). Update §5 to reference `@shadcn/empty` instead of the planned hand-rolled `<EmptyState>`.
-- [ ] `ui-stack.md` — note the MCP-first / dry-run-first / commit-then-add workflow.
-- [ ] `decision-log.md` — single ADR: **"Admin adopts shadcn new-york + theme-neutral wholesale; no token-level brand customization."** Why: every iteration after this gets to track upstream instead of maintaining a parallel design system; brand identity stays on the customer-facing homepage where it matters.
+- [x] `design-system.md` §1 — replace the hex tokens table with "Tokens are sourced from `@shadcn/theme-neutral`. To re-sync, re-run `npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite`." Drop "dark-only" language throughout (admin now ships light + dark + system). Update §5 to reference `@shadcn/empty` instead of the planned hand-rolled `<EmptyState>`.
+- [x] `ui-stack.md` — note the MCP-first / dry-run-first / commit-then-add workflow.
+- [x] `decision-log.md` — single ADR: **"Admin adopts shadcn new-york + theme-neutral wholesale; no token-level brand customization."** Why: every iteration after this gets to track upstream instead of maintaining a parallel design system; brand identity stays on the customer-facing homepage where it matters.
 
 ## Verify
 
-- [ ] `npm run format` + `npm run verify` green.
+- [x] `npm run format` + `npm run verify` green.
 - [ ] Light + dark renders correctly at 375px and 1024px on every existing screen (login, set-password, dashboard, users, events). Before/after screenshots in `kb/perf-reports/iter-16h-design-refresh/{light,dark}/`.
-- [ ] vitest-axe on `DashboardSidebar`, `LoginPage`, `DashboardHome`, `ThemeToggle` — `toHaveNoViolations()` per theme.
+- [x] vitest-axe on `DashboardSidebar`, `LoginPage`, `DashboardHome`, `ThemeToggle` — `toHaveNoViolations()` per theme.
 - [ ] Cold-load with `localStorage.theme = "dark"` (then `"light"`) shows no flash. Mechanism: `suppressHydrationWarning` + next-themes' built-in pre-hydration script.
 - [ ] Theme toggle persists across reloads; system mode reflects OS-level changes without reload.
 
@@ -86,8 +86,8 @@ Removed:
 
 ## Done when
 
-- [ ] `globals.css` is the verbatim `@shadcn/theme-neutral` output; no project-specific tokens.
-- [ ] Theme toggle (Light / Dark / System) works in the sidebar footer; no flash on cold load.
-- [ ] Sidebar collapses to icons on desktop, offcanvas on mobile; permission gates intact.
-- [ ] Dashboard home matches `dashboard-01`'s layout shape (without its dependency bundle); login + set-password use `login-03` chrome around the iter-16g form bodies.
-- [ ] Single ADR documents the "adopt over invent" stance; `design-system.md` and `ui-stack.md` reflect the upstream-tracked baseline.
+- [x] `globals.css` is the verbatim `@shadcn/theme-neutral` output; no project-specific tokens.
+- [x] Theme toggle (Light / Dark / System) works in the sidebar footer; no flash on cold load.
+- [x] Sidebar collapses to icons on desktop, offcanvas on mobile; permission gates intact.
+- [x] Dashboard home matches `dashboard-01`'s layout shape (without its dependency bundle); login + set-password use `login-03` chrome around the iter-16g form bodies.
+- [x] Single ADR documents the "adopt over invent" stance; `design-system.md` and `ui-stack.md` reflect the upstream-tracked baseline.

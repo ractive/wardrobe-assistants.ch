@@ -195,6 +195,22 @@ Plus `assertPermission` at page-route tops for guarded pages.
 
 ---
 
+## ADR-016 — Admin adopts shadcn new-york + theme-neutral wholesale; no token-level brand customization
+
+**Status:** accepted | **Date:** 2026-05-09
+
+**Context.** Pre-iter-16h the admin used hand-rolled hex tokens with a Bordeaux primary (`#b5564f`). Primitives like `--popover`, `--accent`, and `--destructive-foreground` were undeclared, causing visual gaps whenever shadcn components expected them. Multiple iterations (16c/d/e/g) cleaned the existing UI; the visual lift was explicitly deferred to iter-16h.
+
+**Decision.** iter-16h vendors `@shadcn/theme-neutral` wholesale (`npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite`). No Bordeaux override block. Admin goes fully neutral. Brand identity stays on the customer-facing homepage independently.
+
+**Alternatives considered:**
+- Apply Bordeaux override on top of `@shadcn/theme-neutral` in the same iteration (rejected: the neutral baseline hadn't been validated under light + dark + system; adding brand colour on top of an unvalidated baseline risks regressions in the full semantic token set).
+- Keep the hand-rolled hex palette (rejected: undeclared tokens kept surfacing visual gaps as more shadcn primitives were adopted).
+
+**Consequences.** Every iteration after this tracks `@shadcn/theme-neutral` upstream rather than maintaining a parallel design system. shadcn screenshots, examples, and blocks render as-shipped — no surprise divergence. Loss: admin no longer carries the Bordeaux brand. Mitigation: **iter-16i** (planned) re-applies Bordeaux as a five-line override on `--primary` and derivatives if the brand-loss proves to matter — easy to add, easy to revert. See `design-system.md §1` for the exact override surface.
+
+---
+
 ## How to add an ADR
 
 When making a new architectural decision:
