@@ -16,7 +16,7 @@ Mobile responsiveness lands here for the navigation surface (sidebar offcanvas) 
 - [x] iter-16c (design system foundation) merged. `design-system.md` is the contract; vendored `Sidebar`, `Sheet`, `Skeleton` exist; `vitest-axe` installed.
 - [ ] iter-16b merged (security headers in place; CSP shape known).
 
-## Scope — adopt official shadcn `Sidebar` [4/4]
+## Scope — adopt official shadcn `Sidebar` [3/4]
 
 Closes **F-FE-05** (mobile nav missing) + **F-FE-06** (no `aria-current`). The hand-rolled `DashboardSidebar.tsx` becomes a thin wrapper over the shadcn composables.
 
@@ -57,8 +57,8 @@ Each item is mechanical, ≤30 min.
 - [x] **F-FE-22**: Decide on `--radius-m: 16px` per the design-system doc — **adopted** (kept as defined in `globals.css`; `design-system.md` already documents it).
 - [x] **F-FE-08 + EVENT_VIEW**: Add `EVENT_VIEW` to `lib/permissions.ts` (granted to ADMIN and SQUAD_MEMBER); replace the `EVENT_CREATE` gate at `events/[id]/page.tsx:26` with `EVENT_VIEW`. Module-load self-check in `permissions.ts` will catch missing role grants.
 - [x] **F-FE-10**: Drop `useMemo` from `EventsTable.tsx:25`, `UsersTable.tsx:31`, `AssigneesPicker.tsx:38,42`. (EventsTable / UsersTable's `useMemo` goes away when they become server components anyway; AssigneesPicker keeps its client logic but loses the wrapper.)
-- [x] **F-FE-17**: Migrate `app/(dashboard)/sign-out-button.tsx` from manual `useState(pending)` to `useTransition()`; add `toast.error` on signout failure.
-- [x] **F-FE-25**: Fix `MessageAssigneesDialog.tsx:50-52` and `MessageUserDialog.tsx:47-49` form-reset `useEffect` dep array — `[open]` only.
+- [x] **F-FE-17**: Add `toast.error` on signout failure in `app/(dashboard)/sign-out-button.tsx` so failures aren't silent (was the audit's substantive concern). The plan's secondary "migrate to `useTransition()`" was attempted then reverted to `useState(pending)` after Copilot + CodeRabbit flagged that `startTransition` doesn't reliably keep `pending` true through an async callback (double-submit risk).
+- [x] **F-FE-25**: Fix `MessageAssigneesDialog.tsx` and `MessageUserDialog.tsx` form-reset `useEffect` dep array. Final form is `[open, eventId]` / `[open, userId]` (not `[open]` only) — CodeRabbit's review pointed out that omitting the id risks reusing the dialog with stale recipients; `form` stays out of deps via `biome-ignore` since it's stable.
 
 ## Scope — mobile-responsive layout polish [2/3]
 
