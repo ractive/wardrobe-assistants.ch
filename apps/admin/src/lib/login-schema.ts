@@ -1,12 +1,17 @@
 import { z } from "zod";
 
 // Step 1 — credentials.
+//
+// Sign-in forms validate **submittability**, not policy. The 12-char floor
+// (iter-16f / C-SEC-15) is a *creation* rule and lives in the set-password
+// schema + Better Auth's `minPasswordLength`. Enforcing it client-side on
+// sign-in would (a) lock out anyone with a legitimate pre-12-char legacy
+// password before they can reach the "forgot password" flow, and (b) leak
+// the org's policy floor to anyone hitting /login. Server decides whether
+// the password is correct; the form just makes sure something was typed.
 export const credentialsSchema = z.object({
   email: z.string().email(),
-  // iter-16f / C-SEC-15: floor raised from 8 → 12. Length is the single
-  // most effective rule; we deliberately don't add character-class
-  // requirements (NIST SP 800-63B-style guidance: length over complexity).
-  password: z.string().min(12, "Password must be at least 12 characters"),
+  password: z.string().min(1, "Password is required"),
 });
 
 // Step 2 — TOTP code (6 digits).
