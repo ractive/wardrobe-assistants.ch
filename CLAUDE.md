@@ -5,6 +5,8 @@ Use agents for implementation tasks whenever possible.
 
 When working in `apps/admin/` or `packages/db/`, read [`kb/admin-architecture/overview.md`](kb/admin-architecture/overview.md) first. It's a short summary of the architectural rules (folder layout, type contracts, permissions, services, UI stack) with links to detailed docs per topic and a [decision log](kb/admin-architecture/decision-log.md) recording *why* each rule exists. Don't break the rules without first reading the relevant ADR — there's usually a reason.
 
+**Adding a new feature slice** (events, services, etc.) — follow [`kb/admin-architecture/feature-slice-template.md`](kb/admin-architecture/feature-slice-template.md). It's a concrete file-by-file checklist that iter-16 onward copy from. Smoke tests (`apps/admin/src/test/http-harness.ts` + `*.smoke.test.ts`) against the real auth + Drizzle path are mandatory per slice (the iter-15b/iter-15c motivation).
+
 The shared layers are:
 - `apps/admin/src/lib/` — cross-cutting non-React infra (`auth.ts`, `db.ts`, `email.ts`, `env.ts`, `permissions.ts`, `utils.ts`)
 - `apps/admin/src/components/` — cross-feature React (incl. `HasPermission.tsx`, `NoPermissionCard.tsx`, and `components/ui/` for shadcn primitives)
@@ -13,7 +15,7 @@ The shared layers are:
 
 Cross-feature isolation is enforced by Biome (`biome.json`'s `noRestrictedImports` overrides). Shared code may not import from `features/`; each feature is forbidden from importing other features. Add a per-feature override block when introducing a new feature.
 
-Permissions live in `apps/admin/src/lib/permissions.ts` (catalog + `userHasPermission` / `assertPermission` / `withPermission` helpers). Server-side gating: `<HasPermission>`. Client-side gating: `useHasPermission`. Roles are read from the Better Auth session (`session.user.role`), merged in via the session-create hook in `lib/auth.ts`.
+Permissions live in `apps/admin/src/lib/permissions.ts` (catalog + `userHasPermission` / `assertPermission` / `withPermission` helpers). Server-side gating: `<HasPermission>`. Client-side gating: `useHasPermission`. Roles are read from `user_profile` at permission-check time via `roleForUserId(userId)` in `lib/auth.ts` — `withPermission` does the lookup automatically. (Earlier iter-15 plan to merge role into the session via Better Auth `additionalFields` was a no-op; see iter-15c.)
 
 # bunny.net services
 If you manage bunny.net services, use the "hoppy" CLI tool (hoppy --help) to discover and debug things.

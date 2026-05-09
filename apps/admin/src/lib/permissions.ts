@@ -85,14 +85,12 @@ export function withPermission<TArgs extends unknown[], TResult>(
     // from lib/auth via getCurrentUserRole, but withPermission also needs the
     // userId. Importing through a function call keeps the module-load order
     // tolerant of the auth.ts ↔ permissions.ts circular type reference.
-    const { auth } = await import("./auth");
+    const { auth, roleForUserId } = await import("./auth");
     const { headers } = await import("next/headers");
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) throw new UnauthenticatedError();
-    const role = (session.user as { role?: string } | undefined)?.role;
-    if (role !== "ADMIN" && role !== "SQUAD_MEMBER") {
-      throw new PermissionError(perm);
-    }
+    const role = await roleForUserId(session.user.id);
+    if (!role) throw new PermissionError(perm);
     if (!ROLE_PERMISSIONS[role].has(perm)) {
       throw new PermissionError(perm);
     }

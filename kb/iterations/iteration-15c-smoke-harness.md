@@ -2,7 +2,7 @@
 title: Iteration 15c — Local-dev smoke harness + feature-slice template
 type: iteration
 order: 16.7
-status: planned
+status: done
 ---
 
 # Iteration 15c — Local-dev smoke harness + feature-slice template
@@ -17,39 +17,29 @@ This iteration adds a thin HTTP-level smoke harness (vitest, no Playwright) and 
 - The test gap is *integration* — i.e. "run the auth API against the real Drizzle schema and a real libSQL DB and confirm it doesn't 500". Unit tests against an actions module mock too much; `next build` doesn't run code at all. Playwright would close this gap but is overkill at one developer + small feature surface.
 - `db:reset:admin` already gives a one-shot local bootstrap (.env.local synthesis, schema, seeded admin). Smoke needs to layer on top of that, not duplicate it.
 
-## Scope — HTTP smoke harness [0/4]
+## Scope — HTTP smoke harness [4/4]
 
-- [ ] Add `apps/admin/src/test/http-harness.ts` exporting helpers that:
-  - Spin up an in-process libSQL file in `tmpdir()`, run `runMigrations()` against it.
-  - Initialise a fresh `auth` instance against that DB (or reuse the singleton with `vi.stubEnv` swapping `DATABASE_URL`).
-  - Provide `signUpAndSignIn(email, password)` returning a `Headers` object pre-populated with the auth cookie, plus a `db` handle for direct schema reads.
-  - `seedAdmin({ email, password })` and `seedSquadMember({ email, password })` for permission tests.
-- [ ] Add `apps/admin/src/test/http-harness.test.ts` to self-test the harness — proves sign-up + sign-in actually round-trip against the schema. If this test ever 500s, every feature smoke breaks the same way at the same line.
-- [ ] Convention: smoke tests live next to the feature as `*.smoke.test.ts`. Vitest's existing `*.test.ts` glob already picks them up; the suffix is a signal to the reader, not a separate runner.
-- [ ] First example: `apps/admin/src/features/users/server/users.smoke.test.ts` covering the iter-15 paths — invite, list, role-gated delete (401 as squad member, 200 as admin). Used as the canonical reference future features copy.
+- [x] Add `apps/admin/src/test/http-harness.ts` exporting helpers that spin up tmp libSQL + real auth + signUpAndSignIn / seedAdmin / seedSquadMember + a `runAs(cookies, fn)` helper for next/headers-mocked permission tests.
+- [x] Add `apps/admin/src/test/http-harness.test.ts` to self-test the harness — 5 cases including round-trip session + role assertions on user_profile.
+- [x] Convention adopted: smoke tests live next to the feature as `*.smoke.test.ts`.
+- [x] First example: `apps/admin/src/features/users/server/users.smoke.test.ts` covering invite + list + role-gated delete (squad member denied, admin succeeds, self-delete rejected).
 
-## Scope — feature-slice template doc [0/3]
+## Scope — feature-slice template doc [3/3]
 
-- [ ] Create `kb/admin-architecture/feature-slice-template.md` describing the slice shape iter-15 established:
-  - Folder layout (`schema.ts` / `schema.test.ts` / `server/queries.ts` / `server/actions.ts` / `server/actions.test.ts` / `components/*`).
-  - Schema convention (Drizzle table + migrations dir).
-  - Server actions convention (Zod parse → permission gate → query → revalidate path).
-  - Permission catalog entry + `HasPermission` / `useHasPermission` gating points.
-  - Test triad: schema test (Zod boundaries), action test (mocked DB), smoke test (real DB, HTTP layer).
-  - **Per-iteration smoke checklist** — a 5–10 line markdown stub each iteration appends to its plan: "boot `npm run dev:admin`, sign in as the seeded dev admin, create one of <X>, see it in the list, sign out". Forces a manual UI pass before merge but takes 60s.
-- [ ] Cross-link from `kb/admin-architecture/overview.md` so the existing entry-point pulls newcomers (and future me) into the template.
-- [ ] Update `CLAUDE.md`'s admin-app section to point at the new template doc as the canonical "this is how a feature looks" reference.
+- [x] Create `kb/admin-architecture/feature-slice-template.md` describing the slice shape — folder layout, Drizzle/Zod/permissions/UI conventions, the three-test triad with code snippets, the per-iteration manual smoke checklist, common pitfalls.
+- [x] Cross-link from `kb/admin-architecture/overview.md` (added a "Start here" row pointing at the template).
+- [x] Update `CLAUDE.md`'s admin-app section to point at the new template + flag smoke tests as mandatory.
 
-## Scope — npm scripts + ergonomics [0/2]
+## Scope — npm scripts + ergonomics [2/2]
 
-- [ ] Add `apps/admin/package.json` script `test:smoke` that runs only `*.smoke.test.ts`. Keeps the fast feedback loop (`npm run test`) fast — smoke tests open a libSQL file each run, ~50ms each but they add up.
-- [ ] Wire `test:smoke` into `npm run verify` so the gate that's already enforced in CI also covers the integration path. Acceptable cost: maybe 1–3 seconds added to verify.
+- [x] Add `apps/admin/package.json` script `test:smoke` filtering by name pattern; runs ~9 tests in &lt;2s.
+- [x] `npm run verify` already runs every `*.test.ts` under the admin project, so smoke tests are already gated in CI without further wiring.
 
-## Verify [0/3]
+## Verify [3/3]
 
-- [ ] `npm run verify` — green, including the new smoke tests.
-- [ ] `kb/admin-architecture/feature-slice-template.md` exists, links from overview, and reads as a complete copy/paste reference (a teammate could implement iter-16 with no extra archeology).
-- [ ] `apps/admin/src/features/users/server/users.smoke.test.ts` runs against the real `runMigrations()` schema and exercises at least one role-gated path. If `user_profile` or any iter-14+ migration is missing, this test 500s — turning the iter-15b class of bug into a PR-time failure.
+- [x] `npm run verify` — green; 12 test files / 80 tests pass.
+- [x] `kb/admin-architecture/feature-slice-template.md` exists, links from overview + CLAUDE.md, and is a complete copy/paste reference.
+- [x] `apps/admin/src/features/users/server/users.smoke.test.ts` runs against the real `runMigrations()` schema. **The harness already earned its keep:** it caught a real iter-15 bug — `databaseHooks.session.create.before` returning `role`/`firstName` to fields the session table didn't have, silently dropped, leaving `session.user.role` permanently undefined. Every withPermission gate would have 401'd in prod the moment a permission-gated action was clicked. Fixed in this iteration by reading role from `user_profile` at permission-check time via `roleForUserId(userId)`.
 
 ## Out of scope (deliberate)
 
@@ -72,9 +62,21 @@ Edited:
 - `kb/admin-architecture/overview.md` (cross-link)
 - `CLAUDE.md` (point at the template)
 
-## Done when [0/4]
+## Done when [4/4]
 
-- [ ] Future iteration plans can say "follow the feature-slice template" and that's a complete instruction.
-- [ ] Each new feature lands with at least one `*.smoke.test.ts` exercising the auth + permission + schema path against a real libSQL.
-- [ ] An iter-15b-class breakage (env or schema mismatch) fails CI on the PR rather than at prod smoke.
-- [ ] The per-iteration manual smoke checklist is part of every future iteration plan's "Verify" section.
+- [x] Future iteration plans can say "follow the feature-slice template" and that's a complete instruction.
+- [x] First feature (users) lands with a `*.smoke.test.ts` exercising the auth + permission + schema path against a real libSQL. iter-16+ inherit this requirement via the template + this iteration's "Done when".
+- [x] An iter-15b-class breakage (env or schema mismatch) now fails CI on the PR rather than at prod smoke. Proven by the iter-15 role-bug catch.
+- [x] The per-iteration manual smoke checklist is documented in `feature-slice-template.md`'s "Per-iteration smoke checklist" section; iter-16+ copy it into their `Verify` blocks.
+
+## Surprise found during implementation
+
+The smoke harness immediately caught a real iter-15 auth bug: the `databaseHooks.session.create.before` hook merged `role`/`firstName`/etc. into the session payload, but Better Auth's session schema had no columns for them — the data was silently dropped. `session.user.role` was never populated, and any `withPermission` check would have 401'd in prod the moment someone clicked a permission-gated action.
+
+Fix folded into this iteration:
+- Removed the broken write-time hook + `additionalFields` declaration on user.
+- Added `roleForUserId(userId)` in `lib/auth.ts` that queries `user_profile` directly.
+- `withPermission` and `getCurrentUserRole` now route through it.
+- One extra DB read per permission-checked request — acceptable on the admin surface, can add request-scoped caching later.
+
+This is exactly the class of bug iter-15c was supposed to catch. The harness paid for itself before merging.

@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "./db";
 import { sendEmail } from "./email";
@@ -46,65 +46,44 @@ export const auth = betterAuth({
       });
     },
   },
-  user: {
-    additionalFields: {
-      firstName: { type: "string", required: false },
-      lastName: { type: "string", required: false },
-      nickname: { type: "string", required: false },
-      role: { type: "string", required: false },
-      status: { type: "string", required: false },
-    },
-  },
+  // The iter-15 attempt to merge user_profile fields into session.user via
+  // `databaseHooks.session.create.before` was a no-op: the session table has
+  // no role/firstName/etc columns, so Better Auth silently dropped the
+  // returned data. Permission gates that read `session.user.role` always saw
+  // undefined → every gate would 401 in prod the moment someone clicked one.
+  // The bug stayed invisible because no permission-gated route had been hit
+  // through to a user with role enrichment yet.
+  //
+  // The new model: source of truth for role/status is `user_profile`. Reads
+  // happen at permission-check time in `getCurrentUserRole` and inside
+  // `withPermission`. The extra query per gated action is acceptable —
+  // the admin surface is low-traffic and `user_profile` is keyed on user.id.
+  // First-sign-in `invited → verified` flip moves to the same code path.
   databaseHooks: {
     session: {
       create: {
         before: async (session) => {
-          // Merge domain fields from user_profile into the session payload so
-          // server code can read role/firstName/etc directly off the session
-          // without an extra query per request.
-          const rows = await db
-            .select({
-              firstName: userProfile.firstName,
-              lastName: userProfile.lastName,
-              nickname: userProfile.nickname,
-              role: userProfile.role,
-              status: userProfile.status,
-            })
-            .from(userProfile)
-            .where(eq(userProfile.userId, session.userId))
-            .limit(1);
-          const profile = rows[0];
-          if (!profile) return { data: session };
-          // First successful sign-in after invite ⇒ flip status:invited →
-          // verified. The user just demonstrated they own the email by
-          // completing the password-reset flow that the invite triggered.
-          // Failure to write must not block sign-in: the next session will
-          // retry the flip on its own.
-          let status = profile.status;
-          if (status === "invited") {
-            try {
-              await db
-                .update(userProfile)
-                .set({ status: "verified", verifiedAt: new Date() })
-                .where(eq(userProfile.userId, session.userId));
-              status = "verified";
-            } catch (err) {
-              console.error(
-                "session.create: failed to flip status invited→verified",
-                err,
+          // Best-effort: flip status from invited → verified on the user's
+          // first successful sign-in. The `status = invited` predicate makes
+          // this idempotent and prevents `verifiedAt` being overwritten on
+          // every subsequent sign-in. Failures must not block sign-in.
+          try {
+            await db
+              .update(userProfile)
+              .set({ status: "verified", verifiedAt: new Date() })
+              .where(
+                and(
+                  eq(userProfile.userId, session.userId),
+                  eq(userProfile.status, "invited"),
+                ),
               );
-            }
+          } catch (err) {
+            console.error(
+              "session.create: failed to flip status invited→verified",
+              err,
+            );
           }
-          return {
-            data: {
-              ...session,
-              firstName: profile.firstName,
-              lastName: profile.lastName,
-              nickname: profile.nickname ?? undefined,
-              role: profile.role,
-              status,
-            },
-          };
+          return { data: session };
         },
       },
     },
@@ -120,12 +99,25 @@ export const auth = betterAuth({
 
 export type Session = typeof auth.$Infer.Session;
 
-// Reads the current user's role from the session. Lives in lib/auth.ts so
-// lib/permissions.ts can call it without importing from features/users —
-// preserves the lib/ ⇏ features/ Biome boundary.
+// Reads the current user's role by joining the active session to
+// user_profile. Lives in lib/auth.ts so lib/permissions.ts can call it
+// without importing from features/users — preserves the lib/ ⇏ features/
+// Biome boundary.
 export async function getCurrentUserRole(): Promise<Role | null> {
   const session = await auth.api.getSession({ headers: await headers() });
-  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session) return null;
+  return roleForUserId(session.user.id);
+}
+
+// Internal helper — also used by withPermission. Looks up the role by
+// user.id from the user_profile source of truth.
+export async function roleForUserId(userId: string): Promise<Role | null> {
+  const rows = await db
+    .select({ role: userProfile.role })
+    .from(userProfile)
+    .where(eq(userProfile.userId, userId))
+    .limit(1);
+  const role = rows[0]?.role;
   if (role !== "ADMIN" && role !== "SQUAD_MEMBER") return null;
   return role;
 }
