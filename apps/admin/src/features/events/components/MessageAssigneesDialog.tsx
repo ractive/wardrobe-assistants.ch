@@ -23,10 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useFormAction } from "@/hooks/use-form-action";
-import {
-  type MessageEventAssigneesInput,
-  messageEventAssigneesInput,
-} from "../schema";
+import { messageEventAssigneesInput } from "../schema";
 import { messageEventAssignees } from "../server/actions";
 
 export function MessageAssigneesDialog({

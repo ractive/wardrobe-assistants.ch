@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { BrandBadge } from "@/components/BrandBadge";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -45,7 +46,7 @@ function SetPasswordInner() {
   if (!token) {
     return (
       <>
-        <h1 className="font-semibold text-2xl">Invalid link</h1>
+        <h2 className="font-semibold text-2xl">Invalid link</h2>
         <p className="mt-2 text-[var(--muted-foreground)]">
           This invite link is missing its token. Ask the admin to resend the
           invitation.
@@ -72,7 +73,7 @@ function SetPasswordInner() {
 
   return (
     <>
-      <h1 className="font-semibold text-2xl">Set your password</h1>
+      <h2 className="font-semibold text-2xl">Set your password</h2>
       <p className="mt-2 text-[var(--muted-foreground)]">
         Pick a password to finish setting up your Wardrobe Assistants admin
         account.
@@ -139,12 +140,18 @@ function SetPasswordInner() {
 
 export default function SetPasswordPage() {
   return (
-    <main className="mx-auto max-w-md px-6 py-12">
-      <Suspense
-        fallback={<p className="text-[var(--muted-foreground)]">Loading…</p>}
-      >
-        <SetPasswordInner />
-      </Suspense>
-    </main>
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <h1 className="sr-only">Set your password</h1>
+        <BrandBadge />
+        <main>
+          <Suspense
+            fallback={<p className="text-muted-foreground">Loading…</p>}
+          >
+            <SetPasswordInner />
+          </Suspense>
+        </main>
+      </div>
+    </div>
   );
 }
