@@ -38,7 +38,16 @@ RUN npm -w apps/admin run build
 # in picomatch 4.0.3 inside npm's tinyglobby on node:24-alpine), since
 # distroless ships nothing we don't need at runtime. server.js boots Node
 # directly via the image's ENTRYPOINT.
-FROM gcr.io/distroless/nodejs24-debian12 AS runner
+#
+# Using the `-debian13` (trixie) variant rather than `-debian12` (bookworm):
+# the debian12 distroless image was lagging on rebuilds and shipping libssl3
+# 3.0.18 against advisories fixed in 3.0.19 — Trivy on the post-merge build
+# flagged 1× CRITICAL + 4× HIGH OpenSSL CVEs (CVE-2026-31789/28387/28388/
+# 28389/28390). debian13 ships OpenSSL 3.5.x and tracks current Debian
+# stable, so OS-level findings clear without the rebuild-lag tax. Equivalent
+# to `gcr.io/distroless/nodejs24` — both tags currently point to the same
+# digest, but naming the OS makes future bumps (debian14) obvious in diffs.
+FROM gcr.io/distroless/nodejs24-debian13 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
