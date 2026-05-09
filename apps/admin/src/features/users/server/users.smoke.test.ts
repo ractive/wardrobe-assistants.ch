@@ -16,7 +16,11 @@
 //   - `@/lib/email`         : mocked so invites don't try to hit Resend.
 //   - DB, auth, permissions : real, against the harness's tmp libSQL.
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { type Harness, setupHarness } from "@/test/http-harness";
+import {
+  assertSecurityHeadersConfigured,
+  type Harness,
+  setupHarness,
+} from "@/test/http-harness";
 
 let harness: Harness;
 
@@ -115,6 +119,54 @@ describe("users feature — smoke", () => {
     expect(result.error).toBe(false);
     const list = await listUsers();
     expect(list.map((u) => u.email)).not.toContain("target2@smoke.local");
+  });
+
+  // iter-16b edge hardening: every authenticated admin route must carry the
+  // CDN-safe Cache-Control + the security-header set so the bunny pull-zone
+  // never caches a session-bearing body and clickjacking/XSS surfaces stay
+  // closed. The assertion reads next.config directly, since the smoke
+  // harness has no Next runtime; that's also what makes this a generic
+  // helper iter-17/18 inherit for free.
+  it.each([
+    ["Cache-Control"],
+    ["X-Frame-Options"],
+    ["X-Content-Type-Options"],
+    ["Referrer-Policy"],
+    ["Permissions-Policy"],
+    ["Strict-Transport-Security"],
+    ["Content-Security-Policy"],
+  ])("admin response carries %s", async (header) => {
+    await assertSecurityHeadersConfigured([header]);
+  });
+
+  it("messageUser strips CR/LF from subject (header-injection guard)", async () => {
+    const admin = await harness.seedAdmin({
+      email: "admin-crlf@smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const target = await harness.seedSquadMember({
+      email: "target-crlf@smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const email = await import("@/lib/email");
+    const sendMock = email.sendEmail as unknown as ReturnType<typeof vi.fn>;
+    sendMock.mockClear();
+
+    const { messageUser } = await import("./actions");
+    const result = await harness.runAs(admin.cookies, () =>
+      messageUser({
+        userId: target.userId,
+        subject: "Hello\r\nBcc: attacker@example.com",
+        body: "Body content",
+      }),
+    );
+    expect(result.error, JSON.stringify(result)).toBe(false);
+    // Subject should arrive at sendEmail without any CR/LF.
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const subjectArg = sendMock.mock.calls[0]?.[0]?.subject;
+    expect(subjectArg).toBeDefined();
+    expect(subjectArg).not.toMatch(/[\r\n]/);
   });
 
   it("admin cannot delete their own account", async () => {

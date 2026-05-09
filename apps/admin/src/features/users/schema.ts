@@ -27,7 +27,16 @@ export type InviteUserInput = z.infer<typeof inviteUserInput>;
 
 export const messageUserInput = z.object({
   userId: z.string().min(1),
-  subject: z.string().trim().min(1, "Subject is required").max(200),
+  // CR/LF stripped to neutralize email-header injection (audit C-SEC-07):
+  // the subject is the only field that lands in raw SMTP headers; body is
+  // base64/quoted-printable encoded by the transport. Strip rather than
+  // refuse so a stray paste doesn't surface as a generic "invalid input".
+  subject: z
+    .string()
+    .trim()
+    .min(1, "Subject is required")
+    .max(200)
+    .transform((s) => s.replace(/[\r\n]+/g, " ")),
   body: z.string().trim().min(1, "Message body is required").max(10_000),
 });
 export type MessageUserInput = z.infer<typeof messageUserInput>;

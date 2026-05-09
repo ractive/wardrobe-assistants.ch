@@ -20,6 +20,19 @@
 
 set -euo pipefail
 
+# iter-16b production guardrails (audit C-SEC-05). The TS seed script
+# (`seed-temp-admin.ts`) refuses to run unless ALLOW_TEMP_ADMIN=1 is set.
+# This wrapper sets it explicitly — but only when the run is interactive (a
+# developer typing the command). On CI we refuse: the seeder shouldn't be
+# invoked from any automated pipeline. Combined with the script's domain
+# guard (must be @wardrobe-assistants.ch) and prod refusal (NODE_ENV check),
+# this prevents the iter-15b stranded-temp-admin scenario from recurring.
+if [[ "${CI:-}" == "true" ]]; then
+  echo "Refusing to run seed-temp-admin.sh under CI (CI=true). This script is interactive-only." >&2
+  exit 1
+fi
+export ALLOW_TEMP_ADMIN=1
+
 APP_ID="${1:-h4vme6Uhod4W3Yu}"           # wardrobe-assistants-admin (prod)
 CONTAINER_ID="${2:-h4vme6Uhod4W3Yu-63yu}"
 

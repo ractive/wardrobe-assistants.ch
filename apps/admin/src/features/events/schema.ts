@@ -61,7 +61,14 @@ export type UnassignUserInput = z.infer<typeof unassignUserInput>;
 
 export const messageEventAssigneesInput = z.object({
   eventId: z.string().min(1),
-  subject: z.string().trim().min(1, "Subject is required").max(200),
+  // CR/LF stripped to neutralize email-header injection (audit C-SEC-07).
+  // Mirrors the same guard on `messageUserInput` in users/schema.ts.
+  subject: z
+    .string()
+    .trim()
+    .min(1, "Subject is required")
+    .max(200)
+    .transform((s) => s.replace(/[\r\n]+/g, " ")),
   body: z.string().trim().min(1, "Message body is required").max(10_000),
 });
 export type MessageEventAssigneesInput = z.infer<

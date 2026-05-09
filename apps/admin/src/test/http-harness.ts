@@ -38,6 +38,40 @@ const TEST_BETTER_AUTH_SECRET = "0".repeat(64);
 // on this variable. Smoke tests are sequential by design.
 let activeCookies: Headers = new Headers();
 
+/**
+ * Header-presence helper for smoke tests. Pulls the configured `headers()`
+ * block from `next.config.ts` and asserts each named header is present on
+ * the catch-all `/(.*)` source. Next.js applies these to every response, so
+ * validating the *config* (not a live HTTP fetch) is the right level: the
+ * vitest harness has no Next runtime, but the config is the authoritative
+ * source of truth for what the server will emit.
+ *
+ * Usage:
+ *   await assertSecurityHeadersConfigured([
+ *     "Cache-Control",
+ *     "X-Frame-Options",
+ *     ...
+ *   ]);
+ */
+export async function assertSecurityHeadersConfigured(
+  expected: readonly string[],
+): Promise<void> {
+  const cfg = await import("../../next.config");
+  const headers = await cfg.default.headers?.();
+  if (!headers) {
+    throw new Error("next.config headers() is not configured");
+  }
+  const catchAll = headers.find((h) => h.source === "/(.*)");
+  if (!catchAll) {
+    throw new Error("next.config headers() has no /(.*) catch-all source");
+  }
+  const present = new Set(catchAll.headers.map((h) => h.key));
+  const missing = expected.filter((k) => !present.has(k));
+  if (missing.length > 0) {
+    throw new Error(`Missing security headers: ${missing.join(", ")}`);
+  }
+}
+
 export interface Harness {
   /** Tmp libSQL DB used by both `auth` and direct queries. */
   db: Database;

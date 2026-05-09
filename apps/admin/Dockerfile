@@ -38,14 +38,23 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# iter-16b container hardening (audit C-SEC-06): drop root. The standalone
+# server binds to PORT=3000 (above 1024) so no CAP_NET_BIND_SERVICE is
+# needed. Create the user *before* the COPY commands so the chown flag on
+# COPY hits a known UID/GID — chowning afterwards would double the layer
+# size for the .next/standalone tree.
+RUN addgroup -S app && adduser -S app -G app
+
 # Standalone output: server.js + bundled deps under .next/standalone.
-COPY --from=builder /repo/apps/admin/.next/standalone ./
-COPY --from=builder /repo/apps/admin/.next/static ./apps/admin/.next/static
-COPY --from=builder /repo/apps/admin/public ./apps/admin/public
+COPY --from=builder --chown=app:app /repo/apps/admin/.next/standalone ./
+COPY --from=builder --chown=app:app /repo/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=builder --chown=app:app /repo/apps/admin/public ./apps/admin/public
 # Drizzle migration journal + SQL files. apps/admin/src/lib/migrate.ts
 # resolves the migrations folder relative to cwd at boot — keep this layout
 # in sync with resolveMigrationsFolder()'s candidate list.
-COPY --from=builder /repo/packages/db/migrations ./packages/db/migrations
+COPY --from=builder --chown=app:app /repo/packages/db/migrations ./packages/db/migrations
+
+USER app
 
 EXPOSE 3000
 # Migrations apply automatically on container boot via Next's instrumentation

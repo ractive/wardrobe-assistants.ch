@@ -46,17 +46,21 @@ resource "bunnynet_pullzone_hostname" "homepage_www" {
   }
 }
 
-// `cache_enabled = true` and `strip_cookies = false` match live state and
-// the MC controller's defaults. The admin app is responsible for setting
-// `Cache-Control: no-store, private` on every authenticated response so
-// the bunny CDN never caches a Set-Cookie or session-bearing body. Verify
-// during audit; if Better Auth ever drops that header, flip strip_cookies
-// to true here and add an edge rule that bypasses cache for requests with
-// a `Cookie:` header.
+// Admin pull-zone caching posture (iter-16b edge hardening, audit C-SEC-04):
+//   - `cache_enabled = true` matches live state and the MC controller's
+//     defaults.
+//   - `strip_cookies = true` is the CDN-side belt-and-suspenders to the
+//     `Cache-Control: private, no-store, must-revalidate` header the admin
+//     app emits via `apps/admin/next.config.ts`'s `headers()` block. Even if
+//     a future header regression slips through, cookies will not be part of
+//     the cache key here — the worst case becomes "no caching", not "leak
+//     user A's session payload to user B".
+// The admin pull-zone serves only authenticated traffic; there is no public
+// surface that depends on cookie-bearing cache hits.
 resource "bunnynet_pullzone" "admin_cdn" {
   name          = "mc-r6f39iacv2"
   cache_enabled = true
-  strip_cookies = false
+  strip_cookies = true
 
   origin {
     type                  = "ComputeContainer"
