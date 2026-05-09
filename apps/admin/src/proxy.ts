@@ -1,23 +1,36 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-// Per-request CSP with a fresh nonce. Next.js 16 renamed `middleware.ts` →
-// `proxy.ts`; placement at `apps/admin/src/proxy.ts` keeps it adjacent to
-// `app/`. iter-16b set CSP via `next.config.ts` headers(), but `script-src
-// 'self'` blocks Next.js's own per-request bootstrap inline (`__next_r`).
-// The structurally correct fix is a nonce: this proxy generates one per
-// request, sets it on the CSP header AND on the `x-nonce` request header
-// so RSCs / Next's renderer can stamp the same nonce onto the framework
-// scripts. The CSP from next.config.ts has been removed for that reason —
-// keep the directive list here as the single source of truth.
+// Combined edge-side gate for the admin app:
 //
-// Dev quirks:
-//  - React Refresh uses `eval` to reconstruct stack traces → 'unsafe-eval'.
-//  - Turbopack injects inline styles for HMR → keep style-src 'unsafe-inline'
-//    in dev. In prod the framework only ships hashed/external stylesheets,
-//    but Tailwind v4's runtime-injected styles still need 'unsafe-inline'
-//    for now (iter-16b decision; tighten when Tailwind moves to nonce'd
-//    style injection).
+// 1. **Auth gate.** Cheap cookie-presence check that redirects unauthed
+//    visitors to /login before they see a flash of dashboard chrome. The
+//    full session validation still happens server-side in (dashboard)/
+//    layout.tsx via auth.api.getSession(); this is purely a UX preflight.
+//
+// 2. **CSP with per-request nonce.** iter-16b set CSP via next.config.ts
+//    headers() with `script-src 'self'` — strict but no nonce, which
+//    blocks Next.js's own per-request bootstrap inline (`__next_r`) and
+//    breaks the entire app. A static headers() block can't generate
+//    per-request nonces; this proxy emits the CSP dynamically with a
+//    fresh nonce that Next auto-stamps onto its framework + page bundles.
+//
+// Next.js 16 renamed `middleware.ts` → `proxy.ts`. This file lives at
+// `apps/admin/src/proxy.ts`, adjacent to `app/`. Its predecessor was
+// `apps/admin/middleware.ts`, removed when this file landed; having both
+// in tree at once was the root cause of the post-iter-16b /login redirect
+// loop (Next picked one or the other inconsistently).
+
+const SESSION_COOKIE_NAMES = [
+  "better-auth.session_token",
+  "__Secure-better-auth.session_token",
+];
+
+// Paths that don't need an auth cookie. Negative-lookahead boundary
+// `(?:$|[/?])` prevents prefix-bypass via paths like `/login-evil` or
+// `/set-password-anything` slipping through unauthenticated.
+const PUBLIC_PATH_RE =
+  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth)/;
 
 export type CspOptions = {
   nonce: string;
@@ -59,19 +72,29 @@ export function buildContentSecurityPolicy({
 }
 
 export function proxy(request: NextRequest): NextResponse {
+  const { pathname } = request.nextUrl;
   const nonce = btoa(crypto.randomUUID());
   const isDev = process.env.NODE_ENV === "development";
   const csp = buildContentSecurityPolicy({ nonce, isDev });
 
-  // The nonce travels two ways: as the standard CSP header (so the browser
-  // enforces it) and as `x-nonce` on the request (so server components can
-  // read it via `headers().get('x-nonce')` if they need to stamp custom
-  // <Script> tags). Next.js itself parses 'nonce-...' out of the CSP header
-  // and applies the value to its framework + page bundles automatically.
+  const isPublic = PUBLIC_PATH_RE.test(pathname);
+  if (!isPublic) {
+    const hasSession = SESSION_COOKIE_NAMES.some((name) =>
+      request.cookies.has(name),
+    );
+    if (!hasSession) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "";
+      const redirect = NextResponse.redirect(url);
+      redirect.headers.set("Content-Security-Policy", csp);
+      return redirect;
+    }
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
-
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
@@ -80,13 +103,13 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Skip static/build assets + API routes (CSP doesn't apply to non-HTML
-  // responses anyway, and prefetches don't render pages → no scripts to
+  // Skip static/build assets + API non-auth routes (CSP doesn't apply to
+  // non-HTML responses, and prefetches don't render pages → no scripts to
   // gate). The `missing` clause skips client-router prefetches so we don't
   // spend a proxy hop generating a nonce that won't be used.
   matcher: [
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+      source: "/((?!_next/static|_next/image|favicon.ico|robots.txt).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },
