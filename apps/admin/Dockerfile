@@ -42,12 +42,18 @@ ENV HOSTNAME=0.0.0.0
 COPY --from=builder /repo/apps/admin/.next/standalone ./
 COPY --from=builder /repo/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=builder /repo/apps/admin/public ./apps/admin/public
+# Drizzle migration journal + SQL files. apps/admin/src/lib/migrate.ts
+# resolves the migrations folder relative to cwd at boot — keep this layout
+# in sync with resolveMigrationsFolder()'s candidate list.
+COPY --from=builder /repo/packages/db/migrations ./packages/db/migrations
 
 EXPOSE 3000
-# Migrations run as a separate operator step (npm -w apps/admin run migrate
-# from a workstation with the libSQL URL + token), not at container boot.
-# The runner image is a Next standalone bundle and intentionally does NOT
-# carry tsx + drizzle-orm + @libsql/client in resolvable paths for the
-# scripts/ directory — bundling those just to migrate-on-boot meant a 6×
-# crash loop when the deps weren't where tsx expected them.
+# Migrations apply automatically on container boot via Next's instrumentation
+# hook (apps/admin/instrumentation.ts → src/lib/migrate.ts). The hook runs
+# inside the Next standalone server process, so drizzle-orm and @libsql/client
+# resolve through the bundle's own node_modules tree (the resolution problem
+# that defeated iter-09's CMD-wrapper approach).
+#
+# Set MIGRATE_ON_BOOT=false to bring up a container without touching schema
+# (operator escape hatch for post-failure triage).
 CMD ["node", "apps/admin/server.js"]
