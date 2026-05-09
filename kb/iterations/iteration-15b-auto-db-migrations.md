@@ -2,7 +2,7 @@
 title: Iteration 15b — Automate DB migrations on deploy
 type: iteration
 order: 16.5
-status: planned
+status: implemented
 ---
 
 # Iteration 15b — Automate DB migrations on deploy + get admin live
@@ -48,46 +48,46 @@ Picking option 3 because:
 
 Option 1 (CI step) is the obvious **fallback** if anything blocks option 3 — its mechanics are well understood and we already have the secret-naming convention from iter-12 (`_FULL` / `_READONLY`).
 
-## Pre-flight [0/4]
+## Pre-flight [4/4]
 
-- [ ] **Bump Next.js to the latest 16.x in `apps/admin` and `apps/homepage`** before doing the standalone-hook spike. Currently pinned at `16.2.4` in both `apps/admin/package.json` and `apps/homepage/package.json` (latest visible in the docs at the time of writing was `16.2.6`). The standalone-instrumentation regression history ([#49897](https://github.com/vercel/next.js/issues/49897), 2023) and assorted standalone-bundle bugs are exactly the class of issue that gets quietly fixed in patch releases — pinning to an older minor risks chasing a ghost. Bump, run `npm run verify`, run a full `next build` for both apps, then proceed to the spike. Land this as a separate commit so a Next-bump regression bisects cleanly.
-- [ ] Confirm Next.js 16's `instrumentation.ts` `register()` hook fires correctly under `output: "standalone"`. Older Next versions had a bug ([#49897](https://github.com/vercel/next.js/issues/49897)) where standalone never called `register()`. Spike test: drop a one-line `console.log("register fired")` into `apps/admin/instrumentation.ts`, build standalone, run the bundled `node server.js`, confirm the log appears before the first request is served. **If this fails on the bumped Next version, fall back to option 1.**
-- [ ] Confirm the bundled standalone's `node_modules` contains `drizzle-orm/libsql/migrator` and `@libsql/client`. They're already runtime deps for `apps/admin`, but `next build` only bundles what's reachable from `import`s — verify by `grep -r "libsql/migrator" apps/admin/.next/standalone/node_modules/` after a build.
-- [ ] Confirm the prod admin currently runs as a single replica (`regions_max_allowed = 1` in `infra/terraform/containers.tf`). Document the assumption that the iteration is single-replica safe; flag a follow-up for multi-replica.
+- [x] **Bump Next.js to the latest 16.x in `apps/admin` and `apps/homepage`** before doing the standalone-hook spike. Currently pinned at `16.2.4` in both `apps/admin/package.json` and `apps/homepage/package.json` (latest visible in the docs at the time of writing was `16.2.6`). The standalone-instrumentation regression history ([#49897](https://github.com/vercel/next.js/issues/49897), 2023) and assorted standalone-bundle bugs are exactly the class of issue that gets quietly fixed in patch releases — pinning to an older minor risks chasing a ghost. Bump, run `npm run verify`, run a full `next build` for both apps, then proceed to the spike. Land this as a separate commit so a Next-bump regression bisects cleanly. → 16.2.6 landed in own commit; verify + both builds green.
+- [x] Confirm Next.js 16's `instrumentation.ts` `register()` hook fires correctly under `output: "standalone"`. Older Next versions had a bug ([#49897](https://github.com/vercel/next.js/issues/49897)) where standalone never called `register()`. Spike test: drop a one-line `console.log("register fired")` into `apps/admin/instrumentation.ts`, build standalone, run the bundled `node server.js`, confirm the log appears before the first request is served. **If this fails on the bumped Next version, fall back to option 1.** → **Deviation:** with `instrumentation.ts` at the app root (next to `next.config.ts`), the standalone bundle did NOT include the chunk that backs `register()` — the `[turbopack]_runtime.js` reference resolved to a missing `apps_admin_*._.js` chunk and the hook never fired. Moving the file to `apps/admin/src/instrumentation.ts` (alongside `src/app/`) fixed this for both Turbopack and Webpack builds. The Next docs back this up: with a `src/` layout, instrumentation belongs **inside** `src/`. The plan's "root, not src/" wording reflected an older pages-router pattern; corrected here.
+- [x] Confirm the bundled standalone's `node_modules` contains `drizzle-orm/libsql/migrator` and `@libsql/client`. They're already runtime deps for `apps/admin`, but `next build` only bundles what's reachable from `import`s — verify by `grep -r "libsql/migrator" apps/admin/.next/standalone/node_modules/` after a build. → Both reachable: `@libsql/client` ships under `.next/standalone/node_modules/@libsql/client/`, and the migrator is bundled into `.next/standalone/apps/admin/.next/server/chunks/apps_admin_src_*.js` (which `instrumentation.js` requires).
+- [x] Confirm the prod admin currently runs as a single replica (`regions_max_allowed = 1` in `infra/terraform/containers.tf`). Document the assumption that the iteration is single-replica safe; flag a follow-up for multi-replica. → Confirmed; multi-replica advisory-lock work is left in "Out of scope".
 
-## Scope — refactor migrate logic into a callable function [0/3]
+## Scope — refactor migrate logic into a callable function [3/3]
 
-- [ ] Move the body of `apps/admin/scripts/migrate.ts` into a new module `apps/admin/src/lib/migrate.ts` exporting `runMigrations(): Promise<void>`. Keep the candidate-path lookup so it works both in dev (`packages/db/migrations`) and in standalone (`./packages/db/migrations` next to the running server). Logs should print the resolved migrations folder + the redacted DB URL on entry, and "Migrations applied" on success.
-- [ ] Rewrite `apps/admin/scripts/migrate.ts` as a thin CLI wrapper: `await runMigrations()` then exit. The wrapper preserves the `npm run migrate` developer flow against `.env.local`.
-- [ ] Add a `lib/migrate.test.ts` with an in-memory libSQL run that confirms `runMigrations` is idempotent (running twice against an already-migrated DB is a no-op).
+- [x] Move the body of `apps/admin/scripts/migrate.ts` into a new module `apps/admin/src/lib/migrate.ts` exporting `runMigrations(): Promise<void>`. Keep the candidate-path lookup so it works both in dev (`packages/db/migrations`) and in standalone (`./packages/db/migrations` next to the running server). Logs should print the resolved migrations folder + the redacted DB URL on entry, and "Migrations applied" on success.
+- [x] Rewrite `apps/admin/scripts/migrate.ts` as a thin CLI wrapper: `await runMigrations()` then exit. The wrapper preserves the `npm run migrate` developer flow against `.env.local`. → Verified by running the CLI against a fresh `file:/tmp/...` DB locally; both 0000 and 0001 migrations applied.
+- [x] Add a `lib/migrate.test.ts` with an in-memory libSQL run that confirms `runMigrations` is idempotent (running twice against an already-migrated DB is a no-op). → Implemented with a per-test `tmpdir()` libSQL file (rather than `:memory:`) so the journal table survives the second call. `vi.stubEnv` keeps the env validator happy under `NODE_ENV=test` (file: URLs allowed there).
 
-## Scope — wire into Next.js instrumentation [0/3]
+## Scope — wire into Next.js instrumentation [3/3]
 
-- [ ] Create `apps/admin/instrumentation.ts` (root of the app, **not** under `src/`). In `register()`, gate on `process.env.NEXT_RUNTIME === "nodejs"` and call `await (await import("./src/lib/migrate")).runMigrations()`.
-- [ ] Add a `MIGRATE_ON_BOOT=false` escape hatch (env-controlled) so a future operator can boot the container without running migrations — useful if a bad migration needs manual intervention. Default is `true` in production.
-- [ ] Surface migration failures clearly: catch + `console.error` with structured fields (`migration_failed=1`, error message, migrations folder), then re-throw so the boot fails. Document in the runbook that crash-looping pods after a deploy almost certainly mean a failed migration; check container logs.
+- [x] Create `apps/admin/instrumentation.ts` (root of the app, **not** under `src/`). In `register()`, gate on `process.env.NEXT_RUNTIME === "nodejs"` and call `await (await import("./src/lib/migrate")).runMigrations()`. → Created at `apps/admin/src/instrumentation.ts` (see deviation in pre-flight item 2). Import path is `./lib/migrate`.
+- [x] Add a `MIGRATE_ON_BOOT=false` escape hatch (env-controlled) so a future operator can boot the container without running migrations — useful if a bad migration needs manual intervention. Default is `true` in production. → Implemented; explicit "false" / "0" disables. When disabled in production, the hook logs a loud `console.warn` so the surprise toggle is visible in deploy logs.
+- [x] Surface migration failures clearly: catch + `console.error` with structured fields (`migration_failed=1`, error message, migrations folder), then re-throw so the boot fails. Document in the runbook that crash-looping pods after a deploy almost certainly mean a failed migration; check container logs. → Done; the error log is a single JSON line `{"event":"migration_failed","migration_failed":1,"message":"…"}` so the bunny dashboard can grep for it.
 
-## Scope — bundle migrations into the standalone image [0/2]
+## Scope — bundle migrations into the standalone image [2/2]
 
-- [ ] Add a Dockerfile COPY step that places `packages/db/migrations/` next to the standalone bundle, so `apps/admin/scripts/migrate.ts`'s candidate-path lookup finds it at runtime: `COPY --from=builder /repo/packages/db/migrations ./packages/db/migrations`.
-- [ ] Verify the image built locally (`docker build -t admin-test -f apps/admin/Dockerfile .`) contains the migrations folder at the expected path. `docker run --rm admin-test ls /app/packages/db/migrations` should list `0000_*.sql`, `0001_*.sql`, etc.
+- [x] Add a Dockerfile COPY step that places `packages/db/migrations/` next to the standalone bundle, so `apps/admin/scripts/migrate.ts`'s candidate-path lookup finds it at runtime: `COPY --from=builder /repo/packages/db/migrations ./packages/db/migrations`.
+- [x] Verify the image built locally (`docker build -t admin-test -f apps/admin/Dockerfile .`) contains the migrations folder at the expected path. `docker run --rm admin-test ls /app/packages/db/migrations` should list `0000_*.sql`, `0001_*.sql`, etc. → Verified: `0000_medical_runaways.sql`, `0001_user_profile.sql`, `meta/`. Container booted with `MIGRATE_ON_BOOT=false` and the hook log appeared as expected.
 
-## Scope — boot-time env requirements [0/2]
+## Scope — boot-time env requirements [2/2]
 
-- [ ] `runMigrations()` needs `DATABASE_URL` + `DATABASE_AUTH_TOKEN`. The container already has both via the Magic Container env (verified during this session's smoke test — `envCount: 9`). No new secrets.
-- [ ] Confirm iter-13's env validator allows boot-time access to these. The env loader is a module-level singleton; importing it from `lib/migrate.ts` should reuse the same parsed object.
+- [x] `runMigrations()` needs `DATABASE_URL` + `DATABASE_AUTH_TOKEN`. The container already has both via the Magic Container env (verified during this session's smoke test — `envCount: 9`). No new secrets.
+- [x] Confirm iter-13's env validator allows boot-time access to these. The env loader is a module-level singleton; importing it from `lib/migrate.ts` should reuse the same parsed object. → Confirmed by triggering it during the spike: feeding a `file:` URL while `NODE_ENV=production` (baked into the standalone build) tripped the validator and crashed the boot via the migration_failed path — exactly the failure shape we want.
 
-## Scope — runbook + deploy notes [0/2]
+## Scope — runbook + deploy notes [2/2]
 
-- [ ] Update `kb/runbooks/runbook-go-live.md`: replace the manual "operator runs migrate from laptop" section with "migrations run automatically on container boot; logs surface the migration outcome before the first request is served."
-- [ ] Add a section to the same runbook covering the failure mode: "if the admin container fails to boot after a deploy, the most common cause is a failed migration. Inspect container logs in the bunny dashboard for `migration_failed=1`. Roll back the image via `bunnynet container app … image_tag=<previous-sha>` if a fix isn't immediate."
+- [x] Update `kb/runbooks/runbook-go-live.md`: replace the manual "operator runs migrate from laptop" section with "migrations run automatically on container boot; logs surface the migration outcome before the first request is served."
+- [x] Add a section to the same runbook covering the failure mode: "if the admin container fails to boot after a deploy, the most common cause is a failed migration. Inspect container logs in the bunny dashboard for `migration_failed=1`. Roll back the image via `bunnynet container app … image_tag=<previous-sha>` if a fix isn't immediate."
 
-## Verify [0/4]
+## Verify [1/4]
 
 - [ ] Confirm iter-14's `user_profile` migration auto-applies on iter-15b's first deploy. Drizzle's migrator is journal-based and idempotent — it diffs `packages/db/migrations/meta/_journal.json` against the `__drizzle_migrations` table in prod and applies anything missing. After deploy, `/api/auth/get-session` should return 200 (or an empty session) instead of 500. **No separate manual backfill needed**; if the user already ran `npm -w apps/admin run migrate` against prod before this iteration shipped, the migrator simply finds nothing to apply.
-- [ ] Author a throwaway test migration on a feature branch (e.g. `0002_test_table_drop_me.sql` that creates and immediately drops a test table). Push, wait for deploy, confirm logs show "Migrations applied" before the first request, and that prod DB still has the (no-op) test artefact. Roll back the migration file in the next commit.
-- [ ] Trigger a deliberate migration failure (broken SQL on a feature branch) and confirm: deploy succeeds image build, container fails to boot, prior pod keeps serving, deploy logs surface `migration_failed=1`. Fix the migration in a follow-up commit.
-- [ ] `npm run verify` is green (Biome + typecheck + the new migrate.test.ts).
+- [ ] Author a throwaway test migration on a feature branch (e.g. `0002_test_table_drop_me.sql` that creates and immediately drops a test table). Push, wait for deploy, confirm logs show "Migrations applied" before the first request, and that prod DB still has the (no-op) test artefact. Roll back the migration file in the next commit. _Deferred to a follow-up — the iter-14 backfill above already exercises the "deploy with pending migration" path._
+- [ ] Trigger a deliberate migration failure (broken SQL on a feature branch) and confirm: deploy succeeds image build, container fails to boot, prior pod keeps serving, deploy logs surface `migration_failed=1`. Fix the migration in a follow-up commit. _Deferred per the "Done when" note below._
+- [x] `npm run verify` is green (Biome + typecheck + the new migrate.test.ts).
 
 ## Out of scope (deliberate)
 
@@ -102,7 +102,7 @@ Option 1 (CI step) is the obvious **fallback** if anything blocks option 3 — i
 New:
 - `apps/admin/src/lib/migrate.ts` (extracted callable migrator)
 - `apps/admin/src/lib/migrate.test.ts` (idempotency check)
-- `apps/admin/instrumentation.ts` (Next.js boot hook)
+- `apps/admin/src/instrumentation.ts` (Next.js boot hook — under `src/`, not the app root; see pre-flight deviation)
 
 Edited:
 - `apps/admin/package.json` + `apps/homepage/package.json` (bump Next.js to latest 16.x; lockfile follows)
@@ -123,11 +123,11 @@ Untouched but worth referencing:
 - **Schema fail re-creates the iter-15 symptom shape.** If the migration succeeds but the app code expects a column that wasn't migrated (e.g. a typo'd field name), `/api/auth/*` 500s the same way. Mitigation: typecheck against the Drizzle schema in `npm run verify`; the type errors should surface mismatches before deploy.
 - **`MIGRATE_ON_BOOT=false` accidentally left set.** A surprise toggle from a debugging session. Mitigation: warn loudly at boot if the flag is set in production (`NODE_ENV=production && !MIGRATE_ON_BOOT` → log a yellow line so it's visible in deploy logs).
 
-## Done when [0/6]
+## Done when [1/6]
 
-- [ ] **Admin app is live end-to-end.** A real browser session (driven via `ff-rdp`) reaches `https://admin.wardrobe-assistants.ch/login`, signs in with valid credentials, and lands on the authenticated dashboard. No 500s on any auth API along the path.
-- [ ] A fresh deploy with a pending migration applies it before serving the first request, with `Migrations applied.` visible in container logs.
-- [ ] Iter-14's `user_profile` migration is applied to prod (auto-applied on iter-15b's first deploy via the boot-time Drizzle migrator — journal-based and idempotent — unless an operator already migrated manually before this lands) and `/api/auth/get-session` returns 200 instead of 500.
-- [ ] A deploy whose migration intentionally fails leaves the prior pod serving and surfaces `migration_failed=1` in logs (manual test from one feature branch — fixed in the next). _May be deferred to a follow-up if it proves disruptive to set up safely._
-- [ ] `kb/runbooks/runbook-go-live.md` no longer instructs operators to run migrations manually.
-- [ ] iter-16+ can introduce schema changes confident the deploy machinery applies them.
+- [ ] **Admin app is live end-to-end.** A real browser session (driven via `ff-rdp`) reaches `https://admin.wardrobe-assistants.ch/login`, signs in with valid credentials, and lands on the authenticated dashboard. No 500s on any auth API along the path. _Pending PR merge + deploy._
+- [ ] A fresh deploy with a pending migration applies it before serving the first request, with `Migrations applied.` visible in container logs. _Pending PR merge + deploy._
+- [ ] Iter-14's `user_profile` migration is applied to prod (auto-applied on iter-15b's first deploy via the boot-time Drizzle migrator — journal-based and idempotent — unless an operator already migrated manually before this lands) and `/api/auth/get-session` returns 200 instead of 500. _Pending PR merge + deploy._
+- [ ] A deploy whose migration intentionally fails leaves the prior pod serving and surfaces `migration_failed=1` in logs (manual test from one feature branch — fixed in the next). _Deferred to a follow-up._
+- [x] `kb/runbooks/runbook-go-live.md` no longer instructs operators to run migrations manually.
+- [ ] iter-16+ can introduce schema changes confident the deploy machinery applies them. _Earned once the deploy verification above is green._

@@ -206,12 +206,26 @@ TODO: paste DB connection params (redacted) here
 
 ### 2. Run migrations
 
+> **Iter-15b update.** Migrations now apply automatically on container boot via Next's instrumentation hook (`apps/admin/src/instrumentation.ts` → `apps/admin/src/lib/migrate.ts`). The first deploy after iter-15b lands picks up any pending migrations via Drizzle's journal-based migrator (idempotent — already-applied migrations are no-ops). The hook runs **before** the first request is served; logs surface `[migrate] applying migrations from …` and `[migrate] Migrations applied.` in the container log stream.
+>
+> The manual `npx drizzle-kit migrate` invocation below is preserved for **DR / first-time provisioning** (where there's no admin container yet to run migrations on its own) and **operator escape hatch** (when `MIGRATE_ON_BOOT=false` was used to bring a container up after a bad migration). Skip this step for normal deploys.
+
 ```bash
+# Manual fallback only — see note above. Normal deploys auto-migrate on boot.
 cd packages/db
 DATABASE_URL=<from step 1> DATABASE_AUTH_TOKEN=<full token> npx drizzle-kit migrate
 ```
 
 > Verify schema landed: connect with `turso db shell` (or libsql CLI) and `.tables` should list the iter-7b auth + admin tables.
+
+#### Failure mode
+
+If the admin container fails to come up after a deploy, the most likely cause is a failed migration. Inspect the container log stream in the bunny dashboard for a structured `migration_failed=1` line — the JSON `message` field contains the underlying error. Until the new pod's migrations succeed, the previous pod keeps serving (single-replica today: `regions_max_allowed = 1` in `infra/terraform/containers.tf`).
+
+Recovery options:
+
+- **Roll back the image** — pin the previous SHA via the bunny dashboard's container image tag, or trigger `BunnyWay/actions/container-update-image` with the prior `image_tag`.
+- **Bring the container up without applying schema** — set `MIGRATE_ON_BOOT=false` in the container env, then triage manually via `npx drizzle-kit migrate` from a workstation. Remember to clear the flag once schema is fixed; the container logs a loud warning while it's set.
 
 Output:
 
