@@ -18,10 +18,23 @@ describe("login schemas", () => {
     expect(r.success).toBe(false);
   });
 
-  it("rejects short password", () => {
+  // Login validates submittability, not policy. A short password must be
+  // accepted client-side so users with legacy pre-12-char passwords can
+  // still hit the server (and either succeed if their password actually
+  // works, or be redirected to "forgot password"). The 12-char floor is
+  // a *creation* rule, exercised in apps/admin/src/app/set-password.
+  it("accepts short passwords (creation rules apply server-side only)", () => {
     const r = credentialsSchema.safeParse({
       email: "a@b.com",
-      password: "short",
+      password: "abc",
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejects an empty password", () => {
+    const r = credentialsSchema.safeParse({
+      email: "a@b.com",
+      password: "",
     });
     expect(r.success).toBe(false);
   });
