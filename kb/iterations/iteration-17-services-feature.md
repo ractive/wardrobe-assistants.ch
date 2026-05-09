@@ -64,9 +64,13 @@ ADMIN gets these automatically (`new Set(PERMISSIONS)`); SQUAD_MEMBER does not.
 - [ ] `<ServiceDialog>` for create/edit. Form fields: name, description (textarea), priceType (radio: fixed/hourly), priceCents (number input, in CHF — show as decimal but store as cents).
 - [ ] Sidebar link gated by `<HasPermission perm="SERVICE_CREATE">`.
 
-## Scope — verify [0/3]
+## Scope — verify [0/4]
 
 - [ ] Schema validation tests: rejects negative prices, invalid priceType.
+- [ ] Smoke test (`services.smoke.test.ts` against the real auth + Drizzle
+  path via `apps/admin/src/test/http-harness.ts`): admin can create / update /
+  archive a service; SQUAD_MEMBER is denied on `SERVICE_CREATE`. Mandatory
+  per slice (iter-15c motivation; iter-16 did the same).
 - [ ] Manual: create both a fixed and an hourly service, edit them, archive one, confirm it's hidden by default.
 - [ ] `npm run verify` green.
 
