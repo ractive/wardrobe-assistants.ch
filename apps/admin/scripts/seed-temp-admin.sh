@@ -5,8 +5,10 @@
 # is enough to sign in.
 #
 # Usage:
-#   apps/admin/scripts/seed-temp-admin.sh                # prod (default)
 #   apps/admin/scripts/seed-temp-admin.sh <APP_ID> <CONTAINER_ID>
+#
+# Both args are required (iter-16b removed the prod defaults; see the guard
+# block below for rationale).
 #
 # Output: writes credentials to /tmp/wa-temp-admin-creds (chmod 600). Caller
 # is responsible for deletion — see "Cleanup" at the end of the printed
@@ -20,21 +22,42 @@
 
 set -euo pipefail
 
-# iter-16b production guardrails (audit C-SEC-05). The TS seed script
-# (`seed-temp-admin.ts`) refuses to run unless ALLOW_TEMP_ADMIN=1 is set.
-# This wrapper sets it explicitly — but only when the run is interactive (a
-# developer typing the command). On CI we refuse: the seeder shouldn't be
-# invoked from any automated pipeline. Combined with the script's domain
-# guard (must be @wardrobe-assistants.ch) and prod refusal (NODE_ENV check),
-# this prevents the iter-15b stranded-temp-admin scenario from recurring.
+# iter-16b production guardrails (audit C-SEC-05). Three layers, in order:
+#   1. Refuse on CI — the seeder must never be invoked from a pipeline.
+#   2. Require an interactive TTY — confirms a human typed the command.
+#   3. Require explicit APP_ID + CONTAINER_ID args. We removed the prod
+#      defaults: the TS script (`seed-temp-admin.ts`) refuses to run when
+#      `NODE_ENV=production`, and the prod env template sets that, so the
+#      old default invocation always failed deep inside subprocess. Better
+#      to fail fast here with a clear message than after env-fetch + python
+#      bootstrap.
+# Combined with the TS script's domain guard (must be @wardrobe-assistants.ch)
+# and prod refusal (NODE_ENV check), this prevents the iter-15b
+# stranded-temp-admin scenario from recurring.
 if [[ "${CI:-}" == "true" ]]; then
   echo "Refusing to run seed-temp-admin.sh under CI (CI=true). This script is interactive-only." >&2
   exit 1
 fi
+if [[ ! -t 0 || ! -t 1 ]]; then
+  echo "Refusing to run seed-temp-admin.sh non-interactively (no TTY on stdin/stdout). Run from a terminal." >&2
+  exit 1
+fi
+if [[ $# -lt 2 ]]; then
+  cat >&2 <<'USAGE'
+Usage: seed-temp-admin.sh <APP_ID> <CONTAINER_ID>
+
+This script seeds against an explicit non-production Magic Container app +
+container. The previous prod defaults were removed in iter-16b: the TS
+seeder refuses NODE_ENV=production, so the prod default invocation always
+failed. Pass the dev/staging app + container ids explicitly.
+USAGE
+  exit 1
+fi
+# Only export ALLOW_TEMP_ADMIN once we've cleared the TTY + arg checks.
 export ALLOW_TEMP_ADMIN=1
 
-APP_ID="${1:-h4vme6Uhod4W3Yu}"           # wardrobe-assistants-admin (prod)
-CONTAINER_ID="${2:-h4vme6Uhod4W3Yu-63yu}"
+APP_ID="$1"
+CONTAINER_ID="$2"
 
 # Fail fast on missing tooling rather than a confusing error mid-flight.
 command -v hoppy >/dev/null || { echo "hoppy not found in PATH"; exit 1; }

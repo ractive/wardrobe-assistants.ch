@@ -40,11 +40,13 @@ let activeCookies: Headers = new Headers();
 
 /**
  * Header-presence helper for smoke tests. Pulls the configured `headers()`
- * block from `next.config.ts` and asserts each named header is present on
- * the catch-all `/(.*)` source. Next.js applies these to every response, so
- * validating the *config* (not a live HTTP fetch) is the right level: the
- * vitest harness has no Next runtime, but the config is the authoritative
- * source of truth for what the server will emit.
+ * block from `next.config.ts` and asserts each named header is configured
+ * for app routes (i.e. present on the catch-all `/(.*)` source OR on the
+ * asset-exclude source that scopes Cache-Control away from `_next/static`).
+ * Next.js applies these to every matching response, so validating the
+ * *config* (not a live HTTP fetch) is the right level: the vitest harness
+ * has no Next runtime, but the config is the authoritative source of truth
+ * for what the server will emit.
  *
  * Usage:
  *   await assertSecurityHeadersConfigured([
@@ -65,8 +67,16 @@ export async function assertSecurityHeadersConfigured(
   if (!catchAll) {
     throw new Error("next.config headers() has no /(.*) catch-all source");
   }
-  const present = new Set(catchAll.headers.map((h) => h.key));
-  const missing = expected.filter((k) => !present.has(k));
+  // Cache-Control is scoped away from /_next/static via a separate source;
+  // accept any source whose path expresses an "app routes" intent (either
+  // the catch-all, or one starting with `/((?!_next/...`).
+  const appRouteHeaderKeys = new Set<string>();
+  for (const rule of headers) {
+    if (rule.source === "/(.*)" || rule.source.startsWith("/((?!_next")) {
+      for (const h of rule.headers) appRouteHeaderKeys.add(h.key);
+    }
+  }
+  const missing = expected.filter((k) => !appRouteHeaderKeys.has(k));
   if (missing.length > 0) {
     throw new Error(`Missing security headers: ${missing.join(", ")}`);
   }

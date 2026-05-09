@@ -7,13 +7,27 @@ import type { NextConfig } from "next";
 // CDN side still won't cache cookies into the cache key.
 //
 // Cache-Control: `private, no-store, must-revalidate` covers Set-Cookie and
-//   session-bearing bodies, irrespective of Better Auth's defaults.
+//   session-bearing bodies, irrespective of Better Auth's defaults. Scoped
+//   to non-static paths via `ASSET_EXCLUDE_SOURCE` below — applying it to
+//   `/_next/static/*` would override Next's immutable asset caching and
+//   force a re-fetch of every JS/CSS chunk on every navigation.
 // CSP: starts permissive (`'unsafe-inline'` for styles is necessary because
 //   Tailwind's runtime-injected styles + react-hook-form's inline error
 //   styling don't ship with nonces in this stack). Tighten in a future
 //   iteration once nonce/hash support is in place.
+
+// Catch-all that excludes Next's build-asset paths. Anything served from
+// `_next/static` or `_next/image` is content-addressable and immutable; the
+// app should not stamp `no-store` over it. Favicon kept out of the
+// no-store rule for the same reason — bunny edge can cache it.
+const ASSET_EXCLUDE_SOURCE = "/((?!_next/static|_next/image|favicon.ico).*)";
+
+const cacheControlHeader = {
+  key: "Cache-Control",
+  value: "private, no-store, must-revalidate",
+};
+
 const securityHeaders = [
-  { key: "Cache-Control", value: "private, no-store, must-revalidate" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -50,12 +64,23 @@ const nextConfig: NextConfig = {
   // alongside the admin app.
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      // Security headers apply to every response — they're harmless on
+      // static assets and add CSP/X-Frame-Options coverage there too.
+      { source: "/(.*)", headers: securityHeaders },
+      // Cache-Control: no-store applies only to app/HTML responses. Static
+      // assets keep Next's immutable defaults.
+      {
+        source: ASSET_EXCLUDE_SOURCE,
+        headers: [cacheControlHeader],
+      },
+    ];
   },
 };
 
 export default nextConfig;
 
 // Re-exported for smoke tests so the asserted list stays in lockstep with
-// the configured list — one source of truth.
-export { securityHeaders };
+// the configured list — one source of truth. `cacheControlHeader` is the
+// app-route-only header; `securityHeaders` apply to every response.
+export { ASSET_EXCLUDE_SOURCE, cacheControlHeader, securityHeaders };

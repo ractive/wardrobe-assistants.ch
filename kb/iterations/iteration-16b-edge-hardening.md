@@ -22,11 +22,11 @@ This is **not** a feature iteration. No new user-visible behavior. The deliverab
 
 These don't compose into "ship feature N+1 first, harden later" — the longer the surface keeps growing under a leaky CDN cache and a root container, the bigger the remediation becomes. Six narrow fixes now is cheaper than a P1 incident later.
 
-## Pre-flight
+## Pre-flight [3/3]
 
-- [ ] iter-16 merged.
-- [ ] [Consolidated audit](../audits/audit-2026-05-09-consolidated.md) re-read; Group 1 still matches the plan below.
-- [ ] Group 2 + 3 items deferred to **iter-16c** (defense-in-depth: rate limiting, query-level authz, audit log, error sanitization, error/not-found boundaries, security scanning workflows). Tracked in the consolidated audit's action plan.
+- [x] iter-16 merged.
+- [x] [Consolidated audit](../audits/audit-2026-05-09-consolidated.md) re-read; Group 1 still matches the plan below.
+- [x] Group 2 + 3 items deferred to **iter-16f** (defense-in-depth: rate limiting, query-level authz, audit log, error sanitization, error/not-found boundaries, security scanning workflows). Iter-16c/d/e cover the parallel frontend cleanup track. Tracked in the consolidated audit's action plan and `kb/audits/findings-index.md`.
 
 ## Scope — CDN cache safety [3/3]
 
@@ -91,18 +91,18 @@ Audit ID: **C-SEC-07**.
 - [x] In `apps/admin/src/features/users/schema.ts` and `events/schema.ts`, added `.transform((s) => s.replace(/[\r\n]+/g, " "))` on the `subject` field of `messageUserInput` and `messageEventAssigneesInput`. Body keeps newlines.
 - [x] Smoke tests `users.smoke.test.ts` and `events.smoke.test.ts` invoke each action with a `Hello\r\nBcc: attacker@example.com` subject and assert `sendEmail` receives a subject with no CR/LF. Closes the **C-TST-01** test gap for these two paths.
 
-## Verify [0/6]
+## Verify [2/6]
 
-- [ ] `npm run verify` — green.
-- [ ] `npm run verify:tf` — green; pull-zone diff matches the new `strip_cookies = true`.
-- [ ] Local docker build runs as `app` user; `id` inside the container shows non-root.
-- [ ] Smoke harness asserts presence of `Cache-Control: private, no-store` and the seven security headers on at least one authenticated admin route response.
-- [ ] Manual: post-deploy, hit the admin in a browser; check DevTools → Network for the response headers on `/`, `/users`, `/events`. All present, none missing.
-- [ ] Manual: `npm run seed:temp-admin` with `NODE_ENV=production` exits 1 without DB writes.
+- [x] `npm run verify` — green (lint + typecheck + 124 tests pass on the PR branch).
+- [ ] `npm run verify:tf` — green; pull-zone diff matches the new `strip_cookies = true`. *(Local sandbox can't refresh state — HTTP backend requires auth. CI runs this on every PR; relying on the deploy.yml verify job here.)*
+- [ ] Local docker build runs as `app` user; `id` inside the container shows non-root. *(Manual; not exercised before merge — covered by post-deploy check below.)*
+- [x] Smoke harness asserts presence of `Cache-Control: private, no-store, must-revalidate` and the six remaining security headers on app-route responses (parametrised `it.each` in `users.smoke.test.ts`; `Cache-Control` scoped to the asset-exclude source so `_next/static` keeps Next's immutable defaults).
+- [ ] Manual: post-deploy, hit the admin in a browser; check DevTools → Network for the response headers on `/`, `/users`, `/events`. All present, none missing. *(Post-merge.)*
+- [ ] Manual: `npm run seed:temp-admin` with `NODE_ENV=production` exits 1 without DB writes. *(Post-merge.)*
 
-## Out of scope (deliberate, → iter-16c)
+## Out of scope (deliberate, → iter-16f)
 
-These all fall under audit Group 2 (medium-severity defense-in-depth) and deserve their own focused iteration rather than bloating this one:
+These all fall under audit Group 2 (medium-severity defense-in-depth) and deserve their own focused iteration rather than bloating this one. Tracked in `iter-16f-defense-in-depth.md`; iter-16c/d/e are the parallel frontend cleanup track:
 
 - **Rate limiting** on Better Auth endpoints (C-SEC-02).
 - **Query-level authorization** — `assertPermission()` inside sensitive `listX/getX` queries (C-SEC-09).
@@ -131,15 +131,15 @@ Edited:
 
 No new feature code; no schema changes; no new permissions.
 
-## Done when [0/7]
+## Done when [5/7]
 
-- [ ] Every authenticated admin response carries `Cache-Control: private, no-store` (and the pull-zone `strip_cookies = true` would catch a future regression).
-- [ ] All seven security headers present on admin and homepage; CSP enforced in non-report-only mode.
-- [ ] No `@main` references in `.github/workflows/`; pinning convention documented.
-- [ ] `seed-temp-admin` cannot run in production. (iter-15b stranded temp admin already deleted by user 2026-05-09.)
-- [ ] Admin container runs as non-root in prod.
-- [ ] CI's `verify` job runs `lint` (not just typecheck + test); a forbidden cross-feature import would now fail CI.
-- [ ] Email subjects in `messageUser` / `messageEventAssignees` reject or strip CR/LF; smoke tests pin the behavior.
+- [x] Every authenticated admin response carries `Cache-Control: private, no-store, must-revalidate` (the pull-zone `strip_cookies = true` is the CDN-side belt-and-suspenders for any future header regression). Cache-Control scoped to non-static paths so `_next/static` keeps Next's immutable defaults.
+- [ ] All seven security headers present on admin and homepage; CSP enforced in non-report-only mode. *Admin: yes. Homepage: intent-only — `output: "export"` doesn't honor `headers()`, and bunny.net edge rules to mirror the list are deferred to iter-16f. The homepage CSP / X-Frame-Options etc. are documented in `apps/homepage/next.config.ts` but not enforced yet.*
+- [x] No `@main` references in `.github/workflows/`; pinning convention documented in `kb/runbooks/github-actions-pinning.md`.
+- [x] `seed-temp-admin` cannot run in production. (iter-15b stranded temp admin already deleted by user 2026-05-09.) Triple guard: `NODE_ENV !== "production"`, `ALLOW_TEMP_ADMIN=1`, email must end with `@wardrobe-assistants.ch`. Wrapper additionally requires a TTY, refuses on `CI=true`, and removed the prod-default APP_ID/CONTAINER_ID args (must be passed explicitly).
+- [ ] Admin container runs as non-root in prod. *Dockerfile creates `app` user, `--chown=app:app` on every COPY, `USER app` set before EXPOSE. Confirmation in prod is the post-deploy manual check.*
+- [x] CI's `verify` job runs `lint` (not just typecheck + test); a forbidden cross-feature import would now fail CI.
+- [x] Email subjects in `messageUser` / `messageEventAssignees` reject or strip CR/LF; smoke tests pin the behavior (`Hello\r\nBcc: attacker@…` → asserted CR/LF-free at `sendEmail` boundary).
 
 ## Risk + rollback
 

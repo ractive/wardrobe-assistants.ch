@@ -2,15 +2,18 @@ import type { NextConfig } from "next";
 
 // `headers()` is documented-unsupported under `output: "export"` (Next 16
 // glossary: static export). The block stays here as the source-of-truth list
-// of intended response headers; actual edge enforcement is mirrored by
-// bunny.net edge rules on the homepage pull-zone (infra/terraform/pullzones.tf).
-// If Next ever supports headers under static export, removing the bunny edge
-// rules is the only follow-up.
+// of intended response headers, but **no edge enforcement is in place yet**:
+// `infra/terraform/pullzones.tf` does not currently configure bunny.net edge
+// rules to emit these headers. Edge enforcement is a deferred follow-up
+// scoped to iter-16f (defense-in-depth). Until then, treat this list as
+// intent-only — the homepage ships without security headers in production.
 //
 // CSP relaxed vs admin: Bunny Fonts (https://fonts.bunny.net) is the
-// homepage's only third-party origin — `style-src` and `font-src` allow it,
-// and `img-src` allows https: for any Pencil-exported assets that resolve
-// to the bunny CDN.
+// homepage's only third-party origin — `style-src` and `font-src` allow it.
+// `img-src` is narrowed to https://*.b-cdn.net (Bunny CDN host pattern) and
+// https://fonts.bunny.net rather than a blanket `https:` so a future XSS
+// can't smuggle pixels through arbitrary third-party hosts. Add other CDNs
+// here explicitly when an image source is introduced.
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -27,7 +30,7 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "img-src 'self' data: https:",
+      "img-src 'self' data: https://*.b-cdn.net https://fonts.bunny.net",
       "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
       "script-src 'self'",
       "font-src 'self' https://fonts.bunny.net",
