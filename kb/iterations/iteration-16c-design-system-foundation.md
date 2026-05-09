@@ -2,7 +2,7 @@
 title: Iteration 16c — Design system foundation
 type: iteration
 order: 17.4
-status: implemented
+status: done
 ---
 
 # Iteration 16c — Design system foundation
