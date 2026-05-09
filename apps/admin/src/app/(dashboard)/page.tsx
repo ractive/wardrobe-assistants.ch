@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getCachedSession } from "@/lib/auth";
-import { SignOutButton } from "./sign-out-button";
 
 export default async function DashboardHome() {
   const session = await getCachedSession();
@@ -16,7 +15,6 @@ export default async function DashboardHome() {
         You're signed in. Quote, gig, and freelancer surfaces land in later
         iterations.
       </p>
-      <SignOutButton />
     </section>
   );
 }

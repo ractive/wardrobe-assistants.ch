@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFormAction } from "@/hooks/use-form-action";
-import { type InviteUserInput, inviteUserInput } from "../schema";
+import { inviteUserInput } from "../schema";
 import { inviteUser } from "../server/actions";
 
 export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {

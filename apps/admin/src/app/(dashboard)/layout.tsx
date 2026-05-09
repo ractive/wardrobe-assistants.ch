@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
-import { DashboardSidebar, NavLink } from "@/components/DashboardSidebar";
+import {
+  Calendar,
+  DashboardSidebar,
+  NavLink,
+  Users,
+} from "@/components/DashboardSidebar";
 import { HasPermission } from "@/components/HasPermission";
 import {
   SidebarInset,
@@ -22,22 +27,19 @@ export default async function DashboardLayout({
   }
   return (
     <SidebarProvider>
-      <DashboardSidebar>
+      <DashboardSidebar userEmail={session.user.email}>
         <HasPermission perm="USER_INVITE">
-          <NavLink href="/users" label="Users" />
+          <NavLink href="/users" label="Users" icon={Users} />
         </HasPermission>
         <HasPermission perm="EVENT_VIEW">
-          <NavLink href="/events" label="Events" />
+          <NavLink href="/events" label="Events" icon={Calendar} />
         </HasPermission>
       </DashboardSidebar>
       <SidebarInset>
         <header className="flex items-center gap-3 border-[var(--border)] border-b px-4 py-3 md:px-6 md:py-4">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger />
           <span className="font-semibold text-sm md:text-base">
             Wardrobe Assistants — Admin
-          </span>
-          <span className="ml-auto truncate text-[var(--muted-foreground)] text-xs md:text-sm">
-            {session.user.email}
           </span>
         </header>
         <main className="flex-1 px-4 py-6 md:px-6 md:py-8">{children}</main>
