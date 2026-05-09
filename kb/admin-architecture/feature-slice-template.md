@@ -95,6 +95,8 @@ Action body shape:
 
 ## UI components (`apps/admin/src/features/<f>/components/`)
 
+UI conventions: see [`design-system.md`](design-system.md) — tokens, breakpoints, forms, tables, dialogs, a11y baseline (mobile-first). The points below are the slice-specific bits the design system doesn't cover.
+
 shadcn/ui primitives in `components/ui/` are global. Feature-specific components (forms, tables, dialogs, badges) live here. RHF + zodResolver wires forms to the same Zod input schema the server action uses — the types stay aligned.
 
 Server-side gate route segments with `<HasPermission perm="...">`. Client-side conditional UI uses `useHasPermission("...")`. Never branch on role directly — use the permission catalog.

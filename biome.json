@@ -16,13 +16,19 @@
       "!**/out",
       "!kb/bunny-snapshot-*",
       "!infra/terraform",
-      "!apps/admin/src/components/ui"
+      "!apps/admin/src/components/ui",
+      "!apps/admin/src/hooks/use-mobile.ts"
     ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
   "linter": {
     "enabled": true,

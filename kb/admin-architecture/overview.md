@@ -35,11 +35,12 @@ Feature-folder layout in `apps/admin/src/features/<f>/` (Zod input schemas, serv
 | Topic | Doc |
 |---|---|
 | **New feature?** Start here | [`feature-slice-template.md`](feature-slice-template.md) — concrete checklist for iter-16/17/18 |
+| **Building UI?** Read first | [`design-system.md`](design-system.md) — tokens, breakpoints, forms, tables, dialogs, a11y baseline (mobile-first) |
 | Folder structure, isolation rules | [`folder-structure.md`](folder-structure.md) |
 | Drizzle schemas, type contracts, identity model | [`data-layer.md`](data-layer.md) |
 | Server actions, queries, services, mocking | [`server-layer.md`](server-layer.md) |
 | Better Auth, RBAC, session shape, gates | [`auth-and-permissions.md`](auth-and-permissions.md) |
-| shadcn/ui, forms, tables, icons, conventions | [`ui-stack.md`](ui-stack.md) |
+| shadcn/ui, forms, tables, icons, conventions | [`ui-stack.md`](ui-stack.md) — library inventory; design-system rules in `design-system.md` |
 | TypeScript strictness, tsconfig.base.json | [`typescript-conventions.md`](typescript-conventions.md) |
 
 ## Decision log
