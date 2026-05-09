@@ -60,7 +60,7 @@ USER nonroot
 
 EXPOSE 3000
 # Migrations apply automatically on container boot via Next's instrumentation
-# hook (apps/admin/instrumentation.ts → src/lib/migrate.ts). The hook runs
+# hook (apps/admin/src/instrumentation.ts → src/lib/migrate.ts). The hook runs
 # inside the Next standalone server process, so drizzle-orm and @libsql/client
 # resolve through the bundle's own node_modules tree (the resolution problem
 # that defeated iter-09's CMD-wrapper approach).
