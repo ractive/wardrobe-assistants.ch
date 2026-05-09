@@ -45,37 +45,37 @@ export const eventAssignments = sqliteTable("event_assignments", {
 
 Add aggregator entry in `packages/db/src/schema.ts`. Generate + apply migration.
 
-## Scope — feature scaffold [0/3]
+## Scope — feature scaffold [3/3]
 
 - [x] `apps/admin/src/features/events/{schema.ts, server/, components/}`.
 - [x] Biome per-feature override.
 - [x] Route: `apps/admin/src/app/(dashboard)/events/page.tsx`. Page-top `assertPermission("EVENT_CREATE")` for admin view; squad members see a different page (route — `/my-events` — handled in iter-18).
 
-## Scope — CRUD [0/3]
+## Scope — CRUD [3/3]
 
 - [x] `createEvent` action — `withPermission("EVENT_CREATE")`. Fields: name, date, venue, notes, initial status (default `draft`).
 - [x] `deleteEvent` action — `withPermission("EVENT_DELETE")`. Confirmation dialog. Cascade removes `event_assignments` via FK. Use `.returning({ id: events.id })` and return `{ error: true, message: "Event not found." }` when 0 rows are affected (same pattern as iter-15 `deleteUser`).
 - [x] `updateEvent` action — `withPermission("EVENT_CREATE")` (re-use; no separate EDIT perm yet). Allows name/date/venue/notes/status edits.
 
-## Scope — assignment [0/3]
+## Scope — assignment [3/3]
 
 - [x] `assignUser` action — `withPermission("EVENT_ASSIGN")`. Inserts a row in `event_assignments`. Idempotent (`onConflictDoNothing`).
 - [x] `unassignUser` action — same perm. Deletes the row.
 - [x] On assignment: send the user an email (`sendEmail` from `lib/email`) saying "you've been assigned to event <name> on <date> at <venue>". Subject + body templated in `features/events/server/email-templates.ts` (or inline if small). When email senders consolidate in iter-20, move templates accordingly. **Email send is best-effort:** wrap in `try/catch` so a transient email failure doesn't roll back the assignment row (the assignment is the source of truth; the email is a notification). Log the failure and return a soft warning in the `ActionResult` (`{ error: false, message: "Assigned, but notification email failed to send." }`).
 
-## Scope — message-all-assigned [0/2]
+## Scope — message-all-assigned [2/2]
 
 - [x] `messageEventAssignees` action — `withPermission("EVENT_MESSAGE_ASSIGNED")`. Input: `{ eventId, subject, body }`. Looks up assignments, fans out to `sendEmail` per assigned user. **Partial-failure handling:** wrap each `sendEmail` in `try/catch` and tally `{ sent, failed }`. Return `{ error: false, message: "Sent to N of M assignees." }` when `sent > 0`; return `{ error: true, message: "Could not send to any assignee." }` when all fail. Do not throw on per-recipient failures; admins need feedback, not a crashed server action.
 - [x] `<MessageAssigneesDialog>` UI from the event detail page.
 
-## Scope — UI [0/4]
+## Scope — UI [4/4]
 
 - [x] `<EventsTable>` for the events list (TanStack Table). Columns: Name, Date, Venue, Status (badge), Assignees count, Actions.
 - [x] `<EventDialog>` (create + edit). shadcn `<Dialog>` with `<Calendar>` for date picking (`npx shadcn add calendar popover` if not yet installed).
 - [x] `<AssigneesPicker>` — shadcn `<Command>` (`npx shadcn add command`) for fuzzy-searching users to assign. Shows current assignees as removable chips.
 - [x] Event detail page at `app/(dashboard)/events/[id]/page.tsx` — shows name/date/venue/notes/status/assignees + the message-all dialog trigger.
 
-## Scope — verify [0/3]
+## Scope — verify [3/3]
 
 - [x] Tests: schema validation, perm enforcement, idempotent assignment, email fanout count.
 - [x] Manual: create event, assign 2 squad members, message them, verify both emails. Delete event, confirm assignments cascade.
