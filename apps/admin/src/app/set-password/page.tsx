@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { BrandBadge } from "@/components/BrandBadge";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -139,12 +140,17 @@ function SetPasswordInner() {
 
 export default function SetPasswordPage() {
   return (
-    <main className="mx-auto max-w-md px-6 py-12">
-      <Suspense
-        fallback={<p className="text-[var(--muted-foreground)]">Loading…</p>}
-      >
-        <SetPasswordInner />
-      </Suspense>
-    </main>
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <BrandBadge />
+        <main>
+          <Suspense
+            fallback={<p className="text-muted-foreground">Loading…</p>}
+          >
+            <SetPasswordInner />
+          </Suspense>
+        </main>
+      </div>
+    </div>
   );
 }
