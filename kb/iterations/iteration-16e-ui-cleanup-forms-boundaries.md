@@ -124,4 +124,4 @@ Edited:
 - [ ] Form-level server errors announce to screen readers via `role="alert"`.
 - [ ] One `<StatusBadge>` serves all entities; per-`kind` maps documented.
 - [ ] Homepage `Button` renamed to `LinkButton`; `href` required.
-- [ ] Audit findings F-FE-02/04/07/12/15/16/25 closed; first two component tests with axe assertions are green.
+- [ ] Audit findings F-FE-02/04/07/12/15/16 closed; first two component tests with axe assertions are green. (F-FE-25 was closed in iter-16d.)

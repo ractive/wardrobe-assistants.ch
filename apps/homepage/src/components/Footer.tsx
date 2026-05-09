@@ -11,11 +11,11 @@ export function Footer() {
               className="h-2.5 w-2.5 rounded-full bg-[var(--primary)]"
               aria-hidden="true"
             />
-            <span className="font-primary text-[14px] font-medium tracking-[2px] text-[#EDEAE4]">
+            <span className="font-primary text-[14px] font-medium tracking-[2px] text-[var(--foreground)]">
               WARDROBE ASSISTANTS
             </span>
           </div>
-          <p className="max-w-[320px] font-body text-[13px] leading-[1.6] text-[#8F8A83]">
+          <p className="max-w-[320px] font-body text-[13px] leading-[1.6] text-[var(--muted-foreground)]">
             Backstage wardrobe squad for theatres, concerts and festivals across
             Switzerland.
           </p>
@@ -62,7 +62,7 @@ export function Footer() {
 
       {/* Bottom */}
       <div className="flex w-full items-center justify-between">
-        <span className="font-body text-[12px] text-[#9B958D]">
+        <span className="font-body text-[12px] text-[var(--muted-foreground)]">
           © {new Date().getFullYear()} wardrobe-assistants.ch
         </span>
       </div>

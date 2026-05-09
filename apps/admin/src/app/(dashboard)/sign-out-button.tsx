@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
 export function SignOutButton() {
@@ -18,6 +19,9 @@ export function SignOutButton() {
           router.replace("/login");
         } catch (error) {
           console.error("Sign out failed:", error);
+          toast.error(
+            error instanceof Error ? error.message : "Could not sign out.",
+          );
           setPending(false);
         }
       }}

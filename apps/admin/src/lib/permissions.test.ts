@@ -34,13 +34,15 @@ describe("ROLES + PERMISSIONS catalog", () => {
     }
   });
 
-  it("SQUAD_MEMBER has only the squad-surface perms", () => {
-    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.size).toBe(2);
+  it("SQUAD_MEMBER has only the squad-surface perms plus EVENT_VIEW", () => {
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.size).toBe(3);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("EVENT_VIEW")).toBe(true);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_VIEW_ASSIGNED")).toBe(true);
     expect(
       ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_REQUEST_PARTICIPATION"),
     ).toBe(true);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("USER_INVITE")).toBe(false);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("EVENT_CREATE")).toBe(false);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("EVENT_DELETE")).toBe(false);
   });
 });

@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,14 +35,8 @@ export function AssigneesPicker({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const assigneeIds = useMemo(
-    () => new Set(assignees.map((a) => a.userId)),
-    [assignees],
-  );
-  const unassigned = useMemo(
-    () => candidates.filter((c) => !assigneeIds.has(c.id)),
-    [candidates, assigneeIds],
-  );
+  const assigneeIds = new Set(assignees.map((a) => a.userId));
+  const unassigned = candidates.filter((c) => !assigneeIds.has(c.id));
 
   function onPick(userId: string) {
     setOpen(false);
@@ -129,7 +123,6 @@ export function AssigneesPicker({
                     value={`${u.displayName} ${u.email}`}
                     onSelect={() => onPick(u.id)}
                   >
-                    <Check className="mr-2 size-4 opacity-0" />
                     <div className="flex flex-col">
                       <span>{u.displayName}</span>
                       <span className="text-[var(--muted-foreground)] text-xs">

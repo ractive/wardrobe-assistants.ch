@@ -47,9 +47,12 @@ export function MessageAssigneesDialog({
     defaultValues: { eventId, subject: "", body: "" },
   });
 
+  // Reset on open or eventId change. `form` is omitted because it's stable
+  // from useForm and depending on it would re-fire on every render.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: form is stable
   useEffect(() => {
     if (open) form.reset({ eventId, subject: "", body: "" });
-  }, [open, eventId, form]);
+  }, [open, eventId]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {

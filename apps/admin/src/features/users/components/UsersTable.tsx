@@ -1,13 +1,4 @@
-"use client";
-
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 import { format } from "date-fns";
-import { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -28,60 +19,6 @@ export function UsersTable({
   users: UserListItem[];
   currentUserId: string;
 }) {
-  const columns = useMemo<ColumnDef<UserListItem>[]>(
-    () => [
-      {
-        accessorKey: "displayName",
-        header: "Name",
-      },
-      {
-        accessorKey: "email",
-        header: "Email",
-        cell: ({ row }) => (
-          <span className="font-mono text-xs">{row.original.email}</span>
-        ),
-      },
-      {
-        accessorKey: "role",
-        header: "Role",
-        cell: ({ row }) => <RoleBadge role={row.original.role} />,
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => <StatusBadge status={row.original.status} />,
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }) => (
-          <span className="text-[var(--muted-foreground)]">
-            {format(row.original.createdAt, "yyyy-MM-dd")}
-          </span>
-        ),
-      },
-      {
-        id: "actions",
-        header: () => <span className="sr-only">Actions</span>,
-        cell: ({ row }) => (
-          <div className="flex justify-end">
-            <UserActionsMenu
-              user={row.original}
-              isSelf={row.original.id === currentUserId}
-            />
-          </div>
-        ),
-      },
-    ],
-    [currentUserId],
-  );
-
-  const table = useReactTable({
-    data: users,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   if (users.length === 0) {
     return (
       <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-8 text-center text-[var(--muted-foreground)]">
@@ -91,36 +28,83 @@ export function UsersTable({
   }
 
   return (
-    <div className="rounded-md border border-[var(--border)]">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((group) => (
-            <TableRow key={group.id}>
-              {group.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </TableHead>
-              ))}
+    <>
+      {/* Mobile: stacked cards (≤ md) */}
+      <ul className="flex flex-col gap-3 md:hidden">
+        {users.map((user) => (
+          <li
+            key={user.id}
+            className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-base">
+                  {user.displayName}
+                </span>
+                <span className="font-mono text-[var(--muted-foreground)] text-xs">
+                  {user.email}
+                </span>
+              </div>
+              <UserActionsMenu user={user} isSelf={user.id === currentUserId} />
+            </div>
+            <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
+              <dt className="text-[var(--muted-foreground)]">Role</dt>
+              <dd>
+                <RoleBadge role={user.role} />
+              </dd>
+              <dt className="text-[var(--muted-foreground)]">Status</dt>
+              <dd>
+                <StatusBadge status={user.status} />
+              </dd>
+            </dl>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: table (≥ md) */}
+      <div className="hidden rounded-md border border-[var(--border)] md:block">
+        <Table aria-label="Users">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
             </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.displayName}</TableCell>
+                <TableCell className="font-mono text-xs">
+                  {user.email}
                 </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                <TableCell>
+                  <RoleBadge role={user.role} />
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={user.status} />
+                </TableCell>
+                <TableCell className="text-[var(--muted-foreground)]">
+                  {format(user.createdAt, "yyyy-MM-dd")}
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-end">
+                    <UserActionsMenu
+                      user={user}
+                      isSelf={user.id === currentUserId}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
