@@ -50,7 +50,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
+    "@tailwindcss/postcss": "^4.3.0",
     "@types/qrcode-terminal": "^0.12.2",
     "babel-plugin-react-compiler": "1.0.0",
     "drizzle-kit": "^0.31.10",

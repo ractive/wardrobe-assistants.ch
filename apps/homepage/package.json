@@ -17,7 +17,7 @@
     "react-dom": "19.2.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
+    "@tailwindcss/postcss": "^4.3.0",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4.2.4"
   }
