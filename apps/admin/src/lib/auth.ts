@@ -14,6 +14,11 @@ import type { Role } from "./permissions";
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
   secret: env.betterAuthSecret,
+  // iter-16f / audit C-SEC-14: explicit allow-list for cross-origin
+  // sign-in callbacks. Better Auth derives a default from `baseURL`, but
+  // pinning the value here makes the trust boundary visible in code and
+  // prevents a surprise widening if a plugin later mutates options.
+  trustedOrigins: [env.betterAuthUrl],
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema,
@@ -30,6 +35,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    // iter-16f / C-SEC-15: keep the auth-layer floor in sync with the
+    // 12-char zod schema used by the login + set-password forms. Without
+    // this, the form schema is the only check on password length.
+    minPasswordLength: 12,
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,

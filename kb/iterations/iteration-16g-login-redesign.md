@@ -18,6 +18,7 @@ Mobile responsiveness applied per design-system doc.
 - [ ] iter-16c (design system) merged. `design-system.md` defines exactly how forms look on mobile/desktop.
 - [ ] iter-16d (nav + data cleanup) merged.
 - [ ] iter-16e (forms + boundaries) merged. `useFormAction()` exists; `role="alert"` already wraps server-error spans on login + set-password.
+- [ ] iter-16f (defense-in-depth) merged. Brings: password floor 12 (`login-schema.ts` + Better Auth `minPasswordLength`), set-password hint copy ("Use a passphrase you don't reuse — at least 12 characters"), rate-limit on auth POSTs (5/15min login per IP+email, 3/h reset per email, 3/h signup per IP) returning HTTP 429 + `Retry-After`. The redesign must preserve the 12-char min message text and gracefully surface the new 429 path (toast via `useFormAction` is already wired; verify the rate-limit message reads sensibly).
 - [ ] **Block before iter-19 (auth-mfa)** — iter-19 will extend MFA logic and benefits from the cleaner step structure landing first.
 
 ## Scope — login page redesign [0/5]
@@ -46,13 +47,14 @@ Closes the remaining mobile gaps on the auth surfaces. Touches files already bei
 - [ ] Login + set-password: page padding `px-4 py-8 md:py-12`; container `max-w-md mx-auto`; touch targets ≥ 44px on inputs and submit; sticky/full-width submit on mobile if helpful.
 - [ ] Manual smoke at 375px: every step usable single-handed; no horizontal scroll; back-button behavior sane.
 
-## Verify [0/5]
+## Verify [0/6]
 
 - [ ] `npm run verify` — green.
 - [ ] All three load-bearing component tests are green; vitest-axe assertions all pass.
 - [ ] Manual desktop: full login flow (credentials → TOTP) works keyboard-only; submit-on-Enter works on each step.
 - [ ] Manual mobile (375px): same flow works thumb-only; focus moves to TOTP input on transition; SR announces field errors and the step transition.
 - [ ] No regressions on set-password page (still uses the iter-16e `role="alert"` region; no redesign needed there).
+- [ ] Manual: trigger the iter-16f rate limiter on login (≥6 bad-credential attempts within 15min) and verify the 429 surfaces as a sensible toast, not a raw error.
 
 ## Out of scope (deliberate)
 

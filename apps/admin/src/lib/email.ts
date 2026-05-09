@@ -51,6 +51,15 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
     ...(html !== undefined ? { html } : {}),
   });
   if (error) {
-    throw new Error(`Resend send failed: ${error.message}`);
+    // iter-16f / C-SEC-08: don't propagate provider error text — it can
+    // include partial recipient strings or upstream details. Log only
+    // non-PII fields server-side; throw a generic message that is safe
+    // to surface. We deliberately omit `error.message` because Resend's
+    // error text occasionally echoes the recipient address back.
+    console.error("[email] Resend send failed", {
+      name: error.name,
+      to: maskEmail(to),
+    });
+    throw new Error("Email could not be sent.");
   }
 }

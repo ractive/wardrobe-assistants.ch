@@ -183,6 +183,58 @@ Use inside client components — buttons or fields conditionally rendered based 
 
 Prefer `assertPermission` at the top of a route component over middleware-based redirect. Middleware redirects are reserved for the unauthenticated case (already in `middleware.ts`). Permission checks belong with the route.
 
+## Query-level authorization (iter-16f)
+
+Sensitive `listX` / `getById` functions in
+`features/{users,events}/server/queries.ts` call `assertPermission()` at
+their entry. The route + page already gate, but the query is now also a
+security boundary on its own — a future caller (RPC, fresh page,
+helper script) is safe by default.
+
+The smoke harness (`features/*/server/*.smoke.test.ts` and
+`src/test/security.smoke.test.ts`) asserts that calling these queries
+without the right perm throws `UnauthenticatedError` /
+`PermissionError`.
+
+## Email verification: why it's off
+
+`emailAndPassword.requireEmailVerification: false` in
+`apps/admin/src/lib/auth.ts`. This is deliberate.
+
+The invite flow is: admin creates the user via `auth.api.signUpEmail`
+(no client interaction), then triggers `requestPasswordReset`. The user
+clicks the link in their email, lands on `/set-password?token=…`, and
+sets a password. Possession of the email is *already* proven by the
+ability to redeem the reset token — adding a separate verification flow
+would re-prove the same fact.
+
+Flipping `requireEmailVerification` to `true` without redesigning
+invite-token expiry semantics (single-use vs. expiry-extended on
+verification, etc.) would break the invite path. See iter-16f scope
+notes for the deferred redesign.
+
+## Rate limiting (iter-16f)
+
+In-memory sliding-window limiter in `apps/admin/src/lib/rate-limit.ts`.
+Applied at the Better Auth route handler boundary
+(`app/api/auth/[...all]/route.ts`) for login (5/15min per IP+email),
+password reset (3/hour per email), and signup (3/hour per IP). The
+invite server action has its own bucket (10/hour per admin).
+
+Single-container deploy makes process-local state acceptable. Restarts
+wipe counters — a brief fail-open after deploy is preferable to a hard
+dependency on Redis. Future swap to Upstash/Redis is mechanical: replace
+the `Map` backend without changing the public `consume()` API.
+
+## Audit log (iter-16f)
+
+Append-only `audit_log` table (schema:
+`packages/db/src/schema/audit_log.ts`). Every mutating server action
+emits one row via `recordAudit()` from
+`apps/admin/src/lib/audit-log.ts`. The row's ULID also surfaces as a
+correlation ID in user-facing toasts on error paths and in server-side
+logs — support can grep one ID across both.
+
 ## MFA
 
 `twoFactor` plugin is enabled. Issuer: `"Wardrobe Assistants Admin"`. **MFA enforcement for admins is deferred** — to be designed in a later auth iteration along with user/password handling and dev-friendly bootstrapping.
