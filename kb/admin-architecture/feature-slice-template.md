@@ -90,8 +90,8 @@ Action body shape:
 1. `safeParse(raw)` against the Zod input schema. Return `{ error: true, message: ... }` on validation failure.
 2. Run the DB mutation(s).
 3. Side effects (email, etc.) — wrap in try/catch and return a partial-success message rather than throwing if the side effect can be retried later.
-4. Return `{ error: false, message: ... }`.
-5. `revalidatePath("/<f>")` for any list page that needs to reflect the change. Mock `next/cache` in tests.
+4. `revalidatePath("/<f>")` for any list page that needs to reflect the change. Must run **after** side-effect handling (and its try/catch) but **before** the return so the next render reads the new state. Mock `next/cache` in tests.
+5. Return `{ error: false, message: ... }`.
 
 ## UI components (`apps/admin/src/features/<f>/components/`)
 

@@ -34,7 +34,7 @@ Feature-folder layout in `apps/admin/src/features/<f>/` (Zod input schemas, serv
 
 | Topic | Doc |
 |---|---|
-| **New feature?** Start here | [`feature-slice-template.md`](feature-slice-template.md) — concrete checklist iter-16/17/18 follow |
+| **New feature?** Start here | [`feature-slice-template.md`](feature-slice-template.md) — concrete checklist for iter-16/17/18 |
 | Folder structure, isolation rules | [`folder-structure.md`](folder-structure.md) |
 | Drizzle schemas, type contracts, identity model | [`data-layer.md`](data-layer.md) |
 | Server actions, queries, services, mocking | [`server-layer.md`](server-layer.md) |

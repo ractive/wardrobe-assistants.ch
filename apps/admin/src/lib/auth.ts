@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "./db";
 import { sendEmail } from "./email";
@@ -64,12 +64,19 @@ export const auth = betterAuth({
       create: {
         before: async (session) => {
           // Best-effort: flip status from invited → verified on the user's
-          // first successful sign-in. Failures must not block sign-in.
+          // first successful sign-in. The `status = invited` predicate makes
+          // this idempotent and prevents `verifiedAt` being overwritten on
+          // every subsequent sign-in. Failures must not block sign-in.
           try {
             await db
               .update(userProfile)
               .set({ status: "verified", verifiedAt: new Date() })
-              .where(eq(userProfile.userId, session.userId));
+              .where(
+                and(
+                  eq(userProfile.userId, session.userId),
+                  eq(userProfile.status, "invited"),
+                ),
+              );
           } catch (err) {
             console.error(
               "session.create: failed to flip status invited→verified",

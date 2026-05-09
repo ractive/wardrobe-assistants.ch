@@ -31,6 +31,11 @@ const TEST_BETTER_AUTH_SECRET = "0".repeat(64);
 //   1) `vi.mock("next/headers", () => ({ headers: () => Promise.resolve(harness.activeCookies()) }))`
 //   2) wrap the call in `harness.runAs(cookies, () => action())`.
 // Single shared variable keeps the mock implementation trivially small.
+//
+// Concurrency caveat: vitest workers run test files in separate processes,
+// so this state never leaks across files. Within a single test file, do
+// NOT run two `runAs` calls in parallel via `Promise.all` — they'd race
+// on this variable. Smoke tests are sequential by design.
 let activeCookies: Headers = new Headers();
 
 export interface Harness {
@@ -116,9 +121,18 @@ export async function setupHarness(): Promise<Harness> {
       body: { email, password },
       asResponse: true,
     });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(
+        `signInEmail failed for ${email}: ${res.status} ${body.slice(0, 200)}`,
+      );
+    }
     const setCookie = res.headers.get("set-cookie");
+    if (!setCookie) {
+      throw new Error(`signInEmail returned no set-cookie for ${email}`);
+    }
     const cookies = new Headers();
-    if (setCookie) cookies.set("cookie", setCookie);
+    cookies.set("cookie", setCookie);
     return cookies;
   }
 
@@ -140,11 +154,12 @@ export async function setupHarness(): Promise<Harness> {
     }
     const userId = signUp.user.id;
 
-    // Insert the domain-side profile BEFORE signing in. The Better Auth
-    // `session.create.before` hook merges role/firstName/etc into the
-    // session payload at session-creation time only — if we sign in before
-    // the profile exists, the cookie's session lacks `role` and every
-    // subsequent withPermission() check fails.
+    // Insert the domain-side profile BEFORE signing in. Permission checks
+    // read role from `user_profile` at request time (since iter-15c — see
+    // `roleForUserId` in lib/auth.ts), so the order of seed-vs-sign-in does
+    // not affect the cookie's session payload. Inserting first still lets
+    // the session.create.before hook see status=verified on the user's
+    // first sign-in, avoiding the verified-flip write entirely.
     const now = new Date();
     await db.insert(schema.userProfile).values({
       userId,
@@ -162,9 +177,18 @@ export async function setupHarness(): Promise<Harness> {
       body: { email: opts.email, password: opts.password },
       asResponse: true,
     });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(
+        `signInEmail failed for ${opts.email}: ${res.status} ${body.slice(0, 200)}`,
+      );
+    }
     const setCookie = res.headers.get("set-cookie");
+    if (!setCookie) {
+      throw new Error(`signInEmail returned no set-cookie for ${opts.email}`);
+    }
     const cookies = new Headers();
-    if (setCookie) cookies.set("cookie", setCookie);
+    cookies.set("cookie", setCookie);
     return { userId, cookies };
   }
 
@@ -172,6 +196,10 @@ export async function setupHarness(): Promise<Harness> {
     db,
     auth,
     cleanup() {
+      // Unstub env so a later test file in the same vitest worker doesn't
+      // inherit our DATABASE_URL / NODE_ENV / etc. and accidentally hit our
+      // (now-deleted) tmp DB.
+      vi.unstubAllEnvs();
       rmSync(dir, { recursive: true, force: true });
     },
     signUpAndSignIn,
