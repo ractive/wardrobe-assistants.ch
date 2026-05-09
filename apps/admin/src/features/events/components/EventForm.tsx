@@ -1,0 +1,221 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import {
+  type CreateEventInput,
+  createEventInput,
+  EVENT_STATUSES,
+} from "../schema";
+import { createEvent, updateEvent } from "../server/actions";
+
+const STATUS_LABEL: Record<(typeof EVENT_STATUSES)[number], string> = {
+  draft: "Draft",
+  published: "Published",
+  cancelled: "Cancelled",
+  done: "Done",
+};
+
+interface EditDefaults {
+  eventId: string;
+  name: string;
+  date: Date;
+  venue: string;
+  notes: string | null;
+  status: (typeof EVENT_STATUSES)[number];
+}
+
+type Props =
+  | { mode: "create"; defaults?: undefined; onSuccess?: () => void }
+  | { mode: "edit"; defaults: EditDefaults; onSuccess?: () => void };
+
+// Both modes drive the same set of input fields. We use the create input
+// schema for client validation and pass the eventId through closure when in
+// edit mode — keeps the form a single component without `any` gymnastics.
+export function EventForm(props: Props) {
+  const router = useRouter();
+  const isEdit = props.mode === "edit";
+  const defaults = isEdit ? props.defaults : undefined;
+
+  const form = useForm<CreateEventInput>({
+    resolver: zodResolver(createEventInput),
+    defaultValues: {
+      name: defaults?.name ?? "",
+      date: defaults?.date ?? (undefined as unknown as Date),
+      venue: defaults?.venue ?? "",
+      notes: defaults?.notes ?? "",
+      status: defaults?.status ?? "draft",
+    },
+  });
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    try {
+      const result = defaults
+        ? await updateEvent({ ...data, eventId: defaults.eventId })
+        : await createEvent(data);
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(result.message);
+      if (!isEdit) form.reset();
+      props.onSuccess?.();
+      router.refresh();
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : isEdit
+            ? "Could not update event."
+            : "Could not create event.",
+      );
+    }
+  });
+
+  const submitLabel = isEdit ? "Save changes" : "Create event";
+
+  return (
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input autoComplete="off" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-[var(--muted-foreground)]",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 size-4" />
+                        {field.value
+                          ? format(field.value, "yyyy-MM-dd")
+                          : "Pick a date"}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={(d) => field.onChange(d)}
+                      autoFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="venue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Venue</FormLabel>
+                <FormControl>
+                  <Input autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes (optional)</FormLabel>
+              <FormControl>
+                <Textarea rows={4} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {EVENT_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {STATUS_LABEL[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? "Saving…" : submitLabel}
+        </Button>
+      </form>
+    </Form>
+  );
+}

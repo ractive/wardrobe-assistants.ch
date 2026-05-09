@@ -8,7 +8,10 @@ type Item = {
   perm: Parameters<typeof HasPermission>[0]["perm"];
 };
 
-const ITEMS: Item[] = [{ href: "/users", label: "Users", perm: "USER_INVITE" }];
+const ITEMS: Item[] = [
+  { href: "/users", label: "Users", perm: "USER_INVITE" },
+  { href: "/events", label: "Events", perm: "EVENT_CREATE" },
+];
 
 function SidebarLink({
   href,
