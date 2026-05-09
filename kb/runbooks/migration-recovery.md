@@ -65,8 +65,8 @@ hoppy db --app wardrobe-assistants-admin
 > SELECT name, sql FROM sqlite_master WHERE type='table';
 ```
 
-Compare the result against `packages/db/migrations/_journal.json`. The
-gap between "last applied tag" and "next tag in journal" is the
+Compare the result against `packages/db/migrations/meta/_journal.json`.
+The gap between "last applied tag" and "next tag in journal" is the
 broken migration.
 
 ---
@@ -162,7 +162,7 @@ hoppy app logs --tail 50 --app wardrobe-assistants-admin
 # Expect: [migrate] Migrations applied.
 hoppy db --app wardrobe-assistants-admin
 > SELECT tag FROM __drizzle_migrations ORDER BY id DESC LIMIT 5;
-# Expect the latest tag from packages/db/migrations/_journal.json.
+# Expect the latest tag from packages/db/migrations/meta/_journal.json.
 ```
 
 Make sure `MIGRATE_ON_BOOT` is **not** set; the env var should be

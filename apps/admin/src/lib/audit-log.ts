@@ -61,7 +61,16 @@ export async function recordAudit(entry: AuditLogEntry): Promise<string> {
       createdAt: new Date(),
     });
   } catch (err) {
-    console.error("[audit-log] failed to insert row", { id, entry, err });
+    // Log only the structural fields — `entry.metadata` may carry
+    // user-supplied PII (emails, etc.) that we don't want in stdout.
+    console.error("[audit-log] failed to insert row", {
+      id,
+      action: entry.action,
+      actorUserId: entry.actorUserId,
+      targetType: entry.targetType,
+      targetId: entry.targetId,
+      err,
+    });
   }
   return id;
 }

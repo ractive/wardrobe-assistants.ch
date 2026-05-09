@@ -28,8 +28,16 @@ const baseHandler = toNextJsHandler(auth.handler);
 // (e.g., 2FA-augmented sign-in) are still covered.
 type LimiterKey = "login" | "passwordReset" | "signup";
 
+// Per-bucket key strategy:
+//   - login         → IP + email (credential stuffing across both)
+//   - passwordReset → email only (don't let an attacker rotate IPs to
+//                     spam reset emails to the same address)
+//   - signup        → IP only (no identifier yet; bound the abuser)
+type KeyStrategy = "ipAndEmail" | "emailOnly" | "ipOnly";
+
 interface LimiterMatch {
   bucket: LimiterKey;
+  strategy: KeyStrategy;
   identifierFromBody: (body: unknown) => string | null;
 }
 
@@ -38,18 +46,45 @@ function pickLimiter(pathname: string): LimiterMatch | null {
     pathname.endsWith("/sign-in/email") ||
     pathname.endsWith("/sign-in/email-password")
   ) {
-    return { bucket: "login", identifierFromBody: extractEmail };
+    return {
+      bucket: "login",
+      strategy: "ipAndEmail",
+      identifierFromBody: extractEmail,
+    };
   }
   if (
     pathname.endsWith("/request-password-reset") ||
     pathname.endsWith("/forget-password")
   ) {
-    return { bucket: "passwordReset", identifierFromBody: extractEmail };
+    return {
+      bucket: "passwordReset",
+      strategy: "emailOnly",
+      identifierFromBody: extractEmail,
+    };
   }
   if (pathname.endsWith("/sign-up/email")) {
-    return { bucket: "signup", identifierFromBody: () => null };
+    return {
+      bucket: "signup",
+      strategy: "ipOnly",
+      identifierFromBody: () => null,
+    };
   }
   return null;
+}
+
+function buildLimiterKey(
+  match: LimiterMatch,
+  ip: string,
+  identifier: string,
+): string {
+  switch (match.strategy) {
+    case "ipAndEmail":
+      return `${match.bucket}:${ip}:${identifier}`;
+    case "emailOnly":
+      return `${match.bucket}:${identifier}`;
+    case "ipOnly":
+      return `${match.bucket}:${ip}`;
+  }
 }
 
 function extractEmail(body: unknown): string | null {
@@ -66,9 +101,10 @@ function extractEmail(body: unknown): string | null {
 
 async function readJsonBody(req: Request): Promise<unknown> {
   // The downstream Better Auth handler reads the body again, so we
-  // re-clone the request before parsing — body streams are
-  // single-shot. `req.clone()` would also work but is heavier than
-  // tee-ing a Buffer.
+  // clone the request before parsing — body streams are single-shot.
+  // `req.clone()` is the simplest correct path here; a manual
+  // tee-into-Buffer would be slightly cheaper but not worth the
+  // complexity at this traffic level.
   try {
     return await req.clone().json();
   } catch {
@@ -102,8 +138,7 @@ export async function POST(req: Request): Promise<Response> {
     const ip = clientIpFromHeaders(req.headers);
     const body = await readJsonBody(req);
     const identifier = match.identifierFromBody(body) ?? "";
-    // Combine IP + identifier for login/reset (IP alone for signup).
-    const key = `${match.bucket}:${ip}:${identifier}`;
+    const key = buildLimiterKey(match, ip, identifier);
     const result = consume(key, RATE_LIMITS[match.bucket]);
     if (!result.allowed) {
       return tooManyRequests(result);
