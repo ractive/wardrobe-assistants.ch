@@ -53,6 +53,13 @@ export function CredentialsStep({ onSuccess }: Props) {
     <Form {...form}>
       <form
         className="space-y-4"
+        // method="post" is defense-in-depth: if React hydration is delayed
+        // (or fails) and the browser performs a native form submission
+        // before our onSubmit handler attaches, a missing method attribute
+        // defaults to GET, putting the password in the URL (browser
+        // history, referer, server access logs). POST keeps fields in the
+        // request body. The handler still preventDefault's once hydrated.
+        method="post"
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
       >

@@ -78,7 +78,7 @@ function SetPasswordInner() {
         account.
       </p>
       <Form {...form}>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form method="post" onSubmit={onSubmit} className="mt-6 space-y-4">
           <FormField
             control={form.control}
             name="newPassword"

@@ -131,6 +131,29 @@ describe("LoginPage", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  // Defense-in-depth: a missing `method` attribute defaults to GET, which
+  // would put the password in the URL (history, referer, server logs) on
+  // pre-hydration submission. Lock both auth-form steps to method="post".
+  it("auth forms set method=post (no password-in-URL leak)", async () => {
+    const { container } = render(<LoginPage />);
+    const credentialsForm = container.querySelector("form");
+    expect(credentialsForm).not.toBeNull();
+    expect(credentialsForm?.getAttribute("method")?.toLowerCase()).toBe("post");
+
+    signInEmail.mockResolvedValueOnce({
+      data: { twoFactorRedirect: true },
+      error: null,
+    });
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Email"), "admin@example.com");
+    await user.type(screen.getByLabelText("Password"), "passphrase-12-chars");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByLabelText("Authentication code");
+
+    const totpForm = container.querySelector("form");
+    expect(totpForm?.getAttribute("method")?.toLowerCase()).toBe("post");
+  });
+
   it("is axe-clean on the TOTP step", async () => {
     signInEmail.mockResolvedValueOnce({
       data: { twoFactorRedirect: true },
