@@ -39,25 +39,50 @@ const TEST_BETTER_AUTH_SECRET = "0".repeat(64);
 let activeCookies: Headers = new Headers();
 
 /**
- * Header-presence helper for smoke tests. Pulls the configured `headers()`
- * block from `next.config.ts` and asserts each named header is configured
- * for app routes (i.e. present on the catch-all `/(.*)` source OR on the
- * asset-exclude source that scopes Cache-Control away from `_next/static`).
- * Next.js applies these to every matching response, so validating the
- * *config* (not a live HTTP fetch) is the right level: the vitest harness
- * has no Next runtime, but the config is the authoritative source of truth
- * for what the server will emit.
+ * Header-presence helper for smoke tests. Validates that each named header
+ * is configured at the authoritative source: `next.config.ts` `headers()`
+ * for static headers (Cache-Control, X-Frame-Options, …), and the per-
+ * request proxy (`src/proxy.ts`) for `Content-Security-Policy`. The vitest
+ * harness has no Next runtime, so we read the configs directly — they are
+ * the contracts the server will honor.
  *
  * Usage:
  *   await assertSecurityHeadersConfigured([
  *     "Cache-Control",
  *     "X-Frame-Options",
- *     ...
+ *     "Content-Security-Policy",
  *   ]);
  */
 export async function assertSecurityHeadersConfigured(
   expected: readonly string[],
 ): Promise<void> {
+  // CSP is emitted by the proxy with a per-request nonce; it can't live in
+  // next.config.ts. Verify the proxy's CSP builder is configured so its
+  // header carries the directives we depend on.
+  const cspIndex = expected.indexOf("Content-Security-Policy");
+  if (cspIndex !== -1) {
+    const proxy = await import("../proxy");
+    const csp = proxy.buildContentSecurityPolicy({
+      nonce: "test-nonce",
+      isDev: false,
+    });
+    const required = [
+      "default-src 'self'",
+      "script-src",
+      "'nonce-test-nonce'",
+      "frame-ancestors 'none'",
+    ];
+    const missingDirectives = required.filter((d) => !csp.includes(d));
+    if (missingDirectives.length > 0) {
+      throw new Error(
+        `proxy CSP is missing directives: ${missingDirectives.join(", ")}`,
+      );
+    }
+  }
+
+  const remaining = expected.filter((h) => h !== "Content-Security-Policy");
+  if (remaining.length === 0) return;
+
   const cfg = await import("../../next.config");
   const headers = await cfg.default.headers?.();
   if (!headers) {
@@ -76,7 +101,7 @@ export async function assertSecurityHeadersConfigured(
       for (const h of rule.headers) appRouteHeaderKeys.add(h.key);
     }
   }
-  const missing = expected.filter((k) => !appRouteHeaderKeys.has(k));
+  const missing = remaining.filter((k) => !appRouteHeaderKeys.has(k));
   if (missing.length > 0) {
     throw new Error(`Missing security headers: ${missing.join(", ")}`);
   }

@@ -11,10 +11,13 @@ import type { NextConfig } from "next";
 //   to non-static paths via `ASSET_EXCLUDE_SOURCE` below — applying it to
 //   `/_next/static/*` would override Next's immutable asset caching and
 //   force a re-fetch of every JS/CSS chunk on every navigation.
-// CSP: starts permissive (`'unsafe-inline'` for styles is necessary because
-//   Tailwind's runtime-injected styles + react-hook-form's inline error
-//   styling don't ship with nonces in this stack). Tighten in a future
-//   iteration once nonce/hash support is in place.
+// CSP: lives in `src/proxy.ts`, not here. Static `headers()` can't generate
+//   a per-request nonce, and a strict `script-src 'self'` without a nonce
+//   blocks Next.js's own bootstrap inline scripts (the `__next_r` request
+//   ID, the framework manifest pointer, etc.). The proxy emits the CSP
+//   dynamically with a fresh nonce per request; Next.js auto-stamps that
+//   nonce onto its framework + page bundles. See `proxy.ts` for the
+//   directive list.
 
 // Catch-all that excludes Next's build-asset paths. Anything served from
 // `_next/static` or `_next/image` is content-addressable and immutable; the
@@ -39,20 +42,8 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=31536000; includeSubDomains",
   },
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "img-src 'self' data:",
-      "style-src 'self' 'unsafe-inline'",
-      "script-src 'self'",
-      "font-src 'self'",
-      "connect-src 'self'",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join("; "),
-  },
+  // Content-Security-Policy intentionally NOT set here — see comment block
+  // at the top of this file. Emitted from `src/proxy.ts` per request.
 ];
 
 const nextConfig: NextConfig = {
