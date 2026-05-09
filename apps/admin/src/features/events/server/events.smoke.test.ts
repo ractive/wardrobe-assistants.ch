@@ -180,6 +180,56 @@ describe("events feature — smoke", () => {
     expect(sendMock).toHaveBeenCalledTimes(2);
   });
 
+  it("messageEventAssignees strips CR/LF from subject (header-injection guard)", async () => {
+    const admin = await harness.seedAdmin({
+      email: "admin-crlf@events-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const m = await harness.seedSquadMember({
+      email: "m-crlf@events-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const email = await import("@/lib/email");
+    const sendMock = email.sendEmail as unknown as ReturnType<typeof vi.fn>;
+
+    const { createEvent, assignUser, messageEventAssignees } = await import(
+      "./actions"
+    );
+    const { listEvents } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createEvent({
+        name: "CRLF guard",
+        date: new Date("2026-10-01T18:00:00.000Z"),
+        venue: "Studio E",
+        notes: undefined,
+        status: "published",
+      }),
+    );
+    const event = (await listEvents()).find((e) => e.name === "CRLF guard");
+    expect(event).toBeDefined();
+    if (!event) return;
+
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ eventId: event.id, userId: m.userId }),
+    );
+
+    sendMock.mockClear();
+    const r = await harness.runAs(admin.cookies, () =>
+      messageEventAssignees({
+        eventId: event.id,
+        subject: "Heads up\r\nBcc: attacker@example.com",
+        body: "See you there.",
+      }),
+    );
+    expect(r.error, JSON.stringify(r)).toBe(false);
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const subjectArg = sendMock.mock.calls[0]?.[0]?.subject;
+    expect(subjectArg).toBeDefined();
+    expect(subjectArg).not.toMatch(/[\r\n]/);
+  });
+
   it("admin can delete an event — cascade removes assignments", async () => {
     const admin = await harness.seedAdmin({
       email: "admin4@events-smoke.local",

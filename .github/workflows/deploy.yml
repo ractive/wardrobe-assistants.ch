@@ -19,8 +19,11 @@ jobs:
           node-version: "24"
           cache: "npm"
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run test
+      # iter-16b (audit C-CI-01): mirror the local pre-commit gate so Biome's
+      # `noRestrictedImports` overrides (cross-feature isolation) actually
+      # fire on PRs — they were on the honor system when CI only ran
+      # typecheck + test.
+      - run: npm run verify
       - run: npm -w @wardrobe-assistants/homepage run build
       # Admin build needs env vars to satisfy lib/env.ts at build time.
       # Values are shape-valid placeholders only (NODE_ENV=production during
@@ -139,7 +142,13 @@ jobs:
 
       - name: Roll admin Magic Container to new image
         if: steps.changes.outputs.app == 'true'
-        uses: BunnyWay/actions/container-update-image@main
+        # iter-16b supply-chain hardening (audit C-SEC-03): third-party Action
+        # pinned to a commit SHA so a compromised upstream `main` can't take
+        # over the deploy. Resolve the new SHA when bumping; document the
+        # version in the trailing comment.
+        # SHA: BunnyWay/actions @ d15f94f8fd513950561a5996a40f99d1dd1c357c
+        # (refs/heads/main as of 2026-05-09).
+        uses: BunnyWay/actions/container-update-image@d15f94f8fd513950561a5996a40f99d1dd1c357c
         with:
           app_id: ${{ vars.APP_ID }}
           api_key: ${{ secrets.BUNNYNET_API_KEY }}

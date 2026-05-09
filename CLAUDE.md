@@ -7,6 +7,8 @@ When working in `apps/admin/` or `packages/db/`, read [`kb/admin-architecture/ov
 
 **Adding a new feature slice** (events, services, etc.) — follow [`kb/admin-architecture/feature-slice-template.md`](kb/admin-architecture/feature-slice-template.md). It's a concrete file-by-file checklist that iter-16 onward copy from. Smoke tests (`apps/admin/src/test/http-harness.ts` + `*.smoke.test.ts`) against the real auth + Drizzle path are mandatory per slice (the iter-15b/iter-15c motivation).
 
+**Audit findings** (security + frontend) live in [`kb/audits/`](kb/audits/). Before any UI or security work, check [`kb/audits/findings-index.md`](kb/audits/findings-index.md) — it maps every consolidated finding ID (`C-SEC-XX`, `F-FE-XX`) to its target iteration with live status. The post-iter-16 hardening sequence (iter-16b..16g) closes most of them; don't bypass unless the finding is explicitly marked deferred or accepted.
+
 The shared layers are:
 - `apps/admin/src/lib/` — cross-cutting non-React infra (`auth.ts`, `db.ts`, `email.ts`, `env.ts`, `permissions.ts`, `utils.ts`)
 - `apps/admin/src/components/` — cross-feature React (incl. `HasPermission.tsx`, `NoPermissionCard.tsx`, and `components/ui/` for shadcn primitives)
