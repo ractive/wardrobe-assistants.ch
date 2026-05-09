@@ -2,7 +2,7 @@
 title: Iteration 16e — UI cleanup pass 2 (forms + boundaries)
 type: iteration
 order: 17.6
-status: implemented
+status: done
 ---
 
 # Iteration 16e — UI cleanup pass 2: forms + boundaries
