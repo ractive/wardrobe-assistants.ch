@@ -25,7 +25,7 @@ Feature-folder layout in `apps/admin/src/features/<f>/` (Zod input schemas, serv
 | Permissions | `lib/permissions.ts` defines `PERMISSIONS` (`as const` array) and `ROLE_PERMISSIONS` map. ADMIN gets `new Set(PERMISSIONS)`; SQUAD_MEMBER explicit. Module-load self-check enforces every perm is granted. |
 | Permission API | `userHasPermission(perm)`, `assertPermission(perm)`, `withPermission(perm, action)` — wrapped server actions get auth+perm check + `userId` injected. |
 | UI gates | `<HasPermission perm="...">` (RSC) and `useHasPermission("...")` (client). |
-| Session | Just `role` merged in via Better Auth `additionalFields`. Perms computed on both sides from the in-code map (isomorphic). |
+| Session | Better Auth's session/user untouched. Role + status are read from `user_profile` at permission-check time via `roleForUserId(userId)` (called by `withPermission` / `getCurrentUserRole`). Perms computed on both sides from the in-code map (isomorphic). _(iter-15c — earlier "merge into session via additionalFields" was a no-op because session/user tables had no role column.)_ |
 | Services | Direct imports. Lazy provider construction. Tests use `vi.mock` with `__mocks__/<service>.ts` siblings. |
 | TypeScript | `strict` + `noUncheckedIndexedAccess` + `noFallthroughCasesInSwitch` + `noImplicitReturns` + `verbatimModuleSyntax`. One root `tsconfig.base.json`. |
 | UI | shadcn/ui + RHF + Zod + TanStack Table + lucide + sonner. Tailwind v4 with shadcn-shaped CSS variables already wired to the brand. |
@@ -34,6 +34,7 @@ Feature-folder layout in `apps/admin/src/features/<f>/` (Zod input schemas, serv
 
 | Topic | Doc |
 |---|---|
+| **New feature?** Start here | [`feature-slice-template.md`](feature-slice-template.md) — concrete checklist iter-16/17/18 follow |
 | Folder structure, isolation rules | [`folder-structure.md`](folder-structure.md) |
 | Drizzle schemas, type contracts, identity model | [`data-layer.md`](data-layer.md) |
 | Server actions, queries, services, mocking | [`server-layer.md`](server-layer.md) |
