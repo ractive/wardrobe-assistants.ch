@@ -121,6 +121,18 @@ describe("notifyUser", () => {
     expect(sendPushMock).toHaveBeenCalledOnce();
   });
 
+  it("throws AggregateError when both channels fail", async () => {
+    sendTemplatedMock.mockRejectedValue(new Error("SMTP down"));
+    sendPushMock.mockRejectedValue(new Error("push down"));
+
+    await expect(
+      notifyUser("user-1", "userDirectMessage", {
+        subject: "Test",
+        body: "Body",
+      }),
+    ).rejects.toBeInstanceOf(AggregateError);
+  });
+
   it("returns early when user not found", async () => {
     dbMock._selectResult = [];
 

@@ -19,9 +19,12 @@ export type EventBroadcastParams = {
 import type { PushPayload } from "../push";
 
 export function pushPayload(p: EventBroadcastParams): PushPayload {
+  // Show the first non-empty body line as the preview so the recipient can
+  // see actual content; fall back to the event reference when body is empty.
+  const firstLine = p.body.split(/\r?\n/).find((line) => line.trim() !== "");
   return {
-    title: p.subject,
-    body: `Re: ${p.eventName}`,
+    title: `${p.eventName}: ${p.subject}`,
+    body: firstLine?.slice(0, 120) || `Re: ${p.eventName}`,
   };
 }
 

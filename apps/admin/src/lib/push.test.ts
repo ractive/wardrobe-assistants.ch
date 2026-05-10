@@ -28,15 +28,17 @@ import { sendPush } from "./push";
 
 interface DbMock {
   _selectResult: unknown[];
-  _deleteEndpoints: string[];
+  _deleteCalls: number;
+  _lastDeleteWhere: unknown;
   select: () => { from: () => { where: () => Promise<unknown[]> } };
-  delete: () => { where: () => Promise<void> };
+  delete: () => { where: (pred: unknown) => Promise<void> };
 }
 
 function makeDbMock(): DbMock {
   return {
     _selectResult: [],
-    _deleteEndpoints: [],
+    _deleteCalls: 0,
+    _lastDeleteWhere: undefined,
     select() {
       const self = this;
       return {
@@ -52,9 +54,12 @@ function makeDbMock(): DbMock {
     delete() {
       const self = this;
       return {
-        where() {
-          // Record that a delete was attempted (endpoint captured from context).
-          self._deleteEndpoints.push("deleted");
+        where(pred: unknown) {
+          // Record the drizzle predicate so the test can confirm a delete
+          // was issued (and against what — the SQL expression carries the
+          // endpoint internally, opaque but non-empty).
+          self._deleteCalls += 1;
+          self._lastDeleteWhere = pred;
           return Promise.resolve();
         },
       };
@@ -77,7 +82,8 @@ const fakeSub = {
 
 beforeEach(async () => {
   dbMock._selectResult = [fakeSub];
-  dbMock._deleteEndpoints = [];
+  dbMock._deleteCalls = 0;
+  dbMock._lastDeleteWhere = undefined;
   const wp = (await import("web-push")).default;
   (wp.sendNotification as ReturnType<typeof vi.fn>).mockReset();
   (wp.setVapidDetails as ReturnType<typeof vi.fn>).mockReset();
@@ -130,7 +136,8 @@ describe("sendPush", () => {
 
     const result = await sendPush("user-1", { title: "Hi", body: "B" });
     expect(result.sent).toBe(0);
-    expect(dbMock._deleteEndpoints).toHaveLength(1);
+    expect(dbMock._deleteCalls).toBe(1);
+    expect(dbMock._lastDeleteWhere).toBeDefined();
   });
 
   it("deletes stale subscription on 404", async () => {
@@ -140,7 +147,8 @@ describe("sendPush", () => {
 
     const result = await sendPush("user-1", { title: "Hi", body: "B" });
     expect(result.sent).toBe(0);
-    expect(dbMock._deleteEndpoints).toHaveLength(1);
+    expect(dbMock._deleteCalls).toBe(1);
+    expect(dbMock._lastDeleteWhere).toBeDefined();
   });
 
   it("logs and skips on non-404/410 errors without deleting", async () => {
@@ -151,6 +159,6 @@ describe("sendPush", () => {
     const result = await sendPush("user-1", { title: "Hi", body: "B" });
     expect(result.sent).toBe(0);
     // No row deleted for non-stale errors.
-    expect(dbMock._deleteEndpoints).toHaveLength(0);
+    expect(dbMock._deleteCalls).toBe(0);
   });
 });

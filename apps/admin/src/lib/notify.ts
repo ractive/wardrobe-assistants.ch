@@ -19,9 +19,10 @@ export type NotifiableTemplateKey =
   | "userDirectMessage";
 
 // Map each notifiable template key to its push payload builder.
-function pushPayloadFor(
-  key: NotifiableTemplateKey,
-  params: ParamsFor<NotifiableTemplateKey>,
+// Generic over K so callers cannot pair a key with mismatched params.
+function pushPayloadFor<K extends NotifiableTemplateKey>(
+  key: K,
+  params: ParamsFor<K>,
 ) {
   switch (key) {
     case "eventAssigned":
@@ -45,6 +46,10 @@ function pushPayloadFor(
  * Always fires both email and push per the iter-23 decision: push for immediacy,
  * email for durability. A failure in one channel is logged but does not block
  * the other — Promise.allSettled guarantees both run regardless.
+ *
+ * Throws AggregateError when *both* channels fail so callers can surface a
+ * "notification failed" message. A single-channel failure is logged and
+ * resolves successfully (the other channel still got through).
  */
 export async function notifyUser<K extends NotifiableTemplateKey>(
   userId: string,
@@ -61,10 +66,7 @@ export async function notifyUser<K extends NotifiableTemplateKey>(
 
   const [emailResult, pushResult] = await Promise.allSettled([
     sendTemplated(templateKey, recipient.email, params),
-    sendPush(
-      userId,
-      pushPayloadFor(templateKey, params as ParamsFor<NotifiableTemplateKey>),
-    ),
+    sendPush(userId, pushPayloadFor(templateKey, params)),
   ]);
 
   if (emailResult.status === "rejected") {
@@ -80,5 +82,12 @@ export async function notifyUser<K extends NotifiableTemplateKey>(
       templateKey,
       err: pushResult.reason,
     });
+  }
+
+  if (emailResult.status === "rejected" && pushResult.status === "rejected") {
+    throw new AggregateError(
+      [emailResult.reason, pushResult.reason],
+      `[notify] both channels failed for ${templateKey}`,
+    );
   }
 }

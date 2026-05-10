@@ -650,6 +650,11 @@
           "name": "push_subscriptions_endpoint_unique",
           "columns": ["endpoint"],
           "isUnique": true
+        },
+        "push_subscriptions_user_id_idx": {
+          "name": "push_subscriptions_user_id_idx",
+          "columns": ["user_id"],
+          "isUnique": false
         }
       },
       "foreignKeys": {

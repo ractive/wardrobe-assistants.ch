@@ -11,18 +11,25 @@ import { useEffect, useState } from "react";
  * it is not cross-browser and does not work on Safari iOS.
  */
 export function InstallPrompt() {
+  const [mounted, setMounted] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    setIsIOS(
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window),
-    );
+    setMounted(true);
+    // iPadOS 13+ in "Request Desktop Site" mode reports as MacIntel with
+    // touch — check both UA and that fallback so iPad isn't missed.
+    const ua = navigator.userAgent;
+    const uaIOS = /iPad|iPhone|iPod/.test(ua) && !("MSStream" in window);
+    const ipadOS =
+      navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    setIsIOS(uaIOS || ipadOS);
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
   }, []);
 
-  // Already installed or not iOS — nothing to show.
-  if (isStandalone || !isIOS) return null;
+  // SSR / pre-mount renders nothing (matches server output, no hydration mismatch).
+  // Already installed or not iOS — also nothing to show.
+  if (!mounted || isStandalone || !isIOS) return null;
 
   return (
     <p className="px-4 py-2 text-muted-foreground text-xs" role="status">

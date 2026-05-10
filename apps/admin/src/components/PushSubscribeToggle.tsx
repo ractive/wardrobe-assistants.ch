@@ -66,19 +66,35 @@ export function PushSubscribeToggle() {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       });
-      setSubscription(sub);
 
       const json = sub.toJSON() as {
         endpoint: string;
         keys?: { p256dh?: string; auth?: string };
       };
-      if (json.endpoint && json.keys?.p256dh && json.keys.auth) {
-        await subscribePush({
-          endpoint: json.endpoint,
-          keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
-          userAgent: navigator.userAgent.slice(0, 255),
-        });
+      if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
+        // toJSON() didn't expose what the server needs — undo the local
+        // subscription so the UI doesn't claim "on" while the server has
+        // nothing to deliver to.
+        await sub.unsubscribe();
+        console.error(
+          "[PushSubscribeToggle] subscription missing endpoint/keys",
+        );
+        return;
       }
+      const result = await subscribePush({
+        endpoint: json.endpoint,
+        keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
+        userAgent: navigator.userAgent.slice(0, 255),
+      });
+      if (!result.success) {
+        // Server-side persist failed — revert the browser-side subscription
+        // so the toggle reflects reality.
+        await sub.unsubscribe();
+        console.error("[PushSubscribeToggle] server subscribePush failed");
+        return;
+      }
+      // Only flip UI state once both browser and server agree.
+      setSubscription(sub);
     } catch (err) {
       console.error("[PushSubscribeToggle] subscribe failed", err);
     } finally {
@@ -91,9 +107,16 @@ export function PushSubscribeToggle() {
     setLoading(true);
     try {
       const endpoint = subscription.endpoint;
+      // Backend first: if the server delete fails we keep the local
+      // subscription so the user can retry instead of being silently in
+      // a desync state.
+      const result = await unsubscribePush(endpoint);
+      if (!result.success) {
+        console.error("[PushSubscribeToggle] server unsubscribePush failed");
+        return;
+      }
       await subscription.unsubscribe();
       setSubscription(null);
-      await unsubscribePush(endpoint);
     } catch (err) {
       console.error("[PushSubscribeToggle] unsubscribe failed", err);
     } finally {

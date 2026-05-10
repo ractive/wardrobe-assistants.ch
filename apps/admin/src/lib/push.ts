@@ -49,15 +49,16 @@ export async function sendPush(
   const webpush = (await import("web-push")).default;
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-  let sent = 0;
-  await Promise.all(
-    subs.map(async (s) => {
+  // Sum a per-subscription boolean after Promise.all rather than mutating a
+  // shared counter inside the map — concurrent ++ can lose increments.
+  const results = await Promise.all(
+    subs.map(async (s): Promise<boolean> => {
       try {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           JSON.stringify(payload),
         );
-        sent++;
+        return true;
       } catch (err: unknown) {
         const statusCode =
           err !== null &&
@@ -78,9 +79,11 @@ export async function sendPush(
             statusCode,
           });
         }
+        return false;
       }
     }),
   );
 
+  const sent = results.filter(Boolean).length;
   return { sent };
 }

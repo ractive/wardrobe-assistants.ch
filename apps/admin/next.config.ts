@@ -23,7 +23,11 @@ import type { NextConfig } from "next";
 // `_next/static` or `_next/image` is content-addressable and immutable; the
 // app should not stamp `no-store` over it. Favicon kept out of the
 // no-store rule for the same reason — bunny edge can cache it.
-const ASSET_EXCLUDE_SOURCE = "/((?!_next/static|_next/image|favicon.ico).*)";
+// `sw.js` is excluded too — it has its own dedicated headers entry below
+// (Service-Worker-Allowed plus an SW-specific Cache-Control). Without the
+// exclusion, both rules emit Cache-Control and the browser sees a duplicate.
+const ASSET_EXCLUDE_SOURCE =
+  "/((?!_next/static|_next/image|favicon.ico|sw.js).*)";
 
 const cacheControlHeader = {
   key: "Cache-Control",

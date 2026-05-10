@@ -218,8 +218,9 @@ export const assignUser = withPermission(
     });
 
     // Best-effort notification: a transient failure must not roll back the
-    // assignment row. notifyUser fires both email and push; failures in
-    // either channel are logged inside notifyUser and do not throw.
+    // assignment row. notifyUser fires both email and push; a single-channel
+    // failure is logged and resolves successfully, but it throws an
+    // AggregateError when *both* channels fail so we surface a soft warning.
     let notifyFailed = false;
     try {
       await notifyUser(userId, "eventAssigned", {
@@ -318,9 +319,9 @@ export const messageEventAssignees = withPermission(
     const safeSubject = input.subject.replace(/[\r\n]+/g, " ");
 
     // Fan out via notifyUser — both email and push per recipient.
-    // notifyUser handles per-channel failures internally so one bad device
-    // doesn't block the rest. Count attempts as "sent" since failure
-    // reporting is best-effort inside notifyUser.
+    // notifyUser only rejects when *both* channels fail for that recipient,
+    // so `failed` here counts recipients who received nothing. Single-channel
+    // failures are logged inside notifyUser and resolve as fulfilled.
     const results = await Promise.allSettled(
       recipients.map((r) =>
         notifyUser(r.userId, "eventBroadcast", {

@@ -247,12 +247,16 @@ describe("events feature — smoke", () => {
     expect(r.error, JSON.stringify(r)).toBe(false);
     // iter-23: fan-out is via notifyUser → sendTemplated (one call per assignee).
     expect(sendTemplatedMock2).toHaveBeenCalledTimes(1);
-    // The subject passed to sendTemplated must be CR/LF-stripped.
-    const callParams = sendTemplatedMock2.mock.calls[0]?.[2] as {
-      subject: string;
-    };
-    expect(callParams?.subject).toBeDefined();
-    expect(callParams?.subject).not.toMatch(/[\r\n]/);
+    // The subject passed to sendTemplated must be CR/LF-stripped. Locate
+    // the params object by its `subject` property rather than indexing a
+    // positional slot — keeps the test resilient to argument-order changes.
+    const callArgs = sendTemplatedMock2.mock.calls[0] ?? [];
+    const params = callArgs.find(
+      (a): a is { subject: string } =>
+        typeof a === "object" && a !== null && "subject" in a,
+    );
+    expect(params?.subject).toBeDefined();
+    expect(params?.subject).not.toMatch(/[\r\n]/);
   });
 
   it("squad member can request participation on a published future event; admin approves; member sees it as assigned", async () => {
