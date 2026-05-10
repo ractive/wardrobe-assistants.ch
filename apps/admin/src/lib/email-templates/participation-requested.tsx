@@ -11,9 +11,9 @@ import {
 
 export type ParticipationRequestedParams = {
   actorName: string;
-  eventName: string;
+  bookingName: string;
   /** Pre-formatted date string, e.g. "Saturday, 1 March 2026" */
-  eventDate: string;
+  bookingDate: string;
   reviewUrl: string;
 };
 
@@ -22,7 +22,7 @@ import type { PushPayload } from "../push";
 export function pushPayload(p: ParticipationRequestedParams): PushPayload {
   return {
     title: "Participation request",
-    body: `${p.actorName} wants to join ${p.eventName}`,
+    body: `${p.actorName} wants to join ${p.bookingName}`,
     url: p.reviewUrl,
   };
 }
@@ -36,7 +36,7 @@ export default function ParticipationRequested(
     <Html lang="en">
       <Head />
       <Preview>
-        {p.actorName} requested to join {p.eventName}
+        {p.actorName} requested to join {p.bookingName}
       </Preview>
       <Body style={{ backgroundColor: "#ffffff", fontFamily: "sans-serif" }}>
         <Container
@@ -49,7 +49,7 @@ export default function ParticipationRequested(
           </Heading>
           <Text style={{ color: "#333333", fontSize: "15px" }}>
             <strong>{p.actorName}</strong> has requested to participate in{" "}
-            <strong>{p.eventName}</strong> ({p.eventDate}).
+            <strong>{p.bookingName}</strong> ({p.bookingDate}).
           </Text>
           <Text style={{ color: "#555555", fontSize: "14px" }}>
             Review and approve or reject the request in the admin panel.

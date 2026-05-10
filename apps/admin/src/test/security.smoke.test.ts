@@ -2,7 +2,7 @@
 //
 // iter-16f cross-feature smoke tests. Lives in src/test/ (not under any
 // feature/) so it can import from both `features/users` and
-// `features/events` — Biome's `noRestrictedImports` overrides forbid
+// `features/bookings` — Biome's `noRestrictedImports` overrides forbid
 // cross-feature imports inside features/, but tests at the harness
 // boundary are the right place to verify whole-system invariants.
 //
@@ -77,8 +77,10 @@ describe("iter-16f security — cross-feature smoke", () => {
     const { inviteUser, deleteUser } = await import(
       "@/features/users/server/actions"
     );
-    const { createEvent } = await import("@/features/events/server/actions");
-    const { listEvents } = await import("@/features/events/server/queries");
+    const { createBooking } = await import(
+      "@/features/bookings/server/actions"
+    );
+    const { listBookings } = await import("@/features/bookings/server/queries");
 
     await expect(
       harness.runAs(cookies, () => listUsers()),
@@ -87,7 +89,7 @@ describe("iter-16f security — cross-feature smoke", () => {
     });
 
     await expect(
-      harness.runAs(cookies, () => listEvents()),
+      harness.runAs(cookies, () => listBookings()),
     ).rejects.toMatchObject({
       name: expect.stringMatching(/^(PermissionError|UnauthenticatedError)$/),
     });
@@ -115,7 +117,7 @@ describe("iter-16f security — cross-feature smoke", () => {
 
     await expect(
       harness.runAs(cookies, () =>
-        createEvent({
+        createBooking({
           name: "n",
           date: new Date(),
           venue: "v",

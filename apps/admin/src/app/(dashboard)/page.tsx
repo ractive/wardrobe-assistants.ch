@@ -1,7 +1,7 @@
 import "server-only";
 import {
-  eventAssignments,
-  events,
+  bookingAssignments,
+  bookings,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
 import { count, desc, eq, gte, inArray, sql } from "drizzle-orm";
@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 import { HasPermission } from "@/components/HasPermission";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
-import { RecentEventsTable } from "@/components/RecentEventsTable";
+import { RecentBookingsTable } from "@/components/RecentBookingsTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
@@ -23,22 +23,22 @@ import { db } from "@/lib/db";
 import { userHasPermission } from "@/lib/permissions";
 
 const VALID_STATUSES = ["draft", "published", "cancelled", "done"] as const;
-type EventStatus = (typeof VALID_STATUSES)[number];
+type BookingStatus = (typeof VALID_STATUSES)[number];
 
-function parseEventStatus(value: string): EventStatus {
-  if (!VALID_STATUSES.includes(value as EventStatus)) {
-    throw new Error(`Unexpected event status: ${value}`);
+function parseBookingStatus(value: string): BookingStatus {
+  if (!VALID_STATUSES.includes(value as BookingStatus)) {
+    throw new Error(`Unexpected booking status: ${value}`);
   }
-  return value as EventStatus;
+  return value as BookingStatus;
 }
 
-async function fetchUpcomingEventCount(): Promise<number> {
+async function fetchUpcomingBookingCount(): Promise<number> {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const rows = await db
     .select({ count: count() })
-    .from(events)
-    .where(gte(events.date, startOfToday));
+    .from(bookings)
+    .where(gte(bookings.date, startOfToday));
   return rows[0]?.count ?? 0;
 }
 
@@ -50,27 +50,27 @@ async function fetchActiveSquadCount(): Promise<number> {
   return rows[0]?.count ?? 0;
 }
 
-async function fetchRecentEvents() {
+async function fetchRecentBookings() {
   const rows = await db
     .select({
-      id: events.id,
-      name: events.name,
-      date: events.date,
-      status: events.status,
+      id: bookings.id,
+      name: bookings.name,
+      date: bookings.date,
+      status: bookings.status,
       assigneeCount: sql<number>`(
-        SELECT COUNT(*) FROM ${eventAssignments}
-        WHERE ${eventAssignments.eventId} = ${events.id}
+        SELECT COUNT(*) FROM ${bookingAssignments}
+        WHERE ${bookingAssignments.bookingId} = ${bookings.id}
       )`,
     })
-    .from(events)
-    .orderBy(desc(events.date))
+    .from(bookings)
+    .orderBy(desc(bookings.date))
     .limit(5);
 
   return rows.map((r) => ({
     id: r.id,
     title: r.name,
     startAt: r.date,
-    status: parseEventStatus(r.status),
+    status: parseBookingStatus(r.status),
     assigneeCount: Number(r.assigneeCount ?? 0),
   }));
 }
@@ -97,7 +97,7 @@ export default async function DashboardHome() {
   // Role-based redirect: squad members go to their primary view.
   const role = await roleForUserId(session.user.id);
   if (role === "SQUAD_MEMBER") {
-    redirect("/my-events");
+    redirect("/my-bookings");
   }
 
   // Fetch the user's profile for the greeting fallback chain:
@@ -115,17 +115,17 @@ export default async function DashboardHome() {
   const profile = profileRows[0] ?? null;
   const greeting = buildGreeting(profile, session.user.email);
 
-  // Fetch KPI data and recent events in parallel, gated by permission so users
+  // Fetch KPI data and recent bookings in parallel, gated by permission so users
   // who lack the relevant permission don't trigger unused DB reads.
-  const [canViewEvents, canInviteUsers] = await Promise.all([
-    userHasPermission("EVENT_VIEW"),
+  const [canViewBookings, canInviteUsers] = await Promise.all([
+    userHasPermission("BOOKING_VIEW"),
     userHasPermission("USER_INVITE"),
   ]);
 
-  const [upcomingCount, squadCount, recentEvents] = await Promise.all([
-    canViewEvents ? fetchUpcomingEventCount() : Promise.resolve(null),
+  const [upcomingCount, squadCount, recentBookings] = await Promise.all([
+    canViewBookings ? fetchUpcomingBookingCount() : Promise.resolve(null),
     canInviteUsers ? fetchActiveSquadCount() : Promise.resolve(null),
-    canViewEvents ? fetchRecentEvents() : Promise.resolve(null),
+    canViewBookings ? fetchRecentBookings() : Promise.resolve(null),
   ]);
 
   return (
@@ -134,12 +134,12 @@ export default async function DashboardHome() {
 
       {/* KPI grid: 1 col mobile → 2×2 md → 4×1 xl */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <HasPermission perm="EVENT_VIEW">
+        <HasPermission perm="BOOKING_VIEW">
           <KpiCard
-            title="Upcoming events"
+            title="Upcoming bookings"
             value={upcomingCount ?? "—"}
             icon={CalendarClock}
-            description="Events scheduled from today"
+            description="Bookings scheduled from today"
           />
         </HasPermission>
 
@@ -152,7 +152,7 @@ export default async function DashboardHome() {
           />
         </HasPermission>
 
-        <HasPermission perm="EVENT_VIEW">
+        <HasPermission perm="BOOKING_VIEW">
           <KpiCard
             title="Open invoices"
             value="—"
@@ -188,13 +188,16 @@ export default async function DashboardHome() {
         </CardContent>
       </Card>
 
-      {/* Recent events */}
-      <HasPermission perm="EVENT_VIEW">
-        <section aria-labelledby="recent-events-heading">
-          <h2 id="recent-events-heading" className="mb-4 text-lg font-semibold">
-            Recent events
+      {/* Recent bookings */}
+      <HasPermission perm="BOOKING_VIEW">
+        <section aria-labelledby="recent-bookings-heading">
+          <h2
+            id="recent-bookings-heading"
+            className="mb-4 text-lg font-semibold"
+          >
+            Recent bookings
           </h2>
-          <RecentEventsTable events={recentEvents ?? []} />
+          <RecentBookingsTable bookings={recentBookings ?? []} />
         </section>
       </HasPermission>
     </section>

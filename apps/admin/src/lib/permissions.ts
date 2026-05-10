@@ -8,13 +8,13 @@ export const PERMISSIONS = [
   "USER_INVITE",
   "USER_DELETE",
   "USER_MESSAGE",
-  // Events
-  "EVENT_VIEW",
-  "EVENT_CREATE",
-  "EVENT_DELETE",
-  "EVENT_ASSIGN",
-  "EVENT_INVOICE",
-  "EVENT_MESSAGE_ASSIGNED",
+  // Bookings
+  "BOOKING_VIEW",
+  "BOOKING_CREATE",
+  "BOOKING_DELETE",
+  "BOOKING_ASSIGN",
+  "BOOKING_INVOICE",
+  "BOOKING_MESSAGE_ASSIGNED",
   // Services
   "SERVICE_CREATE",
   "SERVICE_DELETE",
@@ -22,14 +22,14 @@ export const PERMISSIONS = [
   "SQUAD_VIEW_ASSIGNED",
   "SQUAD_REQUEST_PARTICIPATION",
   // Admin reviews squad-member participation requests
-  "EVENT_APPROVE_REQUEST",
+  "BOOKING_APPROVE_REQUEST",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const ROLE_PERMISSIONS = {
   ADMIN: new Set<Permission>(PERMISSIONS),
   SQUAD_MEMBER: new Set<Permission>([
-    "EVENT_VIEW",
+    "BOOKING_VIEW",
     "SQUAD_VIEW_ASSIGNED",
     "SQUAD_REQUEST_PARTICIPATION",
   ]),
