@@ -31,6 +31,36 @@ npm run dev:admin         # starts http://localhost:3000 (stop the homepage dev 
 
 `db:reset:admin` is dev-only — it refuses to run when `NODE_ENV=production`, and `apps/admin/.env.local` is auto-generated on first run from `apps/admin/.env.example`.
 
+## Admin PWA — installing for push notifications
+
+The admin app at `admin.wardrobe-assistants.ch` is an installable PWA. **Installing it is a hard prerequisite for receiving push notifications on iOS** — Safari only delivers Web Push to apps that have been added to the home screen and launched in standalone mode. On Android and desktop, install is optional but recommended (push works in-browser too).
+
+### iOS / iPadOS (Safari only)
+
+Chrome and Firefox on iOS cannot install PWAs — they share the WebKit engine but do not expose the install flow. You must use Safari.
+
+1. Open `https://admin.wardrobe-assistants.ch` in **Safari**.
+2. Sign in.
+3. Tap the **Share** button (square with an up-arrow, in the bottom toolbar on iPhone, top-right on iPad).
+4. Scroll the share sheet and tap **Add to Home Screen**.
+5. Confirm the name (default "Admin") and tap **Add**.
+6. Close Safari. **Launch the app from its new home-screen icon** — it must run standalone (no Safari chrome) for push to work.
+7. The app will prompt for **Notifications permission** on first launch in standalone mode. Tap **Allow**. If you miss the prompt, you can grant it later from the in-app notification settings or from iOS Settings → Notifications → Admin.
+
+If you tap "Allow" while still in Safari (before adding to home screen), iOS records a per-site decision that does **not** carry over to the installed PWA. You will need to install first, then grant from the standalone app.
+
+### Android (Chrome / Edge / Firefox)
+
+Chrome and Edge show an automatic "Install app" prompt on first visit. If you dismiss it, you can re-trigger via the browser menu → **Install app** (Chrome/Edge) or **Install** (Firefox). After install, launch from the home-screen icon and grant push permission when prompted.
+
+### Desktop (Chrome / Edge / Safari 17+ on macOS)
+
+Chrome and Edge show an install icon in the address bar (a monitor with a down-arrow). Safari on macOS Sonoma+ exposes the same flow via **File → Add to Dock**. Once installed, the app runs in its own window and can receive push notifications even when the browser is closed.
+
+### Notifications
+
+Push and email both fire for every notifying trigger — push for immediacy, email for durability. If push fails to deliver (permission revoked, subscription expired, browser uninstalled the SW), email still arrives. There is no offline mode — closing the app or losing connectivity means no in-app data, only the OS-level push banner.
+
 ## Scripts (root)
 
 - `npm run dev` — start the homepage dev server
