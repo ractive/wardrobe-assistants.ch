@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
-// Regenerates the admin favicon set from the Lucide "shirt" icon path.
-// Outputs Next.js app-icon-convention files (app/favicon.ico, app/icon.svg,
-// app/apple-icon.png) plus PWA + Web Push assets under public/.
+// Regenerates a Next.js app's favicon set from the Lucide "shirt" icon path.
+// Outputs Next.js 16 app-icon-convention files (app/favicon.ico, app/icon.svg,
+// app/apple-icon.png) and optionally PWA + Web Push assets under public/.
 //
-// Re-run with `node scripts/generate-favicons.mjs` from apps/admin/
-// when the brand color or icon shape changes.
+// Usage:
+//   node scripts/generate-favicons.mjs <app-dir> [--pwa]
+//   node scripts/generate-favicons.mjs apps/admin --pwa
+//   node scripts/generate-favicons.mjs apps/homepage
+//
+// Re-run when the brand color or icon shape changes. Idempotent.
 //
 // Reference: node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/01-metadata/app-icons.md
 //            https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs
@@ -16,9 +20,20 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
-const ADMIN_DIR = path.resolve(path.dirname(__filename), "..");
-const APP_DIR = path.join(ADMIN_DIR, "src/app");
-const PUBLIC_DIR = path.join(ADMIN_DIR, "public");
+const REPO_ROOT = path.resolve(path.dirname(__filename), "..");
+
+const args = process.argv.slice(2);
+const appDirArg = args.find((a) => !a.startsWith("--"));
+const pwa = args.includes("--pwa");
+
+if (!appDirArg) {
+  console.error("Usage: node scripts/generate-favicons.mjs <app-dir> [--pwa]");
+  process.exit(2);
+}
+
+const APP_ROOT = path.resolve(REPO_ROOT, appDirArg);
+const APP_DIR = path.join(APP_ROOT, "src/app");
+const PUBLIC_DIR = path.join(APP_ROOT, "public");
 
 // Lucide shirt — viewBox 0 0 24 24, stroke 2, round caps/joins.
 // Source: node_modules/lucide-react/dist/esm/icons/shirt.mjs
@@ -38,9 +53,6 @@ function brandedSVG({ rounded = true }) {
   const shirtScale = 0.62;
   const shirtSize = C * shirtScale;
   const shirtTranslate = (C - shirtSize) / 2;
-  // Lucide stroke-width 2 at native 24-unit canvas → effective 2/24 of the
-  // shirt's painted size. Crank stroke at small sizes to keep the glyph
-  // legible after rasterization.
   const stroke = 2;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${C} ${C}">
@@ -62,7 +74,7 @@ function brandedSVG({ rounded = true }) {
 // a circle of diameter 80% of the canvas edge.
 function maskableSVG() {
   const C = 64;
-  const shirtScale = 0.46; // safely inside the 80% safe-zone circle
+  const shirtScale = 0.46;
   const shirtSize = C * shirtScale;
   const shirtTranslate = (C - shirtSize) / 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${C} ${C}">
@@ -103,8 +115,8 @@ async function rasterize(svg, size) {
 function buildIco(pngs, sizes) {
   const num = pngs.length;
   const header = Buffer.alloc(6);
-  header.writeUInt16LE(0, 0); // reserved
-  header.writeUInt16LE(1, 2); // type 1 = icon
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
   header.writeUInt16LE(num, 4);
 
   let offset = 6 + num * 16;
@@ -113,14 +125,14 @@ function buildIco(pngs, sizes) {
     const png = pngs[i];
     const sz = sizes[i];
     const e = Buffer.alloc(16);
-    e.writeUInt8(sz >= 256 ? 0 : sz, 0); // width (0 = 256)
-    e.writeUInt8(sz >= 256 ? 0 : sz, 1); // height
-    e.writeUInt8(0, 2); // color count (0 = ≥256)
-    e.writeUInt8(0, 3); // reserved
-    e.writeUInt16LE(1, 4); // color planes
-    e.writeUInt16LE(32, 6); // bits per pixel
-    e.writeUInt32LE(png.length, 8); // size in bytes
-    e.writeUInt32LE(offset, 12); // offset
+    e.writeUInt8(sz >= 256 ? 0 : sz, 0);
+    e.writeUInt8(sz >= 256 ? 0 : sz, 1);
+    e.writeUInt8(0, 2);
+    e.writeUInt8(0, 3);
+    e.writeUInt16LE(1, 4);
+    e.writeUInt16LE(32, 6);
+    e.writeUInt32LE(png.length, 8);
+    e.writeUInt32LE(offset, 12);
     entries.push(e);
     offset += png.length;
   }
@@ -129,12 +141,10 @@ function buildIco(pngs, sizes) {
 
 async function main() {
   await fs.mkdir(APP_DIR, { recursive: true });
-  await fs.mkdir(PUBLIC_DIR, { recursive: true });
+  if (pwa) await fs.mkdir(PUBLIC_DIR, { recursive: true });
 
   const branded = brandedSVG({ rounded: true });
-  const masterSquare = brandedSVG({ rounded: false }); // PWA icons render full-bleed
-  const maskable = maskableSVG();
-  const badge = badgeSVG();
+  const masterSquare = brandedSVG({ rounded: false });
 
   // 1. app/icon.svg — modern browsers (Chrome/Firefox/Safari prefer this).
   await fs.writeFile(path.join(APP_DIR, "icon.svg"), branded);
@@ -149,12 +159,16 @@ async function main() {
   );
 
   // 3. app/apple-icon.png — iOS Safari & home-screen install. 180×180, no transparency.
-  // Per Apple HIG, fill the canvas — iOS doesn't apply rounding anymore but draws on white.
   await sharp(Buffer.from(brandedSVG({ rounded: false })), { density: 384 })
     .resize(180, 180)
     .flatten({ background: BRAND })
     .png({ compressionLevel: 9 })
     .toFile(path.join(APP_DIR, "apple-icon.png"));
+
+  console.log(`Wrote head-icon set to ${path.relative(REPO_ROOT, APP_DIR)}/`);
+  console.log("  favicon.ico, icon.svg, apple-icon.png");
+
+  if (!pwa) return;
 
   // 4. public/icon-192.png + icon-512.png — PWA manifest standard sizes.
   await fs.writeFile(
@@ -169,23 +183,21 @@ async function main() {
   // 5. public/icon-maskable-512.png — Android adaptive icons.
   await fs.writeFile(
     path.join(PUBLIC_DIR, "icon-maskable-512.png"),
-    await rasterize(maskable, 512),
+    await rasterize(maskableSVG(), 512),
   );
 
   // 6. public/badge-72.png — Android Web Push notification badge (monochrome).
   await fs.writeFile(
     path.join(PUBLIC_DIR, "badge-72.png"),
-    await rasterize(badge, 72),
+    await rasterize(badgeSVG(), 72),
   );
 
-  console.log("Generated:");
-  console.log("  app/icon.svg               — modern browsers (sizes=any)");
-  console.log("  app/favicon.ico            — legacy 16/32/48");
-  console.log("  app/apple-icon.png         — iOS 180×180");
-  console.log("  public/icon-192.png        — PWA manifest");
-  console.log("  public/icon-512.png        — PWA manifest");
-  console.log("  public/icon-maskable-512.png — PWA Android adaptive");
-  console.log("  public/badge-72.png        — Web Push badge");
+  console.log(
+    `Wrote PWA + Web Push assets to ${path.relative(REPO_ROOT, PUBLIC_DIR)}/`,
+  );
+  console.log(
+    "  icon-192.png, icon-512.png, icon-maskable-512.png, badge-72.png",
+  );
 }
 
 main().catch((err) => {
