@@ -87,6 +87,26 @@
       }
     },
     {
+      "includes": ["apps/admin/src/features/services/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features/users/**", "@/features/events/**"],
+                    "message": "Cross-feature import. Go through lib/ or compose at the page."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": [
         "apps/admin/src/lib/**",
         "apps/admin/src/components/**",

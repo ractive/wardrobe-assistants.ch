@@ -3,6 +3,7 @@ import {
   Calendar,
   DashboardSidebar,
   NavLink,
+  Tag,
   Users,
 } from "@/components/DashboardSidebar";
 import { HasPermission } from "@/components/HasPermission";
@@ -33,6 +34,9 @@ export default async function DashboardLayout({
         </HasPermission>
         <HasPermission perm="EVENT_VIEW">
           <NavLink href="/events" label="Events" icon={Calendar} />
+        </HasPermission>
+        <HasPermission perm="SERVICE_CREATE">
+          <NavLink href="/services" label="Services" icon={Tag} />
         </HasPermission>
       </DashboardSidebar>
       <SidebarInset>
