@@ -39,6 +39,9 @@ export const AUDIT_ACTIONS = [
   "event.assign",
   "event.unassign",
   "event.message_assignees",
+  "service.create",
+  "service.update",
+  "service.archive",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

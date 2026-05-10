@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 type StatusByKind = {
   event: "draft" | "published" | "cancelled" | "done";
   user: "invited" | "verified";
+  serviceType: "fixed" | "hourly";
+  serviceStatus: "active" | "archived";
 };
 
 type BadgeVariant = "default" | "outline" | "secondary";
@@ -24,6 +26,14 @@ const VARIANTS: { [K in keyof StatusByKind]: Record<StatusByKind[K], Entry> } =
     user: {
       invited: { label: "Invited", variant: "outline" },
       verified: { label: "Verified", variant: "default" },
+    },
+    serviceType: {
+      fixed: { label: "Fixed", variant: "outline" },
+      hourly: { label: "Hourly", variant: "secondary" },
+    },
+    serviceStatus: {
+      active: { label: "Active", variant: "default" },
+      archived: { label: "Archived", variant: "secondary" },
     },
   };
 
