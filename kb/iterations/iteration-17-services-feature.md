@@ -91,31 +91,31 @@ Industry-canonical pattern, citations: [Stripe invoice line item](https://docs.s
 - Hourly price: `CHF 25.-/h` (Swiss/SI hourly suffix).
 - A small `formatChf(price: number, type: "fixed" | "hourly"): string` helper in `apps/admin/src/features/services/format.ts`. Reused by every surface that renders a service or event line item. **No `Intl.NumberFormat` for CHF here** — its `de-CH` output is `CHF 25.00`, not the trade-standard `CHF 25.-`. Hand-rolled is shorter and exact.
 
-## Scope — feature scaffold [0/3]
+## Scope — feature scaffold [3/3]
 
 - [x] `apps/admin/src/features/services/{schema.ts, format.ts, server/, components/}`.
 - [x] Biome per-feature override.
 - [x] Route: `apps/admin/src/app/(dashboard)/services/page.tsx`. `assertPermission("SERVICE_CREATE")` (the page's read gate; squad members don't see the catalog management UI).
 
-## Scope — Zod schemas [0/2]
+## Scope — Zod schemas [2/2]
 
 - [x] `serviceInput`: `name` (≥1), `description` (≥1), `priceType` (enum `"fixed" | "hourly"`), `price` (positive integer, whole CHF).
 - [x] `serviceListItem` output: `id`, `name`, `description`, `priceType`, `price`, `archived`, `createdAt` + computed `priceFormatted` (e.g. `"CHF 25.-"` / `"CHF 25.-/h"`) via the [type-contract pattern](../admin-architecture/data-layer.md). The `priceFormatted` field is the only thing the UI renders for prices — never read raw `price` in JSX.
 
-## Scope — CRUD [0/4]
+## Scope — CRUD [4/4]
 
 - [x] `createService` action — `withPermission("SERVICE_CREATE", ...)`.
 - [x] `updateService` action — re-uses `SERVICE_CREATE` perm. Free to rename / reprice; iter-22 line items are unaffected by design.
 - [x] `archiveService` action — uses `SERVICE_DELETE` perm. Sets `archived: true`. Soft delete only; no destructive delete path exists.
 - [x] `listServices` query — defaults to `archived: false`; admin UI has a toggle to show archived.
 
-## Scope — UI [0/3]
+## Scope — UI [3/3]
 
 - [x] `<ServicesTable>` columns: Name, Type (fixed / hourly badge via `<StatusBadge kind="serviceType">`), Price (formatted), Status (active / archived). Cards on mobile, table on desktop per `design-system.md` §7. Actions menu: edit, archive (no delete). Confirm-dialog before archive.
 - [x] `<ServiceDialog>` for create + edit. Form fields: name, description (textarea), priceType (radio: Fixed / Hourly), price (number input — whole CHF, validates positive integer). Submit lock + form-level error region per `design-system.md` §6.
 - [x] Sidebar "Services" link in the Manage group (iter-16h's grouped nav), gated by `<HasPermission perm="SERVICE_CREATE">`. Icon: `Tag` from `lucide-react`.
 
-## Scope — verify [0/4]
+## Scope — verify [4/4]
 
 - [x] Schema validation tests: rejects negative `price`, rejects non-integer `price`, rejects invalid `priceType`, rejects empty `name` / `description`.
 - [x] Smoke test (`services.smoke.test.ts` against the real auth + Drizzle path via `apps/admin/src/test/http-harness.ts`): admin can create / update / archive a service; SQUAD_MEMBER is denied on `SERVICE_CREATE` and `SERVICE_DELETE`. Mandatory per slice (iter-15c motivation).
