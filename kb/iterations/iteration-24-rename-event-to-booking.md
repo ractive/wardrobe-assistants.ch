@@ -21,10 +21,10 @@ This iteration is implemented autonomously by `/ralph-loop`; it must leave the s
 
 ## Pre-flight
 
-- [ ] iter-23 merged on `main` and deployed.
-- [ ] No in-flight branches touching `apps/admin/src/features/events/` or `packages/db/src/schema/events.ts` / `event-assignments.ts`. Check `git branch -r` and any open PRs.
-- [ ] Backup of production DB taken (the rename is reversible, but cheap insurance).
-- [ ] `npm run verify` green on `main` before starting.
+- [x] iter-23 merged on `main` and deployed.
+- [x] No in-flight branches touching `apps/admin/src/features/events/` or `packages/db/src/schema/events.ts` / `event-assignments.ts`. Check `git branch -r` and any open PRs.
+- [ ] Backup of production DB taken (the rename is reversible, but cheap insurance). _(operational step — not verifiable from the PR diff)_
+- [x] `npm run verify` green on `main` before starting.
 
 ## Scope
 
@@ -127,14 +127,14 @@ Search for any other `features/events` strings in `biome.json` or tooling and up
 
 ## Done when
 
-- [ ] DB tables renamed; migration runs cleanly on a fresh DB and a copy of the prod schema.
-- [ ] `apps/admin/src/features/bookings/` is the only feature folder (no leftover `events/`).
-- [ ] All routes under `(dashboard)/bookings`, `(dashboard)/my-bookings`, `(dashboard)/upcoming-bookings`.
-- [ ] Permission keys all start with `BOOKING_`; no `EVENT_` strings remain (`rg "EVENT_" apps/ packages/`).
-- [ ] Notification templates renamed; no `eventAssigned` etc. left in code.
-- [ ] Biome `noRestrictedImports` override uses `features/bookings/**`.
-- [ ] All existing smoke tests pass under their new names.
-- [ ] `npm run format` clean.
-- [ ] `npm run verify` green (lint + typecheck + test).
-- [ ] System fully deployable; manual smoke against deploy preview confirms the admin app loads, the booking list renders, and assigning a squad member still works end-to-end.
-- [ ] No half-exposed UI for future iterations — this is a pure rename.
+- [x] DB tables renamed; migration runs cleanly on a fresh DB and a copy of the prod schema.
+- [x] `apps/admin/src/features/bookings/` is the only feature folder (no leftover `events/`).
+- [x] All routes under `(dashboard)/bookings`, `(dashboard)/my-bookings`, `(dashboard)/upcoming-bookings`.
+- [x] Permission keys all start with `BOOKING_`; no `EVENT_` strings remain (`rg "EVENT_" apps/ packages/`).
+- [x] Notification templates renamed; no `eventAssigned` etc. left in code.
+- [x] Biome `noRestrictedImports` override uses `features/bookings/**`.
+- [x] All existing smoke tests pass under their new names.
+- [x] `npm run format` clean.
+- [x] `npm run verify` green (lint + typecheck + test).
+- [ ] System fully deployable; manual smoke against deploy preview confirms the admin app loads, the booking list renders, and assigning a squad member still works end-to-end. _(manual deploy-preview smoke not run as part of this PR)_
+- [x] No half-exposed UI for future iterations — this is a pure rename.
