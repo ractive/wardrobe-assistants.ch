@@ -1,8 +1,8 @@
 import type * as React from "react";
-import type { EventAssignedParams } from "./event-assigned";
-import EventAssigned from "./event-assigned";
-import type { EventBroadcastParams } from "./event-broadcast";
-import EventBroadcast from "./event-broadcast";
+import type { BookingAssignedParams } from "./booking-assigned";
+import BookingAssigned from "./booking-assigned";
+import type { BookingBroadcastParams } from "./booking-broadcast";
+import BookingBroadcast from "./booking-broadcast";
 import type { ParticipationRequestedParams } from "./participation-requested";
 import ParticipationRequested from "./participation-requested";
 import type { PasswordResetParams } from "./password-reset";
@@ -18,20 +18,21 @@ type TemplateEntry<P> = {
 };
 
 export const templates = {
-  eventAssigned: {
-    component: EventAssigned,
-    subject: (p: EventAssignedParams) => `Assigned to event: ${p.eventName}`,
-  } satisfies TemplateEntry<EventAssignedParams>,
+  bookingAssigned: {
+    component: BookingAssigned,
+    subject: (p: BookingAssignedParams) =>
+      `Assigned to booking: ${p.bookingName}`,
+  } satisfies TemplateEntry<BookingAssignedParams>,
 
-  eventBroadcast: {
-    component: EventBroadcast,
-    subject: (p: EventBroadcastParams) => p.subject,
-  } satisfies TemplateEntry<EventBroadcastParams>,
+  bookingBroadcast: {
+    component: BookingBroadcast,
+    subject: (p: BookingBroadcastParams) => p.subject,
+  } satisfies TemplateEntry<BookingBroadcastParams>,
 
   participationRequested: {
     component: ParticipationRequested,
     subject: (p: ParticipationRequestedParams) =>
-      `Participation request: ${p.eventName}`,
+      `Participation request: ${p.bookingName}`,
   } satisfies TemplateEntry<ParticipationRequestedParams>,
 
   passwordReset: {
@@ -59,8 +60,8 @@ export type ParamsFor<K extends TemplateKey> = Parameters<
 
 // Re-export param types for use outside the template directory.
 export type {
-  EventAssignedParams,
-  EventBroadcastParams,
+  BookingAssignedParams,
+  BookingBroadcastParams,
   ParticipationRequestedParams,
   PasswordResetParams,
   UserDirectMessageParams,

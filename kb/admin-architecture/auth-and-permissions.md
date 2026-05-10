@@ -46,11 +46,12 @@ export type Role = typeof ROLES[number]
 export const PERMISSIONS = [
   // Users
   "USER_INVITE", "USER_DELETE", "USER_MESSAGE",
-  // Events
-  "EVENT_CREATE", "EVENT_DELETE", "EVENT_ASSIGN",
-  "EVENT_INVOICE", "EVENT_MESSAGE_ASSIGNED",
+  // Bookings
+  "BOOKING_VIEW", "BOOKING_CREATE", "BOOKING_DELETE", "BOOKING_ASSIGN",
+  "BOOKING_INVOICE", "BOOKING_MESSAGE_ASSIGNED",
   // Squad-member surface
   "SQUAD_VIEW_ASSIGNED", "SQUAD_REQUEST_PARTICIPATION",
+  "BOOKING_APPROVE_REQUEST",
 ] as const
 export type Permission = typeof PERMISSIONS[number]
 
@@ -243,7 +244,7 @@ For now: TOTP enrolment is voluntary on first sign-in if the user opts in. No ro
 
 ## What's deliberately NOT in scope
 
-- **Per-resource scoping** (e.g. "EVENT_DELETE_OWN" — can delete events you created, not others). Spec doesn't call for it. If we ever need it, model is `withResourcePermission(perm, predicate)`.
+- **Per-resource scoping** (e.g. "BOOKING_DELETE_OWN" — can delete bookings you created, not others). Spec doesn't call for it. If we ever need it, model is `withResourcePermission(perm, predicate)`.
 - **Multi-perm helpers** (`userHasAllPermissions`, `userHasAnyPermission`). Add when a real call site demands it.
 - **Time-bound permissions** (e.g. "this user can do X until 2026-09-01"). Out of scope.
 - **Dynamic role-perm assignment** (configurable in DB). Hardcoded role→perm is the explicit constraint.

@@ -1,49 +1,49 @@
 import { render } from "@react-email/render";
 import { describe, expect, it } from "vitest";
-import EventAssigned from "../event-assigned";
-import EventBroadcast from "../event-broadcast";
+import BookingAssigned from "../booking-assigned";
+import BookingBroadcast from "../booking-broadcast";
 import ParticipationRequested from "../participation-requested";
 import PasswordReset from "../password-reset";
 import UserDirectMessage from "../user-direct-message";
 import VerifyEmail from "../verify-email";
 
-describe("eventAssigned template", () => {
+describe("bookingAssigned template", () => {
   const params = {
     recipientName: "Alex",
-    eventName: "Spring Show",
-    eventDate: "Sunday, 1 March 2026",
-    eventVenue: "Theatre 1",
-    eventNotes: "Bring black",
-    eventUrl: "https://admin.wardrobe-assistants.ch/events/abc",
+    bookingName: "Spring Show",
+    bookingDate: "Sunday, 1 March 2026",
+    bookingVenue: "Theatre 1",
+    bookingNotes: "Bring black",
+    bookingUrl: "https://admin.wardrobe-assistants.ch/bookings/abc",
   };
 
   it("renders html snapshot", async () => {
-    const html = await render(<EventAssigned {...params} />);
+    const html = await render(<BookingAssigned {...params} />);
     expect(html).toMatchSnapshot();
   });
 
   it("renders plaintext snapshot", async () => {
-    const text = await render(<EventAssigned {...params} />, {
+    const text = await render(<BookingAssigned {...params} />, {
       plainText: true,
     });
     expect(text).toMatchSnapshot();
   });
 });
 
-describe("eventBroadcast template", () => {
+describe("bookingBroadcast template", () => {
   const params = {
     subject: "Reminder: call time is 7pm",
-    eventName: "Spring Show",
+    bookingName: "Spring Show",
     body: "Hi all,\n\nJust a reminder that call time is 7pm.\n\nSee you there!",
   };
 
   it("renders html snapshot", async () => {
-    const html = await render(<EventBroadcast {...params} />);
+    const html = await render(<BookingBroadcast {...params} />);
     expect(html).toMatchSnapshot();
   });
 
   it("renders plaintext snapshot", async () => {
-    const text = await render(<EventBroadcast {...params} />, {
+    const text = await render(<BookingBroadcast {...params} />, {
       plainText: true,
     });
     expect(text).toMatchSnapshot();
@@ -53,9 +53,9 @@ describe("eventBroadcast template", () => {
 describe("participationRequested template", () => {
   const params = {
     actorName: "Mira Adler",
-    eventName: "Spring Show",
-    eventDate: "Sunday, 1 March 2026",
-    reviewUrl: "https://admin.wardrobe-assistants.ch/events/abc",
+    bookingName: "Spring Show",
+    bookingDate: "Sunday, 1 March 2026",
+    reviewUrl: "https://admin.wardrobe-assistants.ch/bookings/abc",
   };
 
   it("renders html snapshot", async () => {

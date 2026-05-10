@@ -1,11 +1,11 @@
 ---
 title: Notes
 ---
-- [ ] Make the description for the services optional
-- [ ] List the services on the homepage. Make a "booking request" page. Edge script to save or expose an API on admin?
-- [ ] When we talk about "getting an e-mail" for the admins or the squad members it means sending an e-mail *and* a browser notification (as implemented in iter-23)
-- [ ] We now talk about "Events", but also about booking requests. I'm wondering if "event" even is an entity that we still need. Maybe it would make sense to just talk about bookings. An admin also creates a booking - and not an event. Let's rename it - also in the DB - everywhere. But also let's discuss again. "A squad member is assigned to an event" and not "A squad member is assigned to a booking". Does is make sense to have a entity "event" plus an entity "booking"? They can't live without each other, so it may not make sense.
-- [ ] Idea: Squad member should get a reminder e-mail & notification the day before a booking/event
+- [x] Make the description for the services optional → folded into [iter-25](iterations/iteration-25-booking-domain.md).
+- [x] List the services on the homepage. Make a "booking request" page → planned across [iter-26](iterations/iteration-26-public-booking-request.md) (homepage form + admin public POST). Decision: form on homepage POSTs to admin (not edge script); see [ADR-021](admin-architecture/decision-log.md#adr-021).
+- [x] When we talk about "getting an e-mail" for the admins or the squad members it means sending an e-mail *and* a browser notification → already true per iter-23 / `lib/notify.ts`; reaffirmed for booking-flow notifications in [iter-26](iterations/iteration-26-public-booking-request.md) and [iter-29](iterations/iteration-29-squad-assignment-confirmation.md).
+- [x] Rename "event" → "booking" everywhere (DB included). Single entity, not two → [iter-24](iterations/iteration-24-rename-event-to-booking.md) (rename) + [ADR-019](admin-architecture/decision-log.md#adr-019) (entity decision). UI label "event" can stay where it reads better (e.g. squad view) — only the DB and code identifiers change.
+- [ ] ~~Squad member reminder e-mail & notification the day before~~ — **deferred** (no scheduler infrastructure yet; revisit in a separate iteration when needed).
 
 # Booking request flow
 Just send an e-mail inquiry.

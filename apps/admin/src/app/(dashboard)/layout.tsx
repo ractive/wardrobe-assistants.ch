@@ -41,16 +41,20 @@ export default async function DashboardLayout({
         {isAdmin && (
           <>
             <NavLink href="/users" label="Users" icon={Users} />
-            <NavLink href="/events" label="Events" icon={Calendar} />
+            <NavLink href="/bookings" label="Bookings" icon={Calendar} />
             <NavLink href="/services" label="Services" icon={Tag} />
           </>
         )}
         {isSquadMember && (
           <>
-            <NavLink href="/my-events" label="My Events" icon={CalendarCheck} />
             <NavLink
-              href="/upcoming-events"
-              label="Upcoming Events"
+              href="/my-bookings"
+              label="My Bookings"
+              icon={CalendarCheck}
+            />
+            <NavLink
+              href="/upcoming-bookings"
+              label="Upcoming Bookings"
               icon={CalendarPlus}
             />
           </>

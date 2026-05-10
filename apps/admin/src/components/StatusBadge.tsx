@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 // (Biome `noRestrictedImports`). When a feature changes its enum, update the
 // matching entry below.
 type StatusByKind = {
-  event: "draft" | "published" | "cancelled" | "done";
+  booking: "draft" | "published" | "cancelled" | "done";
   user: "invited" | "verified";
   serviceType: "fixed" | "hourly";
   serviceStatus: "active" | "archived";
@@ -18,7 +18,7 @@ type Entry = { label: string; variant: BadgeVariant };
 
 const VARIANTS: { [K in keyof StatusByKind]: Record<StatusByKind[K], Entry> } =
   {
-    event: {
+    booking: {
       draft: { label: "Draft", variant: "outline" },
       published: { label: "Published", variant: "default" },
       cancelled: { label: "Cancelled", variant: "secondary" },

@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { sendTemplated } from "./email";
 import type { ParamsFor } from "./email-templates";
-import { pushPayload as eventAssignedPushPayload } from "./email-templates/event-assigned";
-import { pushPayload as eventBroadcastPushPayload } from "./email-templates/event-broadcast";
+import { pushPayload as bookingAssignedPushPayload } from "./email-templates/booking-assigned";
+import { pushPayload as bookingBroadcastPushPayload } from "./email-templates/booking-broadcast";
 import { pushPayload as participationRequestedPushPayload } from "./email-templates/participation-requested";
 import { pushPayload as userDirectMessagePushPayload } from "./email-templates/user-direct-message";
 import { sendPush } from "./push";
@@ -13,8 +13,8 @@ import { sendPush } from "./push";
 //   - userInvited: recipient has no account / subscription yet
 //   - passwordReset, verifyEmail: transactional — email only
 export type NotifiableTemplateKey =
-  | "eventAssigned"
-  | "eventBroadcast"
+  | "bookingAssigned"
+  | "bookingBroadcast"
   | "participationRequested"
   | "userDirectMessage";
 
@@ -25,10 +25,12 @@ function pushPayloadFor<K extends NotifiableTemplateKey>(
   params: ParamsFor<K>,
 ) {
   switch (key) {
-    case "eventAssigned":
-      return eventAssignedPushPayload(params as ParamsFor<"eventAssigned">);
-    case "eventBroadcast":
-      return eventBroadcastPushPayload(params as ParamsFor<"eventBroadcast">);
+    case "bookingAssigned":
+      return bookingAssignedPushPayload(params as ParamsFor<"bookingAssigned">);
+    case "bookingBroadcast":
+      return bookingBroadcastPushPayload(
+        params as ParamsFor<"bookingBroadcast">,
+      );
     case "participationRequested":
       return participationRequestedPushPayload(
         params as ParamsFor<"participationRequested">,

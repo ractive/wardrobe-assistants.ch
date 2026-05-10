@@ -56,7 +56,10 @@
               "options": {
                 "patterns": [
                   {
-                    "group": ["@/features/events/**", "@/features/services/**"],
+                    "group": [
+                      "@/features/bookings/**",
+                      "@/features/services/**"
+                    ],
                     "message": "Cross-feature import. Go through lib/ or compose at the page."
                   }
                 ]
@@ -67,7 +70,7 @@
       }
     },
     {
-      "includes": ["apps/admin/src/features/events/**"],
+      "includes": ["apps/admin/src/features/bookings/**"],
       "linter": {
         "rules": {
           "style": {
@@ -96,7 +99,7 @@
               "options": {
                 "patterns": [
                   {
-                    "group": ["@/features/users/**", "@/features/events/**"],
+                    "group": ["@/features/users/**", "@/features/bookings/**"],
                     "message": "Cross-feature import. Go through lib/ or compose at the page."
                   }
                 ]

@@ -100,11 +100,11 @@ Concrete pattern (per-feature override per feature):
       "includes": ["apps/admin/src/features/users/**"],
       "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error",
         "options": { "patterns": [
-          { "group": ["@/features/events/**", "@/features/services/**"],
+          { "group": ["@/features/bookings/**", "@/features/services/**"],
             "message": "Cross-feature import. Go through lib/ or compose at the page." }
         ] } } } } }
     },
-    // …same for events, services
+    // …same for bookings, services
     {
       "includes": ["apps/admin/src/lib/**", "apps/admin/src/components/**", "apps/admin/src/hooks/**"],
       "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error",
@@ -128,7 +128,7 @@ A route page in `app/(dashboard)/dashboard/page.tsx` may freely import from any 
 
 ```tsx
 import { UsersTable } from "@/features/users/components/UsersTable"
-import { EventsList } from "@/features/events/components/EventsList"
+import { BookingsList } from "@/features/bookings/components/BookingsList"
 
 export default async function DashboardPage() {
   return <><UsersTable /><EventsList /></>

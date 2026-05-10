@@ -4,7 +4,7 @@ import { axe } from "vitest-axe";
 import { StatusBadge } from "./StatusBadge";
 
 describe("StatusBadge", () => {
-  describe("kind=event", () => {
+  describe("kind=booking", () => {
     const cases = [
       { status: "draft" as const, label: "Draft" },
       { status: "published" as const, label: "Published" },
@@ -15,7 +15,7 @@ describe("StatusBadge", () => {
     for (const { status, label } of cases) {
       it(`renders the ${status} badge with the right label`, () => {
         const { getByText } = render(
-          <StatusBadge kind="event" status={status} />,
+          <StatusBadge kind="booking" status={status} />,
         );
         expect(getByText(label)).toBeInTheDocument();
       });
@@ -58,10 +58,10 @@ describe("StatusBadge", () => {
   it("is axe-clean", async () => {
     const { container } = render(
       <div>
-        <StatusBadge kind="event" status="draft" />
-        <StatusBadge kind="event" status="published" />
-        <StatusBadge kind="event" status="cancelled" />
-        <StatusBadge kind="event" status="done" />
+        <StatusBadge kind="booking" status="draft" />
+        <StatusBadge kind="booking" status="published" />
+        <StatusBadge kind="booking" status="cancelled" />
+        <StatusBadge kind="booking" status="done" />
         <StatusBadge kind="user" status="invited" />
         <StatusBadge kind="user" status="verified" />
         <StatusBadge kind="assignment" status="assigned" />

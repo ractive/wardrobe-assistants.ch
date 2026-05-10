@@ -34,16 +34,16 @@ describe("ROLES + PERMISSIONS catalog", () => {
     }
   });
 
-  it("SQUAD_MEMBER has only the squad-surface perms plus EVENT_VIEW", () => {
+  it("SQUAD_MEMBER has only the squad-surface perms plus BOOKING_VIEW", () => {
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.size).toBe(3);
-    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("EVENT_VIEW")).toBe(true);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("BOOKING_VIEW")).toBe(true);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_VIEW_ASSIGNED")).toBe(true);
     expect(
       ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_REQUEST_PARTICIPATION"),
     ).toBe(true);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("USER_INVITE")).toBe(false);
-    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("EVENT_CREATE")).toBe(false);
-    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("EVENT_DELETE")).toBe(false);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("BOOKING_CREATE")).toBe(false);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("BOOKING_DELETE")).toBe(false);
   });
 });
 
@@ -65,17 +65,17 @@ describe("roleHasPermission", () => {
 describe("userHasPermission", () => {
   it("returns true when role grants the perm", async () => {
     mockedGetCurrentUserRole.mockResolvedValue("ADMIN");
-    expect(await userHasPermission("EVENT_CREATE")).toBe(true);
+    expect(await userHasPermission("BOOKING_CREATE")).toBe(true);
   });
 
   it("returns false when role does not grant the perm", async () => {
     mockedGetCurrentUserRole.mockResolvedValue("SQUAD_MEMBER");
-    expect(await userHasPermission("EVENT_CREATE")).toBe(false);
+    expect(await userHasPermission("BOOKING_CREATE")).toBe(false);
   });
 
   it("returns false when no session", async () => {
     mockedGetCurrentUserRole.mockResolvedValue(null);
-    expect(await userHasPermission("EVENT_CREATE")).toBe(false);
+    expect(await userHasPermission("BOOKING_CREATE")).toBe(false);
   });
 });
 
