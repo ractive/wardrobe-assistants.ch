@@ -131,7 +131,7 @@ import { UsersTable } from "@/features/users/components/UsersTable"
 import { BookingsList } from "@/features/bookings/components/BookingsList"
 
 export default async function DashboardPage() {
-  return <><UsersTable /><EventsList /></>
+  return <><UsersTable /><BookingsList /></>
 }
 ```
 

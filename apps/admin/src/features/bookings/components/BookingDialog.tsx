@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { BOOKING_STATUSES } from "../schema";
+import type { BookingStatus } from "../schema";
 import { BookingForm } from "./BookingForm";
 
 export function CreateBookingDialog() {
@@ -45,7 +45,7 @@ export function EditBookingDialog({
     date: Date;
     venue: string;
     notes: string | null;
-    status: (typeof BOOKING_STATUSES)[number];
+    status: BookingStatus;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;

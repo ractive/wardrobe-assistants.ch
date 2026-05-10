@@ -1,11 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function EventsLoading() {
+export default function BookingsLoading() {
   return (
     <section
       className="flex flex-col gap-6"
       aria-busy="true"
-      aria-label="Loading events"
+      aria-label="Loading bookings"
     >
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-2">

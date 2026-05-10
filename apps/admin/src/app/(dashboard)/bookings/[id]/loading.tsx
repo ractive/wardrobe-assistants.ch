@@ -1,11 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function EventDetailLoading() {
+export default function BookingDetailLoading() {
   return (
     <section
       className="flex flex-col gap-6"
       aria-busy="true"
-      aria-label="Loading event details"
+      aria-label="Loading booking details"
     >
       <Skeleton className="h-8 w-24" />
       <header className="flex flex-wrap items-start justify-between gap-4">
