@@ -9,6 +9,7 @@ type StatusByKind = {
   user: "invited" | "verified";
   serviceType: "fixed" | "hourly";
   serviceStatus: "active" | "archived";
+  assignment: "assigned" | "requested" | "rejected";
 };
 
 type BadgeVariant = "default" | "outline" | "secondary";
@@ -34,6 +35,11 @@ const VARIANTS: { [K in keyof StatusByKind]: Record<StatusByKind[K], Entry> } =
     serviceStatus: {
       active: { label: "Active", variant: "default" },
       archived: { label: "Archived", variant: "secondary" },
+    },
+    assignment: {
+      assigned: { label: "Assigned", variant: "default" },
+      requested: { label: "Requested", variant: "outline" },
+      rejected: { label: "Rejected", variant: "secondary" },
     },
   };
 

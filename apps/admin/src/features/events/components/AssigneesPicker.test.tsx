@@ -100,6 +100,7 @@ describe("AssigneesPicker", () => {
             email: "ada@example.com",
             displayName: "Ada Lovelace",
             assignedAt: new Date(),
+            status: "assigned" as const,
           },
         ]}
         candidates={candidates}
@@ -131,6 +132,7 @@ describe("AssigneesPicker", () => {
             email: "ada@example.com",
             displayName: "Ada Lovelace",
             assignedAt: new Date(),
+            status: "assigned" as const,
           },
         ]}
         candidates={candidates}
@@ -163,12 +165,14 @@ describe("AssigneesPicker", () => {
             email: "ada@example.com",
             displayName: "Ada Lovelace",
             assignedAt: new Date(),
+            status: "assigned" as const,
           },
           {
             userId: "u2",
             email: "grace@example.com",
             displayName: "Grace Hopper",
             assignedAt: new Date(),
+            status: "assigned" as const,
           },
         ]}
         candidates={candidates}
@@ -189,6 +193,7 @@ describe("AssigneesPicker", () => {
             email: "ada@example.com",
             displayName: "Ada Lovelace",
             assignedAt: new Date(),
+            status: "assigned" as const,
           },
         ]}
         candidates={candidates}

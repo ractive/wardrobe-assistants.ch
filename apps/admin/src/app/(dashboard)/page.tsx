@@ -18,7 +18,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { getCachedSession } from "@/lib/auth";
+import { getCachedSession, roleForUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { userHasPermission } from "@/lib/permissions";
 
@@ -92,6 +92,12 @@ export default async function DashboardHome() {
   const session = await getCachedSession();
   if (!session) {
     redirect("/login");
+  }
+
+  // Role-based redirect: squad members go to their primary view.
+  const role = await roleForUserId(session.user.id);
+  if (role === "SQUAD_MEMBER") {
+    redirect("/my-events");
   }
 
   // Fetch the user's profile for the greeting fallback chain:

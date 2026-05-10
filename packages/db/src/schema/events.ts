@@ -38,6 +38,11 @@ export const eventAssignments = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     assignedAt: integer("assigned_at", { mode: "timestamp_ms" }).notNull(),
+    status: text("status", {
+      enum: ["assigned", "requested", "rejected"],
+    })
+      .notNull()
+      .default("assigned"),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.eventId, t.userId] }),

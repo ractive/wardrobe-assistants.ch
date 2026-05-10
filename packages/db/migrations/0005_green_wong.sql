@@ -1,0 +1,1 @@
+ALTER TABLE `event_assignments` ADD `status` text DEFAULT 'assigned' NOT NULL;

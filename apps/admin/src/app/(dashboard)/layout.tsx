@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import {
   Calendar,
+  CalendarCheck,
+  CalendarPlus,
   DashboardSidebar,
   NavLink,
   Tag,
@@ -29,6 +31,7 @@ export default async function DashboardLayout({
   return (
     <SidebarProvider>
       <DashboardSidebar userEmail={session.user.email}>
+        {/* Admin nav links */}
         <HasPermission perm="USER_INVITE">
           <NavLink href="/users" label="Users" icon={Users} />
         </HasPermission>
@@ -37,6 +40,17 @@ export default async function DashboardLayout({
         </HasPermission>
         <HasPermission perm="SERVICE_CREATE">
           <NavLink href="/services" label="Services" icon={Tag} />
+        </HasPermission>
+        {/* Squad-member nav links */}
+        <HasPermission perm="SQUAD_VIEW_ASSIGNED">
+          <NavLink href="/my-events" label="My Events" icon={CalendarCheck} />
+        </HasPermission>
+        <HasPermission perm="SQUAD_REQUEST_PARTICIPATION">
+          <NavLink
+            href="/upcoming-events"
+            label="Upcoming Events"
+            icon={CalendarPlus}
+          />
         </HasPermission>
       </DashboardSidebar>
       <SidebarInset>
