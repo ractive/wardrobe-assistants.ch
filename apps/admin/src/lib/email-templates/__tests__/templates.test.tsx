@@ -11,7 +11,7 @@ describe("eventAssigned template", () => {
   const params = {
     recipientName: "Alex",
     eventName: "Spring Show",
-    eventDate: "Saturday, 1 March 2026",
+    eventDate: "Sunday, 1 March 2026",
     eventVenue: "Theatre 1",
     eventNotes: "Bring black",
     eventUrl: "https://admin.wardrobe-assistants.ch/events/abc",
@@ -54,7 +54,7 @@ describe("participationRequested template", () => {
   const params = {
     actorName: "Mira Adler",
     eventName: "Spring Show",
-    eventDate: "Saturday, 1 March 2026",
+    eventDate: "Sunday, 1 March 2026",
     reviewUrl: "https://admin.wardrobe-assistants.ch/events/abc",
   };
 

@@ -226,7 +226,7 @@ describe("messageUser", () => {
     );
   });
 
-  it("returns a sanitized error + correlation ID when sendEmail throws", async () => {
+  it("returns a sanitized error + correlation ID when sendTemplated throws", async () => {
     dbMock._selectResults = [[{ email: "target@example.com" }]];
     sendTemplatedMock.mockRejectedValue(new Error("smtp boom"));
     const r = await messageUser({

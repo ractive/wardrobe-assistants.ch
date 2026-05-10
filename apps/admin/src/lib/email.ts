@@ -33,7 +33,10 @@ const LIST_UNSUBSCRIBE_HEADER =
   "<mailto:info@wardrobe-assistants.ch?subject=unsubscribe>";
 
 export async function sendEmail(input: SendEmailInput): Promise<void> {
-  const { to, subject, text, html } = input;
+  const { to, text, html } = input;
+  // Defense-in-depth: strip CR/LF from caller-supplied subject so single-shot
+  // callers get the same header-injection guard that sendTemplated applies.
+  const subject = stripCrLf(input.subject);
 
   if (env.resendApiKey === undefined && env.nodeEnv === "development") {
     // Dev fallback: print the email so template work doesn't require a real

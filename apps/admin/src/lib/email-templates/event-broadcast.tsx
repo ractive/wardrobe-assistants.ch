@@ -19,8 +19,6 @@ export type EventBroadcastParams = {
 const brand = "#1a1a1a";
 
 export default function EventBroadcast(p: EventBroadcastParams) {
-  // Split body into paragraphs; tag each with a position label so React
-  // has a stable key without using the raw array index.
   const paragraphs = p.body.split(/\r?\n/).map((line, pos) => ({
     line,
     key: `para-${pos}`,

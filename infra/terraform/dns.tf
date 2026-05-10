@@ -119,6 +119,11 @@ resource "bunnynet_dns_record" "send_mx" {
 # is this file. ImprovMX coexists with Resend's send.* subdomain by design:
 # Resend uses send.wardrobe-assistants.ch for MAIL FROM, so apex MX belongs
 # entirely to ImprovMX.
+#
+# Note on CNAME-at-apex coexistence: bunny.net DNS performs CNAME flattening
+# at the apex (resolver returns the flattened A/AAAA), so MX/TXT records can
+# coexist with the apex CNAME. Verified by `dig MX wardrobe-assistants.ch`
+# returning the ImprovMX hosts after apply.
 resource "bunnynet_dns_record" "improvmx_mx_1" {
   zone     = bunnynet_dns_zone.wardrobe_assistants_ch.id
   type     = "MX"

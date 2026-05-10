@@ -449,22 +449,26 @@ export const requestParticipation = withPermission(
     const reviewUrl = `${env.betterAuthUrl}/events/${event.id}`;
     const eventDateStr = format(event.date, "EEEE, d MMMM yyyy");
     // Best-effort batch fan-out to all admins. Errors are logged but must not
-    // prevent the participation request from being recorded.
+    // prevent the participation request from being recorded. Awaited so that
+    // serverless runtimes don't terminate the function before the batch send
+    // completes (Copilot review feedback).
     if (adminRows.length > 0) {
-      sendTemplatedBatch(
-        "participationRequested",
-        adminRows.map((admin) => ({
-          to: admin.email,
-          params: {
-            actorName: safeActorName,
-            eventName: safeEventName,
-            eventDate: eventDateStr,
-            reviewUrl,
-          },
-        })),
-      ).catch((err) => {
+      try {
+        await sendTemplatedBatch(
+          "participationRequested",
+          adminRows.map((admin) => ({
+            to: admin.email,
+            params: {
+              actorName: safeActorName,
+              eventName: safeEventName,
+              eventDate: eventDateStr,
+              reviewUrl,
+            },
+          })),
+        );
+      } catch (err) {
         console.error("requestParticipation: batch notify failed", err);
-      });
+      }
     }
 
     revalidatePath("/upcoming-events");
