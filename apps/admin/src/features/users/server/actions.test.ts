@@ -29,7 +29,7 @@ vi.mock("@/lib/email");
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { sendTemplated } from "@/lib/email";
 import { deleteUser, inviteUser, messageUser } from "./actions";
 
 function makeDbMock() {
@@ -74,7 +74,7 @@ const signUpMock = auth.api.signUpEmail as unknown as ReturnType<typeof vi.fn>;
 const resetMock = auth.api.requestPasswordReset as unknown as ReturnType<
   typeof vi.fn
 >;
-const sendEmailMock = sendEmail as unknown as ReturnType<typeof vi.fn>;
+const sendTemplatedMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   dbMock._selectResults = [];
@@ -84,8 +84,8 @@ beforeEach(() => {
   signUpMock.mockReset();
   resetMock.mockReset();
   resetMock.mockResolvedValue(undefined);
-  sendEmailMock.mockReset();
-  sendEmailMock.mockResolvedValue(undefined);
+  sendTemplatedMock.mockReset();
+  sendTemplatedMock.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -197,7 +197,7 @@ describe("messageUser", () => {
   it("rejects invalid input", async () => {
     const r = await messageUser({ userId: "u1", subject: "", body: "hi" });
     expect(r.error).toBe(true);
-    expect(sendEmailMock).not.toHaveBeenCalled();
+    expect(sendTemplatedMock).not.toHaveBeenCalled();
   });
 
   it("returns 'User not found' when no user matches", async () => {
@@ -208,7 +208,7 @@ describe("messageUser", () => {
       body: "Body",
     });
     expect(r).toEqual({ error: true, message: "User not found." });
-    expect(sendEmailMock).not.toHaveBeenCalled();
+    expect(sendTemplatedMock).not.toHaveBeenCalled();
   });
 
   it("sends an email to the target user", async () => {
@@ -219,16 +219,16 @@ describe("messageUser", () => {
       body: "Hello there.",
     });
     expect(r).toEqual({ error: false, message: "Message sent." });
-    expect(sendEmailMock).toHaveBeenCalledWith({
-      to: "target@example.com",
-      subject: "Welcome",
-      text: "Hello there.",
-    });
+    expect(sendTemplatedMock).toHaveBeenCalledWith(
+      "userDirectMessage",
+      "target@example.com",
+      { subject: "Welcome", body: "Hello there." },
+    );
   });
 
-  it("returns a sanitized error + correlation ID when sendEmail throws", async () => {
+  it("returns a sanitized error + correlation ID when sendTemplated throws", async () => {
     dbMock._selectResults = [[{ email: "target@example.com" }]];
-    sendEmailMock.mockRejectedValue(new Error("smtp boom"));
+    sendTemplatedMock.mockRejectedValue(new Error("smtp boom"));
     const r = await messageUser({
       userId: "u2",
       subject: "Welcome",

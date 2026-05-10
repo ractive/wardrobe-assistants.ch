@@ -27,10 +27,10 @@ export function Footer() {
             Contact
           </span>
           <a
-            href="mailto:hello@wardrobe-assistants.ch"
+            href="mailto:info@wardrobe-assistants.ch"
             className="font-body text-[13px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
           >
-            hello@wardrobe-assistants.ch
+            info@wardrobe-assistants.ch
           </a>
           <span className="font-body text-[13px] text-[var(--muted-foreground)]">
             Zürich

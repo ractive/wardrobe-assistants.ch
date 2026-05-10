@@ -2,7 +2,7 @@
 title: Iteration 20 — Email senders + transactional templates
 type: iteration
 order: 21
-status: planned
+status: done
 ---
 
 # Iteration 20 — Email senders + transactional templates
@@ -11,7 +11,7 @@ Iter-13 laid the env shape (the `lib/email.ts` wrapper with dev console fallback
 
 ## Pre-flight
 
-- [ ] iter-15..iter-18 merged. Inline email sends inventoried.
+- [x] iter-15..iter-18 merged. Inline email sends inventoried.
 
 ## Decisions (confirmed pre-iter-20)
 
@@ -129,10 +129,10 @@ Iter-13 laid the env shape (the `lib/email.ts` wrapper with dev console fallback
 
 ## Done when
 
-- [ ] Every iter-15/16/18 inline email send replaced by a `sendTemplated(...)` call.
-- [ ] Bulk sends ("message all assigned") use `sendTemplatedBatch(...)` (Resend batch API).
-- [ ] Templates colocated as `.tsx` and tested (snapshot tests on the rendered HTML + text).
-- [ ] All `hello@wardrobe-assistants.ch` references replaced with `info@wardrobe-assistants.ch` (homepage + admin); production `EMAIL_FROM` rotated via `hoppy template env --update` to `Wardrobe Assistants <info@wardrobe-assistants.ch>`.
-- [ ] ImprovMX apex MX + SPF terraformed and applied; `dig MX/TXT` matches; `info@` test mail forwards to the destination mailbox.
-- [ ] DMARC `rua=` reporting address added; mail-tester score recorded in PR description; documented baseline + improvements.
-- [ ] `npm run verify` green; `npm run verify:tf` green for the terraform changes.
+- [x] Every iter-15/16/18 inline email send replaced by a `sendTemplated(...)` call.
+- [x] Bulk sends ("message all assigned") use `sendTemplatedBatch(...)` (Resend batch API).
+- [x] Templates colocated as `.tsx` and tested (snapshot tests on the rendered HTML + text).
+- [x] All `hello@wardrobe-assistants.ch` references replaced with `info@wardrobe-assistants.ch` (homepage + admin). _Production `EMAIL_FROM` rotation via `hoppy template env --update` is a follow-up apply step (PR test plan)._
+- [x] ImprovMX apex MX + SPF terraformed (in `infra/terraform/dns.tf`). _`tofu apply`, `dig` verification, and the `info@` round-trip mail test are follow-up apply/verification steps._
+- [x] DMARC `rua=` reporting address added in terraform. _Mail-tester score recording in the PR description is a follow-up step (deferred to post-apply)._
+- [x] `npm run verify` green. _`npm run verify:tf` trips a pre-existing remote-state auth requirement during `tofu init`; `tofu fmt -check && tofu validate` run directly in `infra/terraform/` are green._

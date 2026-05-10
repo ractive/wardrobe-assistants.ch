@@ -135,7 +135,7 @@ export default function Home() {
             it all and dressed it all.
           </p>
           <div className="pt-3">
-            <LinkButton href="mailto:hello@wardrobe-assistants.ch">
+            <LinkButton href="mailto:info@wardrobe-assistants.ch">
               Request a quote
             </LinkButton>
           </div>

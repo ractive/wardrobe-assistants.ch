@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { recordAudit } from "@/lib/audit-log";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { sendTemplated } from "@/lib/email";
 import { withPermission } from "@/lib/permissions";
 import { consume, RATE_LIMITS } from "@/lib/rate-limit";
 import {
@@ -211,10 +211,9 @@ export const messageUser = withPermission(
     }
 
     try {
-      await sendEmail({
-        to: target.email,
+      await sendTemplated("userDirectMessage", target.email, {
         subject: input.subject,
-        text: input.body,
+        body: input.body,
       });
     } catch (err) {
       const correlationId = await recordAudit({

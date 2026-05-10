@@ -32,6 +32,8 @@ vi.mock("server-only", () => ({}));
 
 vi.mock("@/lib/email", () => ({
   sendEmail: vi.fn(async () => {}),
+  sendTemplated: vi.fn(async () => {}),
+  sendTemplatedBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
 }));
 
 describe("iter-16f security — cross-feature smoke", () => {

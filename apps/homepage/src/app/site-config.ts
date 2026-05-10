@@ -4,7 +4,7 @@ export const defaultTitle =
   "Wardrobe Assistants — Backstage Crews in Switzerland";
 export const description =
   "Professional tour wardrobe assistants for theatres, concerts and festivals across Switzerland. Quick changes, ironing, repairs, laundry and load-in support.";
-export const contactEmail = "hello@wardrobe-assistants.ch";
+export const contactEmail = "info@wardrobe-assistants.ch";
 
 // Legal operator details for the Impressum and privacy policy.
 // Swiss law (UWG Art. 3(1)(s)) requires the legal name and a real postal

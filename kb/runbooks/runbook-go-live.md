@@ -274,7 +274,7 @@ Configure env vars on the container template (via `hoppy container app update` o
 - `BETTER_AUTH_SECRET` — generate with `openssl rand -base64 32`. 32+ bytes of secure randomness; rotation invalidates all sessions, so capture it once into 1Password before pasting it in.
 - `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`
 - `RESEND_API_KEY` — mint at https://resend.com/api-keys, scope to the admin app's domain.
-- `EMAIL_FROM=admin@wardrobe-assistants.ch`
+- `EMAIL_FROM="Wardrobe Assistants <info@wardrobe-assistants.ch>"` — rotate via `hoppy template env --update` (see `kb/runbooks/runbook-email-dns.md`).
 
 Output:
 
