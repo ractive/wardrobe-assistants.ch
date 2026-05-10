@@ -55,7 +55,7 @@ describe("inviteUserInput", () => {
     }
   });
 
-  it("accepts E.164 mobile number and returns it normalised", () => {
+  it("accepts international format with separators and normalises to E.164", () => {
     const r = inviteUserInput.safeParse({
       ...valid,
       mobileNumber: "+41 79 123 45 67",
