@@ -2,12 +2,18 @@
 title: Iteration 21 — SMS + WhatsApp evaluation
 type: iteration
 order: 22
-status: planned
+status: done
 ---
 
 # Iteration 21 — SMS + WhatsApp evaluation
 
 The original spec said "we'll add an SMS service later" and "evaluate WhatsApp for communication." This iteration is the spike that decides whether either lands and which provider for each.
+
+## Decisions
+
+- **Defer SMS.** Email (iter-20) is sufficient for current squad size; adding a second channel doubles operational surface for marginal benefit.
+- **Defer WhatsApp.** Meta template pre-approval and opt-in friction are not worth taking on without a measurable email-deliverability gap.
+- **Ship E.164 validation now.** `mobileNumber` validated and normalised via `libphonenumber-js` (default region CH). Full rationale: [notes/sms-whatsapp-evaluation](../notes/sms-whatsapp-evaluation.md).
 
 ## Open questions to resolve
 
@@ -46,4 +52,8 @@ The original spec said "we'll add an SMS service later" and "evaluate WhatsApp f
 
 ## Done when
 
-(Filled in at iteration kickoff after the spike answers the questions.)
+- [x] Decision document `kb/notes/sms-whatsapp-evaluation.md` written
+- [x] `mobileNumber` validated as E.164 via libphonenumber-js (server schema)
+- [x] InviteUserForm placeholder updated to show E.164 example
+- [x] Existing tests updated; new schema tests for E.164 added
+- [x] Quality gates green

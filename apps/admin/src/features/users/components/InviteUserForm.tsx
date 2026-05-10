@@ -119,7 +119,7 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
                   <Input
                     type="tel"
                     autoComplete="off"
-                    placeholder="+41 …"
+                    placeholder="+41 79 123 45 67"
                     {...field}
                   />
                 </FormControl>
