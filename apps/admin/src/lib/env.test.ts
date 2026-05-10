@@ -11,7 +11,7 @@ const baseDev = {
   DATABASE_URL: LOCAL_DB,
   BETTER_AUTH_SECRET: "dev-secret-not-used-in-prod",
   BETTER_AUTH_URL: "http://localhost:3000",
-  EMAIL_FROM: "Wardrobe Assistants <admin@wardrobe-assistants.ch>",
+  EMAIL_FROM: "Wardrobe Assistants <info@wardrobe-assistants.ch>",
 };
 
 const baseProd = {
@@ -20,7 +20,7 @@ const baseProd = {
   DATABASE_AUTH_TOKEN: "token",
   BETTER_AUTH_SECRET: PROD_SECRET,
   BETTER_AUTH_URL: "https://admin.wardrobe-assistants.ch",
-  EMAIL_FROM: "Wardrobe Assistants <admin@wardrobe-assistants.ch>",
+  EMAIL_FROM: "Wardrobe Assistants <info@wardrobe-assistants.ch>",
   RESEND_API_KEY: "re_123",
 };
 

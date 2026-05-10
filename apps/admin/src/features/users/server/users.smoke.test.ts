@@ -40,6 +40,8 @@ vi.mock("server-only", () => ({}));
 
 vi.mock("@/lib/email", () => ({
   sendEmail: vi.fn(async () => {}),
+  sendTemplated: vi.fn(async () => {}),
+  sendTemplatedBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
 }));
 
 describe("users feature — smoke", () => {
@@ -150,7 +152,7 @@ describe("users feature — smoke", () => {
     });
 
     const email = await import("@/lib/email");
-    const sendMock = email.sendEmail as unknown as ReturnType<typeof vi.fn>;
+    const sendMock = email.sendTemplated as unknown as ReturnType<typeof vi.fn>;
     sendMock.mockClear();
 
     const { messageUser } = await import("./actions");
@@ -162,11 +164,13 @@ describe("users feature — smoke", () => {
       }),
     );
     expect(result.error, JSON.stringify(result)).toBe(false);
-    // Subject should arrive at sendEmail without any CR/LF.
+    // Subject is stripped of CR/LF by the Zod schema transform before
+    // reaching sendTemplated — verify the params carry a clean subject.
     expect(sendMock).toHaveBeenCalledTimes(1);
-    const subjectArg = sendMock.mock.calls[0]?.[0]?.subject;
-    expect(subjectArg).toBeDefined();
-    expect(subjectArg).not.toMatch(/[\r\n]/);
+    // sendTemplated("userDirectMessage", to, { subject, body })
+    const params = sendMock.mock.calls[0]?.[2] as { subject: string };
+    expect(params?.subject).toBeDefined();
+    expect(params?.subject).not.toMatch(/[\r\n]/);
   });
 
   // iter-16f / C-SEC-09: query-level authz. listUsers / getUserById are

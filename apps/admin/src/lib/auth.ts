@@ -7,7 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { db } from "./db";
-import { sendEmail } from "./email";
+import { sendTemplated } from "./email";
 import { env } from "./env";
 import type { Role } from "./permissions";
 
@@ -40,20 +40,12 @@ export const auth = betterAuth({
     // this, the form schema is the only check on password length.
     minPasswordLength: 12,
     sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Reset your Wardrobe Assistants admin password",
-        text: `Reset your password by visiting: ${url}`,
-      });
+      await sendTemplated("passwordReset", user.email, { resetUrl: url });
     },
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your Wardrobe Assistants admin email",
-        text: `Verify your email by visiting: ${url}`,
-      });
+      await sendTemplated("verifyEmail", user.email, { verifyUrl: url });
     },
   },
   // The iter-15 attempt to merge user_profile fields into session.user via

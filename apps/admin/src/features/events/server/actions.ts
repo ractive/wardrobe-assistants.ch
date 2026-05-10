@@ -6,12 +6,14 @@ import {
   user,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
+import { format } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { ulid } from "ulid";
 import { recordAudit } from "@/lib/audit-log";
 import { db } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { sendTemplated, sendTemplatedBatch } from "@/lib/email";
+import { env } from "@/lib/env";
 import { withPermission } from "@/lib/permissions";
 import {
   type ActionResult,
@@ -34,7 +36,6 @@ import {
   unassignUserInput,
   updateEventInput,
 } from "../schema";
-import { assignmentEmail } from "./email-templates";
 
 export const createEvent = withPermission(
   "EVENT_CREATE",
@@ -160,7 +161,7 @@ export const assignUser = withPermission(
     }
 
     const userRows = await db
-      .select({ email: user.email })
+      .select({ email: user.email, name: user.name })
       .from(user)
       .where(eq(user.id, userId))
       .limit(1);
@@ -221,16 +222,13 @@ export const assignUser = withPermission(
     // is just a heads-up. Surface a soft warning in the result instead.
     let emailFailed = false;
     try {
-      const tpl = assignmentEmail({
+      await sendTemplated("eventAssigned", target.email, {
+        recipientName: target.name ?? target.email,
         eventName: event.name,
-        date: event.date,
-        venue: event.venue,
-        notes: event.notes,
-      });
-      await sendEmail({
-        to: target.email,
-        subject: tpl.subject,
-        text: tpl.text,
+        eventDate: format(event.date, "EEEE, d MMMM yyyy"),
+        eventVenue: event.venue,
+        eventNotes: event.notes ?? undefined,
+        eventUrl: `${env.betterAuthUrl}/events/${event.id}`,
       });
     } catch (err) {
       emailFailed = true;
@@ -293,11 +291,12 @@ export const messageEventAssignees = withPermission(
     const input = parsed.data;
 
     const eventRows = await db
-      .select({ id: events.id })
+      .select({ id: events.id, name: events.name })
       .from(events)
       .where(eq(events.id, input.eventId))
       .limit(1);
-    if (eventRows.length === 0) {
+    const eventRow = eventRows[0];
+    if (!eventRow) {
       return { error: true, message: "Event not found." };
     }
 
@@ -314,26 +313,20 @@ export const messageEventAssignees = withPermission(
       };
     }
 
-    let sent = 0;
-    let failed = 0;
-    // Per-recipient try/catch: one bad address must not abort the fan-out.
-    // Admins want feedback ("sent to 4 of 5"), not a 500.
-    for (const r of recipients) {
-      try {
-        await sendEmail({
-          to: r.email,
-          subject: input.subject,
-          text: input.body,
-        });
-        sent += 1;
-      } catch (err) {
-        failed += 1;
-        console.error(
-          "messageEventAssignees: send failed for a recipient",
-          err,
-        );
-      }
-    }
+    // Sanitize CR/LF from caller-supplied subject (header injection guard,
+    // mirrors the pattern from requestParticipation's safeEventName).
+    const safeSubject = input.subject.replace(/[\r\n]+/g, " ");
+    const { sent, failed } = await sendTemplatedBatch(
+      "eventBroadcast",
+      recipients.map((r) => ({
+        to: r.email,
+        params: {
+          subject: safeSubject,
+          eventName: eventRow.name,
+          body: input.body,
+        },
+      })),
+    );
 
     if (sent === 0) {
       const correlationId = await recordAudit({
@@ -453,20 +446,25 @@ export const requestParticipation = withPermission(
     // guard from audit C-SEC-07).
     const safeEventName = event.name.replace(/[\r\n]+/g, " ");
     const safeActorName = actorName.replace(/[\r\n]+/g, " ");
-    for (const admin of adminRows) {
-      try {
-        await sendEmail({
+    const reviewUrl = `${env.betterAuthUrl}/events/${event.id}`;
+    const eventDateStr = format(event.date, "EEEE, d MMMM yyyy");
+    // Best-effort batch fan-out to all admins. Errors are logged but must not
+    // prevent the participation request from being recorded.
+    if (adminRows.length > 0) {
+      sendTemplatedBatch(
+        "participationRequested",
+        adminRows.map((admin) => ({
           to: admin.email,
-          subject: `Participation request: ${safeEventName}`,
-          text: `${safeActorName} has requested to participate in "${safeEventName}". Review and approve or reject in the admin panel.`,
-        });
-      } catch (err) {
-        console.error(
-          "requestParticipation: failed to notify admin",
-          { adminId: admin.id },
-          err,
-        );
-      }
+          params: {
+            actorName: safeActorName,
+            eventName: safeEventName,
+            eventDate: eventDateStr,
+            reviewUrl,
+          },
+        })),
+      ).catch((err) => {
+        console.error("requestParticipation: batch notify failed", err);
+      });
     }
 
     revalidatePath("/upcoming-events");
@@ -525,7 +523,7 @@ export const approveRequest = withPermission(
     const event = eventRows[0];
 
     const userRows = await db
-      .select({ email: user.email })
+      .select({ email: user.email, name: user.name })
       .from(user)
       .where(eq(user.id, userId))
       .limit(1);
@@ -534,16 +532,13 @@ export const approveRequest = withPermission(
     let emailFailed = false;
     if (event && target) {
       try {
-        const tpl = assignmentEmail({
+        await sendTemplated("eventAssigned", target.email, {
+          recipientName: target.name ?? target.email,
           eventName: event.name,
-          date: event.date,
-          venue: event.venue,
-          notes: event.notes,
-        });
-        await sendEmail({
-          to: target.email,
-          subject: tpl.subject,
-          text: tpl.text,
+          eventDate: format(event.date, "EEEE, d MMMM yyyy"),
+          eventVenue: event.venue,
+          eventNotes: event.notes ?? undefined,
+          eventUrl: `${env.betterAuthUrl}/events/${eventId}`,
         });
       } catch (err) {
         emailFailed = true;

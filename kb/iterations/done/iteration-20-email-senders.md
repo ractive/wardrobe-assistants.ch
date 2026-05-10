@@ -2,7 +2,7 @@
 title: Iteration 20 — Email senders + transactional templates
 type: iteration
 order: 21
-status: planned
+status: done
 ---
 
 # Iteration 20 — Email senders + transactional templates
