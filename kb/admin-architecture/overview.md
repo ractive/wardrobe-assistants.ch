@@ -27,6 +27,7 @@ Feature-folder layout in `apps/admin/src/features/<f>/` (Zod input schemas, serv
 | UI gates | `<HasPermission perm="...">` (RSC) and `useHasPermission("...")` (client). |
 | Session | Better Auth's session/user untouched. Role + status are read from `user_profile` at permission-check time via `roleForUserId(userId)` (called by `withPermission` / `getCurrentUserRole`). Perms computed on both sides from the in-code map (isomorphic). _(iter-15c — earlier "merge into session via additionalFields" was a no-op because session/user tables had no role column.)_ |
 | Services | Direct imports. Lazy provider construction. Tests use `vi.mock` with `__mocks__/<service>.ts` siblings. |
+| Notifications | `lib/notify.ts` dispatches both email and push on every call (`Promise.allSettled`). `lib/push.ts` handles VAPID/web-push with stale-sub cleanup. Neither channel blocks the other. |
 | TypeScript | `strict` + `noUncheckedIndexedAccess` + `noFallthroughCasesInSwitch` + `noImplicitReturns` + `verbatimModuleSyntax`. One root `tsconfig.base.json`. |
 | UI | shadcn/ui + RHF + Zod + TanStack Table + lucide + sonner. Tailwind v4 with shadcn-shaped CSS variables already wired to the brand. |
 

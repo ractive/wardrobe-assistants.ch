@@ -8,6 +8,8 @@ import {
   Tag,
   Users,
 } from "@/components/DashboardSidebar";
+import { InstallPrompt } from "@/components/InstallPrompt";
+import { PushSubscribeToggle } from "@/components/PushSubscribeToggle";
 import {
   SidebarInset,
   SidebarProvider,
@@ -60,7 +62,11 @@ export default async function DashboardLayout({
           <span className="font-semibold text-sm md:text-base">
             Wardrobe Assistants — Admin
           </span>
+          <div className="ml-auto">
+            <PushSubscribeToggle />
+          </div>
         </header>
+        <InstallPrompt />
         <main className="flex-1 px-4 py-6 md:px-6 md:py-8">{children}</main>
       </SidebarInset>
       <Toaster />

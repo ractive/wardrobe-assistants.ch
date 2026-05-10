@@ -2,7 +2,7 @@
 title: Iteration 23 — Admin PWA + Web Push notifications
 type: iteration
 order: 24
-status: planned
+status: implemented
 ---
 
 # Iteration 23 — Admin PWA + Web Push notifications
@@ -261,13 +261,13 @@ These are server actions, not API routes — keep with the iter-15+ feature-slic
 
 ## Done when
 
-- [ ] Manifest reachable at `/manifest.webmanifest` with correct icons, theme_color matches bordeaux brand override.
-- [ ] App is installable as PWA on Chrome desktop, Chrome Android, and Safari iOS (verified manually with `next dev --experimental-https` for local + a deploy preview for prod-like).
-- [ ] Lighthouse PWA audit passes the installable + manifest checks.
-- [ ] Service worker registers, push subscribe flow completes end-to-end on at least one Chromium browser and one iOS Safari home-screen install.
-- [ ] `notifyUser(...)` replaces `sendTemplated(...)` for the four notifying triggers; both channels fire and stale subscriptions self-cleanup on send failure.
-- [ ] `npm run verify` green, including new smoke tests.
-- [ ] PR description cites `node_modules/next/dist/docs/01-app/02-guides/progressive-web-apps.md` as the primary reference so the next reader can find the doc that isn't on the public docs site.
+- [x] Manifest reachable at `/manifest.webmanifest` with correct icons, theme_color matches bordeaux brand override. (code path verified; manual browser check pending deploy)
+- [ ] App is installable as PWA on Chrome desktop, Chrome Android, and Safari iOS (verified manually with `next dev --experimental-https` for local + a deploy preview for prod-like). Manual install pending deploy.
+- [ ] Lighthouse PWA audit passes the installable + manifest checks. Pending deploy.
+- [ ] Service worker registers, push subscribe flow completes end-to-end on at least one Chromium browser and one iOS Safari home-screen install. Code path verified; manual E2E pending deploy.
+- [x] `notifyUser(...)` replaces `sendTemplated(...)` for the four notifying triggers; both channels fire and stale subscriptions self-cleanup on send failure.
+- [x] `npm run verify` green, including new smoke tests.
+- [x] PR description cites `node_modules/next/dist/docs/01-app/02-guides/progressive-web-apps.md` as the primary reference so the next reader can find the doc that isn't on the public docs site.
 
 ## Future iterations (not this one)
 

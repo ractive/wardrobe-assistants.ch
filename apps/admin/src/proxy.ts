@@ -66,6 +66,11 @@ export function buildContentSecurityPolicy({
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
+    // iter-23: explicit worker-src allows the browser to load /sw.js as a
+    // service worker. `default-src 'self'` would implicitly allow this in
+    // most browsers, but the explicit directive is belt-and-suspenders and
+    // documents intent clearly — the iter-23 plan (§4) calls for it.
+    "worker-src 'self'",
   ];
   if (!isDev) directives.push("upgrade-insecure-requests");
   return directives.join("; ");

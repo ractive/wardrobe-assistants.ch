@@ -26,6 +26,12 @@ vi.mock("@/lib/auth", () => ({
   roleForUserId: async () => null,
 }));
 vi.mock("@/lib/email");
+// iter-23: actions now route through notifyUser instead of sendTemplated/
+// sendTemplatedBatch directly. Mock notify at the boundary; the email mock
+// is kept so lib/email's module-level code doesn't trip on missing env.
+vi.mock("@/lib/notify", () => ({
+  notifyUser: vi.fn(async () => {}),
+}));
 // Stub env so actions that reference env.betterAuthUrl (eventUrl in emails)
 // don't trip the env validator in a test environment without real env vars.
 vi.mock("@/lib/env", () => ({
@@ -39,6 +45,7 @@ vi.mock("@/lib/env", () => ({
 
 import { db } from "@/lib/db";
 import { sendTemplated, sendTemplatedBatch } from "@/lib/email";
+import { notifyUser } from "@/lib/notify";
 import {
   approveRequest,
   assignUser,
@@ -123,10 +130,15 @@ function makeDbMock() {
 }
 
 const dbMock = db as unknown as ReturnType<typeof makeDbMock>;
-const sendTemplatedMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
-const sendTemplatedBatchMock = sendTemplatedBatch as unknown as ReturnType<
+// iter-23: actions now call notifyUser (not sendTemplated/sendTemplatedBatch).
+// Keep sendTemplated/sendTemplatedBatch variables so we don't need to remove
+// the import (it's used by the email module-level load); but assert on
+// notifyUserMock for the triggers that changed.
+const _sendTemplatedMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
+const _sendTemplatedBatchMock = sendTemplatedBatch as unknown as ReturnType<
   typeof vi.fn
 >;
+const notifyUserMock = notifyUser as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   dbMock._selectQueue = [];
@@ -134,10 +146,12 @@ beforeEach(() => {
   dbMock._onConflictResult = [];
   dbMock._updateReturning = [];
   dbMock._deleteReturning = [];
-  sendTemplatedMock.mockReset();
-  sendTemplatedMock.mockResolvedValue(undefined);
-  sendTemplatedBatchMock.mockReset();
-  sendTemplatedBatchMock.mockResolvedValue({ sent: 0, failed: 0 });
+  _sendTemplatedMock.mockReset();
+  _sendTemplatedMock.mockResolvedValue(undefined);
+  _sendTemplatedBatchMock.mockReset();
+  _sendTemplatedBatchMock.mockResolvedValue({ sent: 0, failed: 0 });
+  notifyUserMock.mockReset();
+  notifyUserMock.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -217,22 +231,27 @@ describe("assignUser", () => {
     notes: null,
   };
 
-  it("is idempotent: skips email if assignment already existed", async () => {
+  it("is idempotent: skips notification if assignment already existed", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
     dbMock.pushSelect([{ status: "assigned" }]); // existing assigned row
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({ error: false, message: "User was already assigned." });
-    expect(sendTemplatedMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 
-  it("sends a notification email on a fresh assignment", async () => {
+  it("notifies via notifyUser on a fresh assignment", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
     dbMock.pushSelect([]); // no existing row
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r.error).toBe(false);
-    expect(sendTemplatedMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledWith(
+      "u1",
+      "eventAssigned",
+      expect.objectContaining({ eventName: "Spring" }),
+    );
   });
 
   it("flips a `requested` row to `assigned` and notifies", async () => {
@@ -241,18 +260,18 @@ describe("assignUser", () => {
     dbMock.pushSelect([{ status: "requested" }]);
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r.error).toBe(false);
-    expect(sendTemplatedMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledOnce();
   });
 
-  it("returns a soft warning when the email fails", async () => {
+  it("returns a soft warning when notification fails", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
     dbMock.pushSelect([]); // no existing row
-    sendTemplatedMock.mockRejectedValue(new Error("smtp boom"));
+    notifyUserMock.mockRejectedValue(new Error("notify boom"));
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({
       error: false,
-      message: "Assigned, but notification email failed to send.",
+      message: "Assigned, but notification failed to send.",
     });
   });
 
@@ -260,7 +279,7 @@ describe("assignUser", () => {
     dbMock.pushSelect([]);
     const r = await assignUser({ eventId: "ghost", userId: "u1" });
     expect(r).toEqual({ error: true, message: "Event not found." });
-    expect(sendTemplatedMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 });
 
@@ -290,26 +309,32 @@ describe("messageEventAssignees", () => {
     expect(r).toEqual({ error: true, message: "No assignees on this event." });
   });
 
-  it("fans out to every assignee", async () => {
+  it("fans out to every assignee via notifyUser", async () => {
     dbMock.pushSelect([{ id: "e1", name: "Spring" }]);
-    dbMock.pushSelect([{ email: "a@example.com" }, { email: "b@example.com" }]);
-    sendTemplatedBatchMock.mockResolvedValue({ sent: 2, failed: 0 });
+    // iter-23: recipients now include userId for notifyUser fan-out
+    dbMock.pushSelect([
+      { userId: "u1", email: "a@example.com" },
+      { userId: "u2", email: "b@example.com" },
+    ]);
     const r = await messageEventAssignees({
       eventId: "e1",
       subject: "Hi",
       body: "Hello.",
     });
     expect(r).toEqual({ error: false, message: "Sent to 2 assignees." });
-    expect(sendTemplatedBatchMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledTimes(2);
   });
 
-  it("reports partial-success counts", async () => {
+  it("reports partial-success when some notifyUser calls reject", async () => {
     dbMock.pushSelect([{ id: "e1", name: "Spring" }]);
     dbMock.pushSelect([
-      { email: "ok@example.com" },
-      { email: "bad@example.com" },
+      { userId: "u1", email: "ok@example.com" },
+      { userId: "u2", email: "bad@example.com" },
     ]);
-    sendTemplatedBatchMock.mockResolvedValue({ sent: 1, failed: 1 });
+    // First call succeeds, second rejects — partial send.
+    notifyUserMock
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("channel down"));
     const r = await messageEventAssignees({
       eventId: "e1",
       subject: "Hi",
@@ -321,10 +346,13 @@ describe("messageEventAssignees", () => {
     });
   });
 
-  it("reports a hard error when all sends fail", async () => {
+  it("reports a hard error when all notifyUser calls reject", async () => {
     dbMock.pushSelect([{ id: "e1", name: "Spring" }]);
-    dbMock.pushSelect([{ email: "a@example.com" }, { email: "b@example.com" }]);
-    sendTemplatedBatchMock.mockResolvedValue({ sent: 0, failed: 2 });
+    dbMock.pushSelect([
+      { userId: "u1", email: "a@example.com" },
+      { userId: "u2", email: "b@example.com" },
+    ]);
+    notifyUserMock.mockRejectedValue(new Error("all down"));
     const r = await messageEventAssignees({
       eventId: "e1",
       subject: "Hi",
@@ -347,7 +375,7 @@ describe("messageEventAssignees", () => {
       body: "Hello.",
     });
     expect(r).toEqual({ error: true, message: "Event not found." });
-    expect(sendTemplatedBatchMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 });
 
@@ -399,8 +427,13 @@ describe("requestParticipation", () => {
     ]); // actor profile
     const r = await requestParticipation({ eventId: "e1" });
     expect(r).toEqual({ error: false, message: "Participation request sent." });
-    // Batch fan-out is fire-and-forget; verify the batch was initiated.
-    expect(sendTemplatedBatchMock).toHaveBeenCalledOnce();
+    // iter-23: fan-out is via notifyUser (one per admin).
+    expect(notifyUserMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledWith(
+      "admin1",
+      "participationRequested",
+      expect.objectContaining({ actorName: "Test User" }),
+    );
   });
 
   it("is a no-op when the user already has a row (idempotent)", async () => {
@@ -411,7 +444,7 @@ describe("requestParticipation", () => {
       error: false,
       message: "Participation already recorded.",
     });
-    expect(sendTemplatedBatchMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 });
 
@@ -430,8 +463,9 @@ describe("approveRequest", () => {
     });
   });
 
-  it("succeeds and sends email when request is pending", async () => {
+  it("succeeds and notifies when request is pending", async () => {
     dbMock._updateReturning = [{ userId: "u1" }];
+    // iter-23: approveRequest only fetches event (not user), uses userId for notifyUser
     dbMock.pushSelect([
       {
         name: "Event",
@@ -439,14 +473,19 @@ describe("approveRequest", () => {
         venue: "Studio",
         notes: null,
       },
-    ]); // event for email
-    dbMock.pushSelect([{ email: "member@example.com" }]); // user for email
+    ]); // event for notification
+    dbMock.pushSelect([{ email: "member@example.com", name: "Alice" }]); // user
     const r = await approveRequest({ eventId: "e1", userId: "u1" });
     expect(r.error).toBe(false);
-    expect(sendTemplatedMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledWith(
+      "u1",
+      "eventAssigned",
+      expect.objectContaining({ eventName: "Event" }),
+    );
   });
 
-  it("returns soft warning when email fails", async () => {
+  it("returns soft warning when notification fails", async () => {
     dbMock._updateReturning = [{ userId: "u1" }];
     dbMock.pushSelect([
       {
@@ -456,11 +495,11 @@ describe("approveRequest", () => {
         notes: null,
       },
     ]);
-    dbMock.pushSelect([{ email: "member@example.com" }]);
-    sendTemplatedMock.mockRejectedValue(new Error("smtp down"));
+    dbMock.pushSelect([{ email: "member@example.com", name: "Alice" }]);
+    notifyUserMock.mockRejectedValue(new Error("notify down"));
     const r = await approveRequest({ eventId: "e1", userId: "u1" });
     expect(r.error).toBe(false);
-    expect(r.message).toMatch(/email failed/i);
+    expect(r.message).toMatch(/notification failed/i);
   });
 });
 
@@ -483,6 +522,6 @@ describe("rejectRequest", () => {
     dbMock._updateReturning = [{ userId: "u1" }];
     const r = await rejectRequest({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({ error: false, message: "Request rejected." });
-    expect(sendTemplatedMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 });

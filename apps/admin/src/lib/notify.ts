@@ -1,0 +1,84 @@
+import { user } from "@wardrobe-assistants/db/schema";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
+import { sendTemplated } from "./email";
+import type { ParamsFor } from "./email-templates";
+import { pushPayload as eventAssignedPushPayload } from "./email-templates/event-assigned";
+import { pushPayload as eventBroadcastPushPayload } from "./email-templates/event-broadcast";
+import { pushPayload as participationRequestedPushPayload } from "./email-templates/participation-requested";
+import { pushPayload as userDirectMessagePushPayload } from "./email-templates/user-direct-message";
+import { sendPush } from "./push";
+
+// Templates for which push is meaningful. Excludes:
+//   - userInvited: recipient has no account / subscription yet
+//   - passwordReset, verifyEmail: transactional — email only
+export type NotifiableTemplateKey =
+  | "eventAssigned"
+  | "eventBroadcast"
+  | "participationRequested"
+  | "userDirectMessage";
+
+// Map each notifiable template key to its push payload builder.
+function pushPayloadFor(
+  key: NotifiableTemplateKey,
+  params: ParamsFor<NotifiableTemplateKey>,
+) {
+  switch (key) {
+    case "eventAssigned":
+      return eventAssignedPushPayload(params as ParamsFor<"eventAssigned">);
+    case "eventBroadcast":
+      return eventBroadcastPushPayload(params as ParamsFor<"eventBroadcast">);
+    case "participationRequested":
+      return participationRequestedPushPayload(
+        params as ParamsFor<"participationRequested">,
+      );
+    case "userDirectMessage":
+      return userDirectMessagePushPayload(
+        params as ParamsFor<"userDirectMessage">,
+      );
+  }
+}
+
+/**
+ * Single cross-channel notification entry point for iter-23 notifiable triggers.
+ *
+ * Always fires both email and push per the iter-23 decision: push for immediacy,
+ * email for durability. A failure in one channel is logged but does not block
+ * the other — Promise.allSettled guarantees both run regardless.
+ */
+export async function notifyUser<K extends NotifiableTemplateKey>(
+  userId: string,
+  templateKey: K,
+  params: ParamsFor<K>,
+): Promise<void> {
+  const rows = await db
+    .select({ email: user.email })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  const recipient = rows[0];
+  if (!recipient) return;
+
+  const [emailResult, pushResult] = await Promise.allSettled([
+    sendTemplated(templateKey, recipient.email, params),
+    sendPush(
+      userId,
+      pushPayloadFor(templateKey, params as ParamsFor<NotifiableTemplateKey>),
+    ),
+  ]);
+
+  if (emailResult.status === "rejected") {
+    console.error("[notify] email channel failed", {
+      userId,
+      templateKey,
+      err: emailResult.reason,
+    });
+  }
+  if (pushResult.status === "rejected") {
+    console.error("[notify] push channel failed", {
+      userId,
+      templateKey,
+      err: pushResult.reason,
+    });
+  }
+}

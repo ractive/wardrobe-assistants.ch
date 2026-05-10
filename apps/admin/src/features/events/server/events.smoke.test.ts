@@ -24,6 +24,12 @@ vi.mock("@/lib/email", () => ({
   sendTemplatedBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
 }));
 
+// iter-23: actions now call notifyUser instead of sendTemplated/sendTemplatedBatch
+// directly. Mock push so tests don't need VAPID env or web-push installed.
+vi.mock("@/lib/push", () => ({
+  sendPush: vi.fn(async () => ({ sent: 0 })),
+}));
+
 describe("events feature — smoke", () => {
   beforeAll(async () => {
     harness = await setupHarness();
@@ -145,9 +151,6 @@ describe("events feature — smoke", () => {
     });
 
     const email = await import("@/lib/email");
-    const batchMock = email.sendTemplatedBatch as unknown as ReturnType<
-      typeof vi.fn
-    >;
 
     const { createEvent, assignUser, messageEventAssignees } = await import(
       "./actions"
@@ -176,8 +179,10 @@ describe("events feature — smoke", () => {
       assignUser({ eventId: event.id, userId: m2.userId }),
     );
 
-    batchMock.mockClear();
-    batchMock.mockResolvedValue({ sent: 2, failed: 0 });
+    const sendMock2 = email.sendTemplated as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    sendMock2.mockClear();
     const r = await harness.runAs(admin.cookies, () =>
       messageEventAssignees({
         eventId: event.id,
@@ -186,10 +191,10 @@ describe("events feature — smoke", () => {
       }),
     );
     expect(r.error).toBe(false);
-    // sendTemplatedBatch is called once with all 2 recipients.
-    expect(batchMock).toHaveBeenCalledOnce();
-    const batchRecipients = batchMock.mock.calls[0]?.[1] as unknown[];
-    expect(batchRecipients).toHaveLength(2);
+    // iter-23: messageEventAssignees now fans out via notifyUser (one per
+    // recipient), which calls sendTemplated internally. Expect 2 calls — one
+    // per assignee.
+    expect(sendMock2).toHaveBeenCalledTimes(2);
   });
 
   it("messageEventAssignees strips CR/LF from subject (header-injection guard)", async () => {
@@ -203,9 +208,6 @@ describe("events feature — smoke", () => {
     });
 
     const email = await import("@/lib/email");
-    const batchMock = email.sendTemplatedBatch as unknown as ReturnType<
-      typeof vi.fn
-    >;
 
     const { createEvent, assignUser, messageEventAssignees } = await import(
       "./actions"
@@ -231,8 +233,10 @@ describe("events feature — smoke", () => {
       assignUser({ eventId: event.id, userId: m.userId }),
     );
 
-    batchMock.mockClear();
-    batchMock.mockResolvedValue({ sent: 1, failed: 0 });
+    const sendTemplatedMock2 = email.sendTemplated as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    sendTemplatedMock2.mockClear();
     const r = await harness.runAs(admin.cookies, () =>
       messageEventAssignees({
         eventId: event.id,
@@ -241,14 +245,14 @@ describe("events feature — smoke", () => {
       }),
     );
     expect(r.error, JSON.stringify(r)).toBe(false);
-    expect(batchMock).toHaveBeenCalledOnce();
-    // The subject passed to sendTemplatedBatch must be CR/LF-stripped.
-    const batchRecipients = batchMock.mock.calls[0]?.[1] as Array<{
-      params: { subject: string };
-    }>;
-    const subjectArg = batchRecipients?.[0]?.params?.subject;
-    expect(subjectArg).toBeDefined();
-    expect(subjectArg).not.toMatch(/[\r\n]/);
+    // iter-23: fan-out is via notifyUser → sendTemplated (one call per assignee).
+    expect(sendTemplatedMock2).toHaveBeenCalledTimes(1);
+    // The subject passed to sendTemplated must be CR/LF-stripped.
+    const callParams = sendTemplatedMock2.mock.calls[0]?.[2] as {
+      subject: string;
+    };
+    expect(callParams?.subject).toBeDefined();
+    expect(callParams?.subject).not.toMatch(/[\r\n]/);
   });
 
   it("squad member can request participation on a published future event; admin approves; member sees it as assigned", async () => {
@@ -263,12 +267,7 @@ describe("events feature — smoke", () => {
 
     const email = await import("@/lib/email");
     const sendMock = email.sendTemplated as unknown as ReturnType<typeof vi.fn>;
-    const batchMock = email.sendTemplatedBatch as unknown as ReturnType<
-      typeof vi.fn
-    >;
     sendMock.mockClear();
-    batchMock.mockClear();
-    batchMock.mockResolvedValue({ sent: 1, failed: 0 });
 
     const { createEvent, requestParticipation, approveRequest } = await import(
       "./actions"
@@ -297,10 +296,10 @@ describe("events feature — smoke", () => {
     );
     expect(reqResult.error, JSON.stringify(reqResult)).toBe(false);
 
-    // Admin(s) get notified via sendTemplatedBatch (fire-and-forget).
-    // At least one batch call is made (multiple admins may exist from previous
+    // iter-23: Admin(s) are notified via notifyUser (one sendTemplated call per
+    // admin). At least one call is made (multiple admins may exist from previous
     // smoke tests seeded in the same DB).
-    expect(batchMock.mock.calls.length).toBeGreaterThanOrEqual(1);
+    expect(sendMock.mock.calls.length).toBeGreaterThanOrEqual(1);
 
     // Member sees it in "Your requests"
     const requests = await harness.runAs(member.cookies, () =>
@@ -400,7 +399,7 @@ describe("events feature — smoke", () => {
     });
 
     const email = await import("@/lib/email");
-    const batchMock = email.sendTemplatedBatch as unknown as ReturnType<
+    const sendMockNoop = email.sendTemplated as unknown as ReturnType<
       typeof vi.fn
     >;
 
@@ -439,12 +438,12 @@ describe("events feature — smoke", () => {
     // Member tries to request anyway — idempotent (onConflictDoNothing).
     // The action returns early without fanning out admin emails so repeated
     // clicks can't spam admins.
-    batchMock.mockClear();
+    sendMockNoop.mockClear();
     const result = await harness.runAs(member.cookies, () =>
       requestParticipation({ eventId: event.id }),
     );
     expect(result.error).toBe(false);
-    expect(batchMock).toHaveBeenCalledTimes(0);
+    expect(sendMockNoop).toHaveBeenCalledTimes(0);
   });
 
   it("admin can delete an event — cascade removes assignments", async () => {

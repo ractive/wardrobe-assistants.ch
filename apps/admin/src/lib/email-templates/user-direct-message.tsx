@@ -14,6 +14,15 @@ export type UserDirectMessageParams = {
   body: string;
 };
 
+import type { PushPayload } from "../push";
+
+export function pushPayload(p: UserDirectMessageParams): PushPayload {
+  return {
+    title: p.subject,
+    body: p.body.split(/\r?\n/)[0]?.slice(0, 120) ?? p.subject,
+  };
+}
+
 export default function UserDirectMessage(p: UserDirectMessageParams) {
   // Tag each line with a position-based key so React has a stable identifier.
   const paragraphs = p.body.split(/\r?\n/).map((line, pos) => ({

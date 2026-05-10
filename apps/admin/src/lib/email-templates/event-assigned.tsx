@@ -19,6 +19,16 @@ export type EventAssignedParams = {
   eventUrl: string;
 };
 
+import type { PushPayload } from "../push";
+
+export function pushPayload(p: EventAssignedParams): PushPayload {
+  return {
+    title: `Assigned to ${p.eventName}`,
+    body: `${p.eventDate} — ${p.eventVenue}`,
+    url: p.eventUrl,
+  };
+}
+
 const brand = "#1a1a1a";
 
 export default function EventAssigned(p: EventAssignedParams) {

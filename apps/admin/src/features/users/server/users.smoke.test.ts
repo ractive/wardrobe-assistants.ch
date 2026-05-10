@@ -44,6 +44,12 @@ vi.mock("@/lib/email", () => ({
   sendTemplatedBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
 }));
 
+// iter-23: messageUser now calls notifyUser (email + push). Mock push so
+// tests don't need VAPID env vars.
+vi.mock("@/lib/push", () => ({
+  sendPush: vi.fn(async () => ({ sent: 0 })),
+}));
+
 describe("users feature — smoke", () => {
   beforeAll(async () => {
     harness = await setupHarness();

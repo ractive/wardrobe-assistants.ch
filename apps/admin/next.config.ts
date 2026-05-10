@@ -65,6 +65,24 @@ const nextConfig: NextConfig = {
         source: ASSET_EXCLUDE_SOURCE,
         headers: [cacheControlHeader],
       },
+      // iter-23: service worker headers. Cache-Control no-store ensures the
+      // browser always fetches the latest SW (defense in depth alongside the
+      // updateViaCache:"none" registration option). Service-Worker-Allowed
+      // grants root scope so the SW can intercept push events for all pages.
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
     ];
   },
 };

@@ -16,6 +16,15 @@ export type EventBroadcastParams = {
   body: string;
 };
 
+import type { PushPayload } from "../push";
+
+export function pushPayload(p: EventBroadcastParams): PushPayload {
+  return {
+    title: p.subject,
+    body: `Re: ${p.eventName}`,
+  };
+}
+
 const brand = "#1a1a1a";
 
 export default function EventBroadcast(p: EventBroadcastParams) {
