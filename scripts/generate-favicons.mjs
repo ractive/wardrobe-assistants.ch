@@ -35,6 +35,18 @@ const APP_ROOT = path.resolve(REPO_ROOT, appDirArg);
 const APP_DIR = path.join(APP_ROOT, "src/app");
 const PUBLIC_DIR = path.join(APP_ROOT, "public");
 
+// Fail fast on a typo'd path — writing into a non-existent app dir would
+// otherwise produce a less-obvious error several lines later.
+try {
+  const stat = await fs.stat(APP_ROOT);
+  if (!stat.isDirectory()) throw new Error("not a directory");
+} catch {
+  console.error(
+    `Error: app directory not found or not a directory: ${appDirArg}`,
+  );
+  process.exit(2);
+}
+
 // Lucide shirt — viewBox 0 0 24 24, stroke 2, round caps/joins.
 // Source: node_modules/lucide-react/dist/esm/icons/shirt.mjs
 const SHIRT_PATH =
@@ -99,8 +111,19 @@ function badgeSVG() {
 </svg>`;
 }
 
+// SVG viewBox is 64 units; sharp's default rasterization DPI is 72.
+// To render the SVG at exactly N px sharp wants `density = 72 * N / 64`.
+// We render at 1.5× the target size before downscaling so anti-aliasing
+// has headroom — gives crisper edges than rasterizing at exactly the
+// target size (especially for the 512px outputs the previous fixed
+// density: 384 was upscaling and softening).
+const SVG_VIEWBOX = 64;
+function densityFor(size) {
+  return Math.max(72, Math.ceil((72 * size * 1.5) / SVG_VIEWBOX));
+}
+
 async function rasterize(svg, size) {
-  return sharp(Buffer.from(svg), { density: 384 })
+  return sharp(Buffer.from(svg), { density: densityFor(size) })
     .resize(size, size, {
       fit: "contain",
       background: { r: 0, g: 0, b: 0, alpha: 0 },
@@ -159,7 +182,9 @@ async function main() {
   );
 
   // 3. app/apple-icon.png — iOS Safari & home-screen install. 180×180, no transparency.
-  await sharp(Buffer.from(brandedSVG({ rounded: false })), { density: 384 })
+  await sharp(Buffer.from(brandedSVG({ rounded: false })), {
+    density: densityFor(180),
+  })
     .resize(180, 180)
     .flatten({ background: BRAND })
     .png({ compressionLevel: 9 })
