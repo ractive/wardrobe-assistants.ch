@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { PRICE_TYPES } from "../schema";
+import type { PriceType } from "../schema";
 import { ServiceForm } from "./ServiceForm";
 
 export function CreateServiceDialog() {
@@ -43,7 +43,7 @@ export function EditServiceDialog({
     serviceId: string;
     name: string;
     description: string;
-    priceType: (typeof PRICE_TYPES)[number];
+    priceType: PriceType;
     price: number;
   };
   open: boolean;

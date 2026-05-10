@@ -92,7 +92,10 @@ export const archiveService = withPermission(
   async (actorId, raw: ArchiveServiceInput): Promise<ActionResult> => {
     const parsed = archiveServiceInput.safeParse(raw);
     if (!parsed.success) {
-      return { error: true, message: "Invalid input" };
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
     }
     // Soft delete only — historical event line items reference services
     // informationally; archive retires the catalog entry without breaking
