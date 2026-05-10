@@ -5,7 +5,7 @@ import {
   user,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
-import { and, asc, desc, eq, notExists, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, notExists, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { assertPermission } from "@/lib/permissions";
 import {
@@ -44,6 +44,7 @@ export async function listEvents() {
       assigneesCount: sql<number>`(
         SELECT COUNT(*) FROM ${eventAssignments}
         WHERE ${eventAssignments.eventId} = ${events.id}
+          AND ${eventAssignments.status} = 'assigned'
       )`,
     })
     .from(events)
@@ -239,38 +240,37 @@ export async function listUpcomingEventsForRequest(
       name: events.name,
       date: events.date,
       venue: events.venue,
-      status: events.status,
       createdAt: events.createdAt,
     })
     .from(events)
     .where(
-      notExists(
-        db
-          .select({ _: sql`1` })
-          .from(eventAssignments)
-          .where(
-            and(
-              eq(eventAssignments.eventId, events.id),
-              eq(eventAssignments.userId, userId),
+      and(
+        eq(events.status, "published"),
+        gte(events.date, now),
+        notExists(
+          db
+            .select({ _: sql`1` })
+            .from(eventAssignments)
+            .where(
+              and(
+                eq(eventAssignments.eventId, events.id),
+                eq(eventAssignments.userId, userId),
+              ),
             ),
-          ),
+        ),
       ),
     )
     .orderBy(asc(events.date));
 
-  // Filter for published + future in JS after the query (simpler than
-  // combining gte+eq in a single where clause with notExists subquery).
-  return rows
-    .filter((r) => r.status === "published" && r.date >= now)
-    .map((r) =>
-      upcomingEventForRequest.parse({
-        id: r.id,
-        name: r.name,
-        date: r.date,
-        venue: r.venue,
-        createdAt: r.createdAt,
-      }),
-    );
+  return rows.map((r) =>
+    upcomingEventForRequest.parse({
+      id: r.id,
+      name: r.name,
+      date: r.date,
+      venue: r.venue,
+      createdAt: r.createdAt,
+    }),
+  );
 }
 
 export async function listPendingRequestsCountByEvent(): Promise<

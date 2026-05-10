@@ -169,17 +169,44 @@ export const assignUser = withPermission(
       return { error: true, message: "User not found." };
     }
 
-    // Idempotent: if the assignment already exists, the upsert is a no-op
-    // and we can skip the notification email.
-    const inserted = await db
-      .insert(eventAssignments)
-      .values({ eventId, userId, assignedAt: new Date(), status: "assigned" })
-      .onConflictDoNothing()
-      .returning({ userId: eventAssignments.userId });
+    // Existing row check: a pre-existing row in `requested`/`rejected` state
+    // is flipped to `assigned` so an admin assigning directly always wins.
+    // If the row was already `assigned`, this is a no-op and we skip the
+    // notification email.
+    const existingRows = await db
+      .select({ status: eventAssignments.status })
+      .from(eventAssignments)
+      .where(
+        and(
+          eq(eventAssignments.eventId, eventId),
+          eq(eventAssignments.userId, userId),
+        ),
+      )
+      .limit(1);
+    const existing = existingRows[0];
 
-    if (inserted.length === 0) {
+    if (existing?.status === "assigned") {
       revalidatePath(`/events/${eventId}`);
       return { error: false, message: "User was already assigned." };
+    }
+
+    if (existing) {
+      await db
+        .update(eventAssignments)
+        .set({ status: "assigned", assignedAt: new Date() })
+        .where(
+          and(
+            eq(eventAssignments.eventId, eventId),
+            eq(eventAssignments.userId, userId),
+          ),
+        );
+    } else {
+      await db.insert(eventAssignments).values({
+        eventId,
+        userId,
+        assignedAt: new Date(),
+        status: "assigned",
+      });
     }
     await recordAudit({
       actorUserId: actorId,
@@ -371,8 +398,10 @@ export const requestParticipation = withPermission(
       return { error: true, message: "This event is in the past." };
     }
 
-    // Idempotent: if a row already exists (any status), do nothing.
-    await db
+    // Idempotent: if a row already exists (any status), do nothing — and
+    // skip the audit record + admin email fan-out so repeated clicks don't
+    // spam admins.
+    const inserted = await db
       .insert(eventAssignments)
       .values({
         eventId,
@@ -380,7 +409,12 @@ export const requestParticipation = withPermission(
         assignedAt: new Date(),
         status: "requested",
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ userId: eventAssignments.userId });
+
+    if (inserted.length === 0) {
+      return { error: false, message: "Participation already recorded." };
+    }
 
     await recordAudit({
       actorUserId: actorId,
@@ -391,7 +425,7 @@ export const requestParticipation = withPermission(
 
     // Fan-out email to all admins — best-effort, per-recipient try/catch.
     const adminRows = await db
-      .select({ email: user.email })
+      .select({ id: user.id, email: user.email })
       .from(userProfile)
       .innerJoin(user, eq(user.id, userProfile.userId))
       .where(eq(userProfile.role, "ADMIN"));
@@ -414,17 +448,22 @@ export const requestParticipation = withPermission(
         `${actorProfile.firstName} ${actorProfile.lastName}`.trim()
       : actorId;
 
+    // Defense-in-depth: strip CR/LF from interpolated values before they
+    // reach the email subject (mirrors the `messageEventAssigneesInput`
+    // guard from audit C-SEC-07).
+    const safeEventName = event.name.replace(/[\r\n]+/g, " ");
+    const safeActorName = actorName.replace(/[\r\n]+/g, " ");
     for (const admin of adminRows) {
       try {
         await sendEmail({
           to: admin.email,
-          subject: `Participation request: ${event.name}`,
-          text: `${actorName} has requested to participate in "${event.name}". Review and approve or reject in the admin panel.`,
+          subject: `Participation request: ${safeEventName}`,
+          text: `${safeActorName} has requested to participate in "${safeEventName}". Review and approve or reject in the admin panel.`,
         });
       } catch (err) {
         console.error(
           "requestParticipation: failed to notify admin",
-          admin.email,
+          { adminId: admin.id },
           err,
         );
       }
@@ -514,6 +553,8 @@ export const approveRequest = withPermission(
 
     revalidatePath("/events");
     revalidatePath(`/events/${eventId}`);
+    revalidatePath("/my-events");
+    revalidatePath("/upcoming-events");
     if (emailFailed) {
       return {
         error: false,
@@ -562,6 +603,8 @@ export const rejectRequest = withPermission(
 
     revalidatePath("/events");
     revalidatePath(`/events/${eventId}`);
+    revalidatePath("/my-events");
+    revalidatePath("/upcoming-events");
     return { error: false, message: "Request rejected." };
   },
 );

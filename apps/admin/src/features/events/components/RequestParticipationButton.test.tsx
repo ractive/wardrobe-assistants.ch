@@ -8,6 +8,9 @@ vi.mock("../server/actions", () => ({
   requestParticipation: mockRequestParticipation,
 }));
 
+const refresh = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+
 const mockToastError = vi.hoisted(() => vi.fn());
 const mockToastSuccess = vi.hoisted(() => vi.fn());
 vi.mock("sonner", () => ({

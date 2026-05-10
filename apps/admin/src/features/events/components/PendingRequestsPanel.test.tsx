@@ -20,6 +20,9 @@ vi.mock("sonner", () => ({
   },
 }));
 
+const refresh = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+
 afterEach(() => {
   cleanup();
   mockApproveRequest.mockReset();

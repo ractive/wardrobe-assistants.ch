@@ -413,15 +413,15 @@ describe("events feature — smoke", () => {
     );
     expect(upcoming.map((e) => e.id)).not.toContain(event.id);
 
-    // Member tries to request anyway — idempotent (onConflictDoNothing)
+    // Member tries to request anyway — idempotent (onConflictDoNothing).
+    // The action returns early without fanning out admin emails so repeated
+    // clicks can't spam admins.
     sendMock.mockClear();
     const result = await harness.runAs(member.cookies, () =>
       requestParticipation({ eventId: event.id }),
     );
-    // No error (onConflictDoNothing makes this a no-op at DB level)
     expect(result.error).toBe(false);
-    // No admin email sent (the insert was a no-op, but the email still fires
-    // because we fan out after insert regardless — only the insert was no-op)
+    expect(sendMock).toHaveBeenCalledTimes(0);
   });
 
   it("admin can delete an event — cascade removes assignments", async () => {

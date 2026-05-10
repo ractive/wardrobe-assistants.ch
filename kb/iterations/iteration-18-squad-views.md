@@ -69,10 +69,10 @@ Add to ADMIN's set (auto via `new Set(PERMISSIONS)`).
 - [x] `<UpcomingEventsList>` (squad-side) — card layout per event with a "Request to participate" button.
 - [x] `<RequestsBadge>` on the admin events table — shows count of pending requests.
 
-## Scope — verify [3/3]
+## Scope — verify [2/3]
 
 - [x] Tests: perm enforcement (squad can't reach admin routes; admin can't accidentally request on their own events); the "already assigned" check; email fan-out on request.
-- [ ] Manual end-to-end: SQUAD_MEMBER sees only their views; requests participation; admin gets email; admin approves; squad member sees event move from "requests" to "assigned".
+- [ ] Manual end-to-end: SQUAD_MEMBER sees only their views; requests participation; admin gets email; admin approves; squad member sees event move from "requests" to "assigned". *(Deferred — covered by smoke + unit tests against the real auth/Drizzle path. Reserve for a manual sweep before the next demo.)*
 - [x] `npm run verify` green.
 
 ## Out of scope (deliberate)

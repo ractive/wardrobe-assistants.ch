@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface RequestParticipationButtonProps {
 export function RequestParticipationButton({
   eventId,
 }: RequestParticipationButtonProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleClick() {
@@ -23,6 +25,7 @@ export function RequestParticipationButton({
           return;
         }
         toast.success(result.message);
+        router.refresh();
       } catch {
         toast.error("Something went wrong. Please try again.");
       }

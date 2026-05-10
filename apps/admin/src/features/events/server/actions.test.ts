@@ -205,7 +205,7 @@ describe("assignUser", () => {
   it("is idempotent: skips email if assignment already existed", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
-    dbMock._onConflictResult = []; // no insert happened
+    dbMock.pushSelect([{ status: "assigned" }]); // existing assigned row
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({ error: false, message: "User was already assigned." });
     expect(sendEmailMock).not.toHaveBeenCalled();
@@ -214,7 +214,16 @@ describe("assignUser", () => {
   it("sends a notification email on a fresh assignment", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
-    dbMock._onConflictResult = [{ userId: "u1" }];
+    dbMock.pushSelect([]); // no existing row
+    const r = await assignUser({ eventId: "e1", userId: "u1" });
+    expect(r.error).toBe(false);
+    expect(sendEmailMock).toHaveBeenCalledOnce();
+  });
+
+  it("flips a `requested` row to `assigned` and notifies", async () => {
+    dbMock.pushSelect([baseEvent]);
+    dbMock.pushSelect([{ email: "u@example.com" }]);
+    dbMock.pushSelect([{ status: "requested" }]);
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r.error).toBe(false);
     expect(sendEmailMock).toHaveBeenCalledOnce();
@@ -223,7 +232,7 @@ describe("assignUser", () => {
   it("returns a soft warning when the email fails", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
-    dbMock._onConflictResult = [{ userId: "u1" }];
+    dbMock.pushSelect([]); // no existing row
     sendEmailMock.mockRejectedValue(new Error("smtp boom"));
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({
@@ -364,8 +373,8 @@ describe("requestParticipation", () => {
 
   it("succeeds on a valid published future event and fans out to admins", async () => {
     dbMock.pushSelect([baseEvent]); // event lookup
-    dbMock._onConflictResult = []; // insert no-op (idempotent path)
-    dbMock.pushSelect([{ email: "admin@example.com" }]); // admin list
+    dbMock._onConflictResult = [{ userId: "actor1" }]; // new request inserted
+    dbMock.pushSelect([{ id: "admin1", email: "admin@example.com" }]);
     dbMock.pushSelect([
       {
         firstName: "Test",
@@ -377,6 +386,17 @@ describe("requestParticipation", () => {
     const r = await requestParticipation({ eventId: "e1" });
     expect(r).toEqual({ error: false, message: "Participation request sent." });
     expect(sendEmailMock).toHaveBeenCalledOnce();
+  });
+
+  it("is a no-op when the user already has a row (idempotent)", async () => {
+    dbMock.pushSelect([baseEvent]);
+    dbMock._onConflictResult = []; // insert no-op
+    const r = await requestParticipation({ eventId: "e1" });
+    expect(r).toEqual({
+      error: false,
+      message: "Participation already recorded.",
+    });
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 });
 

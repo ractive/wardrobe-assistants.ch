@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ function PendingRequestRow({
   eventId: string;
   request: PendingRequest;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleApprove() {
@@ -57,6 +59,7 @@ function PendingRequestRow({
           return;
         }
         toast.success(result.message);
+        router.refresh();
       } catch {
         toast.error("Something went wrong. Please try again.");
       }
@@ -75,6 +78,7 @@ function PendingRequestRow({
           return;
         }
         toast.success(result.message);
+        router.refresh();
       } catch {
         toast.error("Something went wrong. Please try again.");
       }
