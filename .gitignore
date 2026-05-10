@@ -68,3 +68,4 @@ infra/terraform/generated.tf
 
 # Claude Code transient runtime state (lock files, scheduled-task store)
 .claude/*.lock
+.claude/agent-memory/
