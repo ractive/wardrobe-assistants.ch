@@ -54,6 +54,43 @@ describe("inviteUserInput", () => {
       expect(r.data.mobileNumber).toBeUndefined();
     }
   });
+
+  it("accepts international format with separators and normalises to E.164", () => {
+    const r = inviteUserInput.safeParse({
+      ...valid,
+      mobileNumber: "+41 79 123 45 67",
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.mobileNumber).toBe("+41791234567");
+    }
+  });
+
+  it("accepts Swiss local format and normalises to E.164", () => {
+    const r = inviteUserInput.safeParse({
+      ...valid,
+      mobileNumber: "0791234567",
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.mobileNumber).toBe("+41791234567");
+    }
+  });
+
+  it("rejects too-short number", () => {
+    expect(
+      inviteUserInput.safeParse({ ...valid, mobileNumber: "12345" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects non-numeric junk", () => {
+    expect(
+      inviteUserInput.safeParse({
+        ...valid,
+        mobileNumber: "+1 555 not-a-number",
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("messageUserInput", () => {

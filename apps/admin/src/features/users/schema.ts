@@ -1,3 +1,7 @@
+// `/min` ships a smaller metadata bundle (covers parsing/validation but not
+// formatting), keeping the admin client bundle lean since this schema is
+// imported by the InviteUserForm client component.
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { z } from "zod";
 
 // Inlined to avoid a transitive import of @/lib/permissions, which loads
@@ -20,7 +24,25 @@ export const inviteUserInput = z.object({
     .trim()
     .max(40)
     .optional()
-    .transform((v) => (v === "" ? undefined : v)),
+    .transform((v) => (v === "" ? undefined : v))
+    .pipe(
+      z
+        .string()
+        .optional()
+        .transform((v, ctx) => {
+          if (v === undefined) return undefined;
+          const parsed = parsePhoneNumberFromString(v, "CH");
+          if (!parsed?.isValid()) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message:
+                "Must be a valid phone number (E.164 or local Swiss format)",
+            });
+            return z.NEVER;
+          }
+          return parsed.number;
+        }),
+    ),
   role: z.enum(ROLES),
 });
 export type InviteUserInput = z.infer<typeof inviteUserInput>;
