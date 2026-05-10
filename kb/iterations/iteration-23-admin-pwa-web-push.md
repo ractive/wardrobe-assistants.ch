@@ -2,7 +2,7 @@
 title: Iteration 23 — Admin PWA + Web Push notifications
 type: iteration
 order: 24
-status: planned
+status: implemented
 ---
 
 # Iteration 23 — Admin PWA + Web Push notifications
@@ -29,9 +29,9 @@ The doc is **not** on the public Next.js docs site nav at the time of writing �
 
 ## Pre-flight
 
-- [ ] iter-20 (email senders) merged. Push is wired alongside the existing email send paths — both channels are dispatched from the same call site.
-- [ ] Decide where the dispatcher lives: cross-cutting infra in `apps/admin/src/lib/notify.ts` (recommended — same layer as `lib/email.ts`), or feature-owned. See [`kb/admin-architecture/overview.md`](../admin-architecture/overview.md).
-- [ ] Verify production HTTPS chain end-to-end (already in place via bunny.net — admin.wardrobe-assistants.ch). Web Push **requires** HTTPS at every hop.
+- [x] iter-20 (email senders) merged. Push is wired alongside the existing email send paths — both channels are dispatched from the same call site.
+- [x] Decide where the dispatcher lives: cross-cutting infra in `apps/admin/src/lib/notify.ts` (recommended — same layer as `lib/email.ts`), or feature-owned. See [`kb/admin-architecture/overview.md`](../admin-architecture/overview.md). → landed in `apps/admin/src/lib/notify.ts`.
+- [x] Verify production HTTPS chain end-to-end (already in place via bunny.net — admin.wardrobe-assistants.ch). Web Push **requires** HTTPS at every hop.
 
 ## Scope
 
@@ -261,13 +261,13 @@ These are server actions, not API routes — keep with the iter-15+ feature-slic
 
 ## Done when
 
-- [ ] Manifest reachable at `/manifest.webmanifest` with correct icons, theme_color matches bordeaux brand override.
-- [ ] App is installable as PWA on Chrome desktop, Chrome Android, and Safari iOS (verified manually with `next dev --experimental-https` for local + a deploy preview for prod-like).
-- [ ] Lighthouse PWA audit passes the installable + manifest checks.
-- [ ] Service worker registers, push subscribe flow completes end-to-end on at least one Chromium browser and one iOS Safari home-screen install.
-- [ ] `notifyUser(...)` replaces `sendTemplated(...)` for the four notifying triggers; both channels fire and stale subscriptions self-cleanup on send failure.
-- [ ] `npm run verify` green, including new smoke tests.
-- [ ] PR description cites `node_modules/next/dist/docs/01-app/02-guides/progressive-web-apps.md` as the primary reference so the next reader can find the doc that isn't on the public docs site.
+- [x] Manifest reachable at `/manifest.webmanifest` with correct icons, theme_color matches bordeaux brand override. (code path verified; manual browser check pending deploy)
+- [ ] App is installable as PWA on Chrome desktop, Chrome Android, and Safari iOS (verified manually with `next dev --experimental-https` for local + a deploy preview for prod-like). Manual install pending deploy.
+- [ ] Lighthouse PWA audit passes the installable + manifest checks. Pending deploy.
+- [ ] Service worker registers, push subscribe flow completes end-to-end on at least one Chromium browser and one iOS Safari home-screen install. Code path verified; manual E2E pending deploy.
+- [x] `notifyUser(...)` replaces `sendTemplated(...)` for the four notifying triggers; both channels fire and stale subscriptions self-cleanup on send failure.
+- [x] `npm run verify` green, including new smoke tests.
+- [x] PR description cites `node_modules/next/dist/docs/01-app/02-guides/progressive-web-apps.md` as the primary reference so the next reader can find the doc that isn't on the public docs site.
 
 ## Future iterations (not this one)
 

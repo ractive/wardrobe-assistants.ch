@@ -12,8 +12,8 @@ import { revalidatePath } from "next/cache";
 import { ulid } from "ulid";
 import { recordAudit } from "@/lib/audit-log";
 import { db } from "@/lib/db";
-import { sendTemplated, sendTemplatedBatch } from "@/lib/email";
 import { env } from "@/lib/env";
+import { notifyUser } from "@/lib/notify";
 import { withPermission } from "@/lib/permissions";
 import {
   type ActionResult,
@@ -217,12 +217,13 @@ export const assignUser = withPermission(
       metadata: { userId },
     });
 
-    // Best-effort notification: a transient SMTP failure must not roll back
-    // the assignment row — the assignment is the source of truth, the email
-    // is just a heads-up. Surface a soft warning in the result instead.
-    let emailFailed = false;
+    // Best-effort notification: a transient failure must not roll back the
+    // assignment row. notifyUser fires both email and push; a single-channel
+    // failure is logged and resolves successfully, but it throws an
+    // AggregateError when *both* channels fail so we surface a soft warning.
+    let notifyFailed = false;
     try {
-      await sendTemplated("eventAssigned", target.email, {
+      await notifyUser(userId, "eventAssigned", {
         recipientName: target.name ?? target.email,
         eventName: event.name,
         eventDate: format(event.date, "EEEE, d MMMM yyyy"),
@@ -231,15 +232,15 @@ export const assignUser = withPermission(
         eventUrl: `${env.betterAuthUrl}/events/${event.id}`,
       });
     } catch (err) {
-      emailFailed = true;
-      console.error("assignUser: failed to send notification email", err);
+      notifyFailed = true;
+      console.error("assignUser: failed to send notification", err);
     }
 
     revalidatePath(`/events/${eventId}`);
-    if (emailFailed) {
+    if (notifyFailed) {
       return {
         error: false,
-        message: "Assigned, but notification email failed to send.",
+        message: "Assigned, but notification failed to send.",
       };
     }
     return { error: false, message: "User assigned." };
@@ -301,7 +302,7 @@ export const messageEventAssignees = withPermission(
     }
 
     const recipients = await db
-      .select({ email: user.email })
+      .select({ userId: eventAssignments.userId, email: user.email })
       .from(eventAssignments)
       .innerJoin(user, eq(user.id, eventAssignments.userId))
       .where(eq(eventAssignments.eventId, input.eventId));
@@ -316,17 +317,22 @@ export const messageEventAssignees = withPermission(
     // Sanitize CR/LF from caller-supplied subject (header injection guard,
     // mirrors the pattern from requestParticipation's safeEventName).
     const safeSubject = input.subject.replace(/[\r\n]+/g, " ");
-    const { sent, failed } = await sendTemplatedBatch(
-      "eventBroadcast",
-      recipients.map((r) => ({
-        to: r.email,
-        params: {
+
+    // Fan out via notifyUser — both email and push per recipient.
+    // notifyUser only rejects when *both* channels fail for that recipient,
+    // so `failed` here counts recipients who received nothing. Single-channel
+    // failures are logged inside notifyUser and resolve as fulfilled.
+    const results = await Promise.allSettled(
+      recipients.map((r) =>
+        notifyUser(r.userId, "eventBroadcast", {
           subject: safeSubject,
           eventName: eventRow.name,
           body: input.body,
-        },
-      })),
+        }),
+      ),
     );
+    const sent = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected").length;
 
     if (sent === 0) {
       const correlationId = await recordAudit({
@@ -448,27 +454,21 @@ export const requestParticipation = withPermission(
     const safeActorName = actorName.replace(/[\r\n]+/g, " ");
     const reviewUrl = `${env.betterAuthUrl}/events/${event.id}`;
     const eventDateStr = format(event.date, "EEEE, d MMMM yyyy");
-    // Best-effort batch fan-out to all admins. Errors are logged but must not
-    // prevent the participation request from being recorded. Awaited so that
-    // serverless runtimes don't terminate the function before the batch send
-    // completes (Copilot review feedback).
+    // Best-effort fan-out to all admins via notifyUser — both email and push.
+    // Errors are logged but must not prevent the participation request from
+    // being recorded. Awaited so serverless runtimes don't terminate before
+    // the fan-out completes.
     if (adminRows.length > 0) {
-      try {
-        await sendTemplatedBatch(
-          "participationRequested",
-          adminRows.map((admin) => ({
-            to: admin.email,
-            params: {
-              actorName: safeActorName,
-              eventName: safeEventName,
-              eventDate: eventDateStr,
-              reviewUrl,
-            },
-          })),
-        );
-      } catch (err) {
-        console.error("requestParticipation: batch notify failed", err);
-      }
+      await Promise.allSettled(
+        adminRows.map((admin) =>
+          notifyUser(admin.id, "participationRequested", {
+            actorName: safeActorName,
+            eventName: safeEventName,
+            eventDate: eventDateStr,
+            reviewUrl,
+          }),
+        ),
+      );
     }
 
     revalidatePath("/upcoming-events");
@@ -533,11 +533,11 @@ export const approveRequest = withPermission(
       .limit(1);
     const target = userRows[0];
 
-    let emailFailed = false;
-    if (event && target) {
+    let notifyFailed = false;
+    if (event) {
       try {
-        await sendTemplated("eventAssigned", target.email, {
-          recipientName: target.name ?? target.email,
+        await notifyUser(userId, "eventAssigned", {
+          recipientName: target?.name ?? target?.email ?? userId,
           eventName: event.name,
           eventDate: format(event.date, "EEEE, d MMMM yyyy"),
           eventVenue: event.venue,
@@ -545,8 +545,8 @@ export const approveRequest = withPermission(
           eventUrl: `${env.betterAuthUrl}/events/${eventId}`,
         });
       } catch (err) {
-        emailFailed = true;
-        console.error("approveRequest: failed to send notification email", err);
+        notifyFailed = true;
+        console.error("approveRequest: failed to send notification", err);
       }
     }
 
@@ -554,10 +554,10 @@ export const approveRequest = withPermission(
     revalidatePath(`/events/${eventId}`);
     revalidatePath("/my-events");
     revalidatePath("/upcoming-events");
-    if (emailFailed) {
+    if (notifyFailed) {
       return {
         error: false,
-        message: "Request approved, but notification email failed to send.",
+        message: "Request approved, but notification failed to send.",
       };
     }
     return { error: false, message: "Request approved." };

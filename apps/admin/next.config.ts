@@ -23,7 +23,11 @@ import type { NextConfig } from "next";
 // `_next/static` or `_next/image` is content-addressable and immutable; the
 // app should not stamp `no-store` over it. Favicon kept out of the
 // no-store rule for the same reason — bunny edge can cache it.
-const ASSET_EXCLUDE_SOURCE = "/((?!_next/static|_next/image|favicon.ico).*)";
+// `sw.js` is excluded too — it has its own dedicated headers entry below
+// (Service-Worker-Allowed plus an SW-specific Cache-Control). Without the
+// exclusion, both rules emit Cache-Control and the browser sees a duplicate.
+const ASSET_EXCLUDE_SOURCE =
+  "/((?!_next/static|_next/image|favicon.ico|sw.js).*)";
 
 const cacheControlHeader = {
   key: "Cache-Control",
@@ -64,6 +68,24 @@ const nextConfig: NextConfig = {
       {
         source: ASSET_EXCLUDE_SOURCE,
         headers: [cacheControlHeader],
+      },
+      // iter-23: service worker headers. Cache-Control no-store ensures the
+      // browser always fetches the latest SW (defense in depth alongside the
+      // updateViaCache:"none" registration option). Service-Worker-Allowed
+      // grants root scope so the SW can intercept push events for all pages.
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
       },
     ];
   },

@@ -33,6 +33,33 @@ export const envSchema = z
     // running app — left optional so dev/prod boots don't trip on absence.
     ADMIN_EMAIL: z.string().optional(),
     ADMIN_PASSWORD: z.string().optional(),
+    // VAPID keys for Web Push (iter-23). All three are optional at boot:
+    // push paths short-circuit (no-op + warn) when any are missing —
+    // mirroring the RESEND_API_KEY dev-fallback pattern.
+    // Web-push VAPID public key: ~87 base64url chars (P-256 uncompressed).
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z
+      .string()
+      .regex(
+        /^[A-Za-z0-9_-]{80,90}$/,
+        "NEXT_PUBLIC_VAPID_PUBLIC_KEY must be base64url (~87 chars)",
+      )
+      .optional(),
+    // Web-push VAPID private key: ~43 base64url chars (P-256 scalar).
+    VAPID_PRIVATE_KEY: z
+      .string()
+      .regex(
+        /^[A-Za-z0-9_-]{40,46}$/,
+        "VAPID_PRIVATE_KEY must be base64url (~43 chars)",
+      )
+      .optional(),
+    // RFC 8292 §2.1: contact URI, must be a mailto: or https: URL.
+    VAPID_SUBJECT: z
+      .string()
+      .regex(
+        /^(mailto:|https:\/\/).+/,
+        "VAPID_SUBJECT must start with mailto: or https://",
+      )
+      .optional(),
   })
   .superRefine((value, ctx) => {
     const { NODE_ENV, DATABASE_URL, BETTER_AUTH_SECRET, RESEND_API_KEY } =
@@ -98,6 +125,9 @@ export type Env = Readonly<{
   resendApiKey: string | undefined;
   adminEmail: string | undefined;
   adminPassword: string | undefined;
+  vapidPublicKey: string | undefined;
+  vapidPrivateKey: string | undefined;
+  vapidSubject: string | undefined;
 }>;
 
 export function parseEnv(source: NodeJS.ProcessEnv): Env {
@@ -123,6 +153,9 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     resendApiKey: parsed.data.RESEND_API_KEY || undefined,
     adminEmail: parsed.data.ADMIN_EMAIL || undefined,
     adminPassword: parsed.data.ADMIN_PASSWORD || undefined,
+    vapidPublicKey: parsed.data.NEXT_PUBLIC_VAPID_PUBLIC_KEY || undefined,
+    vapidPrivateKey: parsed.data.VAPID_PRIVATE_KEY || undefined,
+    vapidSubject: parsed.data.VAPID_SUBJECT || undefined,
   });
 }
 

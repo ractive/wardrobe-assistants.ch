@@ -17,6 +17,16 @@ export type ParticipationRequestedParams = {
   reviewUrl: string;
 };
 
+import type { PushPayload } from "../push";
+
+export function pushPayload(p: ParticipationRequestedParams): PushPayload {
+  return {
+    title: "Participation request",
+    body: `${p.actorName} wants to join ${p.eventName}`,
+    url: p.reviewUrl,
+  };
+}
+
 const brand = "#1a1a1a";
 
 export default function ParticipationRequested(

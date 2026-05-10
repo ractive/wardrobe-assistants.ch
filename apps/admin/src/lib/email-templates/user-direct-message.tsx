@@ -14,6 +14,19 @@ export type UserDirectMessageParams = {
   body: string;
 };
 
+import type { PushPayload } from "../push";
+
+export function pushPayload(p: UserDirectMessageParams): PushPayload {
+  // First non-whitespace line of the body, truncated; fall back to subject
+  // when the body is empty or whitespace-only (`??` would let an empty
+  // first line through as the notification body).
+  const firstLine = p.body.split(/\r?\n/).find((line) => line.trim() !== "");
+  return {
+    title: p.subject,
+    body: firstLine?.slice(0, 120) || p.subject,
+  };
+}
+
 export default function UserDirectMessage(p: UserDirectMessageParams) {
   // Tag each line with a position-based key so React has a stable identifier.
   const paragraphs = p.body.split(/\r?\n/).map((line, pos) => ({

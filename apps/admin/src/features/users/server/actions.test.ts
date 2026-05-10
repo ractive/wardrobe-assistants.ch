@@ -26,10 +26,17 @@ vi.mock("@/lib/auth", () => ({
   },
 }));
 vi.mock("@/lib/email");
+// iter-23: messageUser now calls notifyUser (email + push). Mock notify at
+// the boundary so unit tests don't exercise email/push internals and don't
+// need extra DB select results for notifyUser's user-lookup query.
+vi.mock("@/lib/notify", () => ({
+  notifyUser: vi.fn(async () => {}),
+}));
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendTemplated } from "@/lib/email";
+import { notifyUser } from "@/lib/notify";
 import { deleteUser, inviteUser, messageUser } from "./actions";
 
 function makeDbMock() {
@@ -74,7 +81,8 @@ const signUpMock = auth.api.signUpEmail as unknown as ReturnType<typeof vi.fn>;
 const resetMock = auth.api.requestPasswordReset as unknown as ReturnType<
   typeof vi.fn
 >;
-const sendTemplatedMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
+const _sendTemplatedMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
+const notifyUserMock = notifyUser as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   dbMock._selectResults = [];
@@ -84,8 +92,10 @@ beforeEach(() => {
   signUpMock.mockReset();
   resetMock.mockReset();
   resetMock.mockResolvedValue(undefined);
-  sendTemplatedMock.mockReset();
-  sendTemplatedMock.mockResolvedValue(undefined);
+  _sendTemplatedMock.mockReset();
+  _sendTemplatedMock.mockResolvedValue(undefined);
+  notifyUserMock.mockReset();
+  notifyUserMock.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -197,38 +207,40 @@ describe("messageUser", () => {
   it("rejects invalid input", async () => {
     const r = await messageUser({ userId: "u1", subject: "", body: "hi" });
     expect(r.error).toBe(true);
-    expect(sendTemplatedMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 
   it("returns 'User not found' when no user matches", async () => {
-    dbMock._selectResults = [[]];
+    dbMock._selectResults = [[]]; // user existence check returns empty
     const r = await messageUser({
       userId: "missing",
       subject: "Hi",
       body: "Body",
     });
     expect(r).toEqual({ error: true, message: "User not found." });
-    expect(sendTemplatedMock).not.toHaveBeenCalled();
+    expect(notifyUserMock).not.toHaveBeenCalled();
   });
 
-  it("sends an email to the target user", async () => {
-    dbMock._selectResults = [[{ email: "target@example.com" }]];
+  it("calls notifyUser for the target user", async () => {
+    // iter-23: messageUser now checks existence via {id} select, then calls
+    // notifyUser. The DB mock just needs one result for the existence check.
+    dbMock._selectResults = [[{ id: "u2" }]];
     const r = await messageUser({
       userId: "u2",
       subject: "Welcome",
       body: "Hello there.",
     });
     expect(r).toEqual({ error: false, message: "Message sent." });
-    expect(sendTemplatedMock).toHaveBeenCalledWith(
-      "userDirectMessage",
-      "target@example.com",
-      { subject: "Welcome", body: "Hello there." },
-    );
+    expect(notifyUserMock).toHaveBeenCalledOnce();
+    expect(notifyUserMock).toHaveBeenCalledWith("u2", "userDirectMessage", {
+      subject: "Welcome",
+      body: "Hello there.",
+    });
   });
 
-  it("returns a sanitized error + correlation ID when sendTemplated throws", async () => {
-    dbMock._selectResults = [[{ email: "target@example.com" }]];
-    sendTemplatedMock.mockRejectedValue(new Error("smtp boom"));
+  it("returns a sanitized error + correlation ID when notifyUser throws", async () => {
+    dbMock._selectResults = [[{ id: "u2" }]];
+    notifyUserMock.mockRejectedValue(new Error("notify boom"));
     const r = await messageUser({
       userId: "u2",
       subject: "Welcome",
@@ -237,8 +249,8 @@ describe("messageUser", () => {
     expect(r.error).toBe(true);
     if (r.error) {
       // iter-16f / C-SEC-08: generic message + correlation ID, not the
-      // raw Resend / nodemailer error text.
-      expect(r.message).not.toContain("smtp boom");
+      // raw underlying error text.
+      expect(r.message).not.toContain("notify boom");
       expect(r.message).toMatch(/Failed to send message/);
       expect(r.message).toMatch(/ref [0-9A-Z]{20,}/);
     }

@@ -211,6 +211,37 @@ Plus `assertPermission` at page-route tops for guarded pages.
 
 ---
 
+## ADR-017 — Cross-channel notifications: always fire both email and push
+
+**Status:** accepted | **Date:** 2026-05-10
+
+**Decision:** `lib/notify.ts` is the single notification entry point for all user-facing events. It always fires both email (Resend) and push (web-push/VAPID) for every supported template key, using `Promise.allSettled` so one channel's failure never blocks the other. Callers use one function (`notifyUser(userId, templateKey, params)`) and do not decide which channels to use.
+
+**Supported template keys (iter-23):** `eventAssigned`, `eventBroadcast`, `participationRequested`, `userDirectMessage`.
+
+**Alternatives considered:**
+- Caller chooses channels at each call site (rejected: every new call site must reason about channel selection; easy to forget push; harder to audit coverage).
+- Push-only for some events (rejected: premature; email is the reliable fallback; keeping both always simplifies the mental model).
+- A `channels` option param (rejected: same as caller-chooses; adds API surface with no near-term benefit).
+
+**Rationale:** Dual-channel always simplifies call sites (one call, one audit log entry) and guarantees push reach for all notifiable events without opt-in per call site. `Promise.allSettled` ensures neither channel blocks delivery through the other. Per-channel failures are logged inside `lib/push.ts` / `lib/email.ts` without propagating unless both throw.
+
+---
+
+## ADR-018 — Service worker is push-only; no offline/fetch handler
+
+**Status:** accepted | **Date:** 2026-05-10
+
+**Decision:** `public/sw.js` contains only `push` and `notificationclick` event handlers. There is no `fetch` handler, no caching, and no offline support. This is permanent, not deferred.
+
+**Alternatives considered:**
+- Serwist / Workbox for offline-first (rejected: admin requires real-time data; stale cache is actively harmful for an ops tool; added complexity with no user benefit).
+- Cache static assets only (rejected: even asset caching introduces CLS/update-delay risks; the app is behind auth so perceived load time isn't a public-facing concern).
+
+**Rationale:** Push delivery is the only reason a service worker exists in this app. Offline is out of scope by product decision. A fetch handler that does nothing but pass through is still a foot-gun (opaque responses, update mechanics). Simpler SW = fewer failure modes.
+
+---
+
 ## How to add an ADR
 
 When making a new architectural decision:

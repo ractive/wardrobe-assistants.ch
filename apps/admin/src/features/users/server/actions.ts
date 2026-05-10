@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { recordAudit } from "@/lib/audit-log";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendTemplated } from "@/lib/email";
+import { notifyUser } from "@/lib/notify";
 import { withPermission } from "@/lib/permissions";
 import { consume, RATE_LIMITS } from "@/lib/rate-limit";
 import {
@@ -200,8 +200,9 @@ export const messageUser = withPermission(
     }
     const input = parsed.data;
 
+    // Verify user exists before attempting to notify.
     const rows = await db
-      .select({ email: user.email })
+      .select({ id: user.id })
       .from(user)
       .where(eq(user.id, input.userId))
       .limit(1);
@@ -211,7 +212,10 @@ export const messageUser = withPermission(
     }
 
     try {
-      await sendTemplated("userDirectMessage", target.email, {
+      // notifyUser fires both email and push; per-channel failures are logged
+      // inside notifyUser and do not throw unless both channels throw (which
+      // would be caught here).
+      await notifyUser(input.userId, "userDirectMessage", {
         subject: input.subject,
         body: input.body,
       });
