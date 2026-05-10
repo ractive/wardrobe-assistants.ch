@@ -2,7 +2,7 @@
 title: Iteration 23 — Admin PWA + Web Push notifications
 type: iteration
 order: 24
-status: implemented
+status: done
 ---
 
 # Iteration 23 — Admin PWA + Web Push notifications
