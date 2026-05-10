@@ -2,7 +2,7 @@
 title: Iteration 22 — Invoice flow (event invoicing with services)
 type: iteration
 order: 23
-status: planned
+status: deferred
 ---
 
 # Iteration 22 — Invoice flow

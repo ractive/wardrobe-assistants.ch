@@ -13,7 +13,7 @@ The original spec said "we'll add an SMS service later" and "evaluate WhatsApp f
 
 - **Defer SMS.** Email (iter-20) is sufficient for current squad size; adding a second channel doubles operational surface for marginal benefit.
 - **Defer WhatsApp.** Meta template pre-approval and opt-in friction are not worth taking on without a measurable email-deliverability gap.
-- **Ship E.164 validation now.** `mobileNumber` validated and normalised via `libphonenumber-js` (default region CH). Full rationale: [notes/sms-whatsapp-evaluation](../notes/sms-whatsapp-evaluation.md).
+- **Ship E.164 validation now.** `mobileNumber` validated and normalised via `libphonenumber-js` (default region CH). Full rationale: [notes/sms-whatsapp-evaluation](sms-whatsapp-evaluation.md).
 
 ## Open questions to resolve
 

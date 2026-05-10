@@ -47,11 +47,11 @@ Rationale for a single column over a join table: the product question is "email 
 
 ## SMS provider shortlist
 
-| Provider | Price to CH | Data residency | Notes |
-|---|---|---|---|
-| **ASPSMS** | ~CHF 0.06/SMS | Switzerland | Swiss-domiciled; simpler compliance story; straightforward REST API |
-| Twilio | ~CHF 0.07/SMS | US (SCCs available) | Incumbent choice; strong CH coverage; more complex compliance paperwork |
-| Vonage | ~CHF 0.07–0.08/SMS | US/EU | Reliable but no CH-residency advantage |
+| Provider   | Price to CH        | Data residency      | Notes                                                                   |
+| ---------- | ------------------ | ------------------- | ----------------------------------------------------------------------- |
+| **ASPSMS** | ~CHF 0.06/SMS      | Switzerland         | Swiss-domiciled; simpler compliance story; straightforward REST API     |
+| Twilio     | ~CHF 0.07/SMS      | US (SCCs available) | Incumbent choice; strong CH coverage; more complex compliance paperwork |
+| Vonage     | ~CHF 0.07–0.08/SMS | US/EU               | Reliable but no CH-residency advantage                                  |
 
 **Clarification on bunny.net:** bunny.net does NOT offer SMS. The iter-21 plan speculated "BunnyCDN SMS as of late 2025" — this is incorrect. bunny.net's product surface is CDN, storage, stream, and DNS. Remove this from consideration.
 
