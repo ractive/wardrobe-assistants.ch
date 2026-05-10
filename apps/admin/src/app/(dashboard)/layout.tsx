@@ -1,19 +1,20 @@
 import { redirect } from "next/navigation";
 import {
   Calendar,
+  CalendarCheck,
+  CalendarPlus,
   DashboardSidebar,
   NavLink,
   Tag,
   Users,
 } from "@/components/DashboardSidebar";
-import { HasPermission } from "@/components/HasPermission";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { getCachedSession } from "@/lib/auth";
+import { getCachedSession, roleForUserId } from "@/lib/auth";
 
 export default async function DashboardLayout({
   children,
@@ -26,18 +27,32 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/login");
   }
+  // Sidebar is role-gated (not permission-gated) so admins don't see the
+  // squad-member shortcuts and squad members don't see admin sections —
+  // ADMIN holds every permission, so a permission gate would show both sets.
+  const role = await roleForUserId(session.user.id);
+  const isAdmin = role === "ADMIN";
+  const isSquadMember = role === "SQUAD_MEMBER";
   return (
     <SidebarProvider>
       <DashboardSidebar userEmail={session.user.email}>
-        <HasPermission perm="USER_INVITE">
-          <NavLink href="/users" label="Users" icon={Users} />
-        </HasPermission>
-        <HasPermission perm="EVENT_VIEW">
-          <NavLink href="/events" label="Events" icon={Calendar} />
-        </HasPermission>
-        <HasPermission perm="SERVICE_CREATE">
-          <NavLink href="/services" label="Services" icon={Tag} />
-        </HasPermission>
+        {isAdmin && (
+          <>
+            <NavLink href="/users" label="Users" icon={Users} />
+            <NavLink href="/events" label="Events" icon={Calendar} />
+            <NavLink href="/services" label="Services" icon={Tag} />
+          </>
+        )}
+        {isSquadMember && (
+          <>
+            <NavLink href="/my-events" label="My Events" icon={CalendarCheck} />
+            <NavLink
+              href="/upcoming-events"
+              label="Upcoming Events"
+              icon={CalendarPlus}
+            />
+          </>
+        )}
       </DashboardSidebar>
       <SidebarInset>
         <header className="flex items-center gap-3 border-[var(--border)] border-b px-4 py-3 md:px-6 md:py-4">

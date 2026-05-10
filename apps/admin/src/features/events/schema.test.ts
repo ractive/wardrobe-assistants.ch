@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  approveRequestInput,
   assignUserInput,
   createEventInput,
   deleteEventInput,
   eventListItem,
   messageEventAssigneesInput,
+  myEventListItem,
+  pendingRequest,
+  rejectRequestInput,
+  requestParticipationInput,
   unassignUserInput,
   updateEventInput,
 } from "./schema";
@@ -144,6 +149,83 @@ describe("eventListItem", () => {
         assigneesCount: 0,
         createdAt: new Date(),
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe("requestParticipationInput", () => {
+  it("requires a non-empty eventId", () => {
+    expect(requestParticipationInput.safeParse({ eventId: "" }).success).toBe(
+      false,
+    );
+    expect(requestParticipationInput.safeParse({ eventId: "e1" }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe("approveRequestInput / rejectRequestInput", () => {
+  const valid = { eventId: "e1", userId: "u1" };
+
+  it("requires both ids for approve", () => {
+    expect(
+      approveRequestInput.safeParse({ eventId: "", userId: "u1" }).success,
+    ).toBe(false);
+    expect(
+      approveRequestInput.safeParse({ eventId: "e1", userId: "" }).success,
+    ).toBe(false);
+    expect(approveRequestInput.safeParse(valid).success).toBe(true);
+  });
+
+  it("requires both ids for reject", () => {
+    expect(
+      rejectRequestInput.safeParse({ eventId: "", userId: "u1" }).success,
+    ).toBe(false);
+    expect(
+      rejectRequestInput.safeParse({ eventId: "e1", userId: "" }).success,
+    ).toBe(false);
+    expect(rejectRequestInput.safeParse(valid).success).toBe(true);
+  });
+});
+
+describe("myEventListItem", () => {
+  const valid = {
+    id: "e1",
+    name: "Event",
+    date: new Date(),
+    venue: "Venue",
+    status: "published" as const,
+    assignmentStatus: "assigned" as const,
+    createdAt: new Date(),
+  };
+
+  it("accepts a valid my-event item", () => {
+    expect(myEventListItem.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects unknown assignmentStatus", () => {
+    expect(
+      myEventListItem.safeParse({ ...valid, assignmentStatus: "pending" })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("pendingRequest", () => {
+  const valid = {
+    userId: "u1",
+    displayName: "Test User",
+    email: "test@example.com",
+    requestedAt: new Date(),
+  };
+
+  it("accepts a valid pending request", () => {
+    expect(pendingRequest.safeParse(valid).success).toBe(true);
+  });
+
+  it("requires userId", () => {
+    expect(
+      pendingRequest.safeParse({ ...valid, userId: undefined }).success,
     ).toBe(false);
   });
 });

@@ -1,6 +1,14 @@
 "use client";
 
-import { Calendar, Home, type LucideIcon, Tag, Users } from "lucide-react";
+import {
+  Calendar,
+  CalendarCheck,
+  CalendarPlus,
+  Home,
+  type LucideIcon,
+  Tag,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -107,4 +115,4 @@ export function DashboardSidebar({
 
 // Re-export icon constants so the layout can pass them to NavLink without
 // importing lucide directly.
-export { Calendar, Tag, Users };
+export { Calendar, CalendarCheck, CalendarPlus, Tag, Users };

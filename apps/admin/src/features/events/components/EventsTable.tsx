@@ -10,8 +10,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { EventListItem } from "../schema";
+import { RequestsBadge } from "./RequestsBadge";
 
-export function EventsTable({ events }: { events: EventListItem[] }) {
+interface EventsTableProps {
+  events: EventListItem[];
+  pendingRequestsCountByEvent?: Map<string, number>;
+}
+
+export function EventsTable({
+  events,
+  pendingRequestsCountByEvent,
+}: EventsTableProps) {
   if (events.length === 0) {
     return (
       <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-8 text-center text-[var(--muted-foreground)]">
@@ -34,7 +43,14 @@ export function EventsTable({ events }: { events: EventListItem[] }) {
               className="block p-4 hover:bg-[var(--muted)]"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="font-medium text-base">{event.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-base">{event.name}</span>
+                  {pendingRequestsCountByEvent && (
+                    <RequestsBadge
+                      count={pendingRequestsCountByEvent.get(event.id) ?? 0}
+                    />
+                  )}
+                </div>
                 <StatusBadge kind="event" status={event.status} />
               </div>
               <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
@@ -68,12 +84,19 @@ export function EventsTable({ events }: { events: EventListItem[] }) {
             {events.map((event) => (
               <TableRow key={event.id}>
                 <TableCell>
-                  <Link
-                    href={`/events/${event.id}`}
-                    className="font-medium hover:underline"
-                  >
-                    {event.name}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/events/${event.id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {event.name}
+                    </Link>
+                    {pendingRequestsCountByEvent && (
+                      <RequestsBadge
+                        count={pendingRequestsCountByEvent.get(event.id) ?? 0}
+                      />
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>{format(event.date, "yyyy-MM-dd")}</TableCell>
                 <TableCell>{event.venue}</TableCell>

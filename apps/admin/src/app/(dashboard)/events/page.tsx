@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { NoPermissionCard } from "@/components/NoPermissionCard";
 import { CreateEventDialog } from "@/features/events/components/EventDialog";
 import { EventsTable } from "@/features/events/components/EventsTable";
-import { listEvents } from "@/features/events/server/queries";
+import {
+  listEvents,
+  listPendingRequestsCountByEvent,
+} from "@/features/events/server/queries";
 import { getCachedSession } from "@/lib/auth";
 import { userHasPermission } from "@/lib/permissions";
 
@@ -21,7 +24,14 @@ export default async function EventsPage() {
   }
 
   const canCreate = await userHasPermission("EVENT_CREATE");
-  const events = await listEvents();
+  const canApproveRequests = await userHasPermission("EVENT_APPROVE_REQUEST");
+
+  const [events, pendingRequestsCountByEvent] = await Promise.all([
+    listEvents(),
+    canApproveRequests
+      ? listPendingRequestsCountByEvent()
+      : Promise.resolve(undefined),
+  ]);
 
   return (
     <section className="flex flex-col gap-6">
@@ -34,7 +44,10 @@ export default async function EventsPage() {
         </div>
         {canCreate && <CreateEventDialog />}
       </header>
-      <EventsTable events={events} />
+      <EventsTable
+        events={events}
+        pendingRequestsCountByEvent={pendingRequestsCountByEvent}
+      />
     </section>
   );
 }

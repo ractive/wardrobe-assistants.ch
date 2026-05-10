@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { AssigneesPicker } from "@/features/events/components/AssigneesPicker";
 import { EventDetailActions } from "@/features/events/components/EventDetailActions";
+import { PendingRequestsPanel } from "@/features/events/components/PendingRequestsPanel";
 import {
   getEventById,
   listAssignableUsers,
@@ -36,11 +37,13 @@ export default async function EventDetailPage({
   const event = await getEventById(id);
   if (!event) notFound();
 
-  const [canAssign, canDelete, canMessage] = await Promise.all([
-    userHasPermission("EVENT_ASSIGN"),
-    userHasPermission("EVENT_DELETE"),
-    userHasPermission("EVENT_MESSAGE_ASSIGNED"),
-  ]);
+  const [canAssign, canDelete, canMessage, canApproveRequests] =
+    await Promise.all([
+      userHasPermission("EVENT_ASSIGN"),
+      userHasPermission("EVENT_DELETE"),
+      userHasPermission("EVENT_MESSAGE_ASSIGNED"),
+      userHasPermission("EVENT_APPROVE_REQUEST"),
+    ]);
   const candidates = canAssign ? await listAssignableUsers() : [];
 
   return (
@@ -103,6 +106,12 @@ export default async function EventDetailPage({
           )}
         </div>
       </div>
+      {canApproveRequests && event.pendingRequests.length > 0 && (
+        <PendingRequestsPanel
+          eventId={event.id}
+          pendingRequests={event.pendingRequests}
+        />
+      )}
     </section>
   );
 }

@@ -30,10 +30,13 @@ vi.mock("@/lib/email");
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import {
+  approveRequest,
   assignUser,
   createEvent,
   deleteEvent,
   messageEventAssignees,
+  rejectRequest,
+  requestParticipation,
   unassignUser,
   updateEvent,
 } from "./actions";
@@ -202,7 +205,7 @@ describe("assignUser", () => {
   it("is idempotent: skips email if assignment already existed", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
-    dbMock._onConflictResult = []; // no insert happened
+    dbMock.pushSelect([{ status: "assigned" }]); // existing assigned row
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({ error: false, message: "User was already assigned." });
     expect(sendEmailMock).not.toHaveBeenCalled();
@@ -211,7 +214,16 @@ describe("assignUser", () => {
   it("sends a notification email on a fresh assignment", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
-    dbMock._onConflictResult = [{ userId: "u1" }];
+    dbMock.pushSelect([]); // no existing row
+    const r = await assignUser({ eventId: "e1", userId: "u1" });
+    expect(r.error).toBe(false);
+    expect(sendEmailMock).toHaveBeenCalledOnce();
+  });
+
+  it("flips a `requested` row to `assigned` and notifies", async () => {
+    dbMock.pushSelect([baseEvent]);
+    dbMock.pushSelect([{ email: "u@example.com" }]);
+    dbMock.pushSelect([{ status: "requested" }]);
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r.error).toBe(false);
     expect(sendEmailMock).toHaveBeenCalledOnce();
@@ -220,7 +232,7 @@ describe("assignUser", () => {
   it("returns a soft warning when the email fails", async () => {
     dbMock.pushSelect([baseEvent]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
-    dbMock._onConflictResult = [{ userId: "u1" }];
+    dbMock.pushSelect([]); // no existing row
     sendEmailMock.mockRejectedValue(new Error("smtp boom"));
     const r = await assignUser({ eventId: "e1", userId: "u1" });
     expect(r).toEqual({
@@ -321,6 +333,141 @@ describe("messageEventAssignees", () => {
       body: "Hello.",
     });
     expect(r).toEqual({ error: true, message: "Event not found." });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("requestParticipation", () => {
+  const futureDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days from now
+  const baseEvent = {
+    id: "e1",
+    name: "Spring Event",
+    status: "published",
+    date: futureDate,
+  };
+
+  it("rejects invalid input (empty eventId)", async () => {
+    const r = await requestParticipation({ eventId: "" });
+    expect(r.error).toBe(true);
+  });
+
+  it("returns error when event not found", async () => {
+    dbMock.pushSelect([]); // event not found
+    const r = await requestParticipation({ eventId: "ghost" });
+    expect(r).toEqual({ error: true, message: "Event not found." });
+  });
+
+  it("returns error when event is not published", async () => {
+    dbMock.pushSelect([{ ...baseEvent, status: "draft" }]);
+    const r = await requestParticipation({ eventId: "e1" });
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/published/i);
+  });
+
+  it("returns error when event is in the past", async () => {
+    dbMock.pushSelect([{ ...baseEvent, date: new Date("2020-01-01") }]);
+    const r = await requestParticipation({ eventId: "e1" });
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/past/i);
+  });
+
+  it("succeeds on a valid published future event and fans out to admins", async () => {
+    dbMock.pushSelect([baseEvent]); // event lookup
+    dbMock._onConflictResult = [{ userId: "actor1" }]; // new request inserted
+    dbMock.pushSelect([{ id: "admin1", email: "admin@example.com" }]);
+    dbMock.pushSelect([
+      {
+        firstName: "Test",
+        lastName: "User",
+        nickname: null,
+        email: "actor@example.com",
+      },
+    ]); // actor profile
+    const r = await requestParticipation({ eventId: "e1" });
+    expect(r).toEqual({ error: false, message: "Participation request sent." });
+    expect(sendEmailMock).toHaveBeenCalledOnce();
+  });
+
+  it("is a no-op when the user already has a row (idempotent)", async () => {
+    dbMock.pushSelect([baseEvent]);
+    dbMock._onConflictResult = []; // insert no-op
+    const r = await requestParticipation({ eventId: "e1" });
+    expect(r).toEqual({
+      error: false,
+      message: "Participation already recorded.",
+    });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("approveRequest", () => {
+  it("rejects invalid input", async () => {
+    const r = await approveRequest({ eventId: "", userId: "u1" });
+    expect(r.error).toBe(true);
+  });
+
+  it("returns error when no pending request found", async () => {
+    dbMock._updateReturning = [];
+    const r = await approveRequest({ eventId: "e1", userId: "u1" });
+    expect(r).toEqual({
+      error: true,
+      message: "No pending request found for this user on this event.",
+    });
+  });
+
+  it("succeeds and sends email when request is pending", async () => {
+    dbMock._updateReturning = [{ userId: "u1" }];
+    dbMock.pushSelect([
+      {
+        name: "Event",
+        date: new Date(),
+        venue: "Studio",
+        notes: null,
+      },
+    ]); // event for email
+    dbMock.pushSelect([{ email: "member@example.com" }]); // user for email
+    const r = await approveRequest({ eventId: "e1", userId: "u1" });
+    expect(r.error).toBe(false);
+    expect(sendEmailMock).toHaveBeenCalledOnce();
+  });
+
+  it("returns soft warning when email fails", async () => {
+    dbMock._updateReturning = [{ userId: "u1" }];
+    dbMock.pushSelect([
+      {
+        name: "Event",
+        date: new Date(),
+        venue: "Studio",
+        notes: null,
+      },
+    ]);
+    dbMock.pushSelect([{ email: "member@example.com" }]);
+    sendEmailMock.mockRejectedValue(new Error("smtp down"));
+    const r = await approveRequest({ eventId: "e1", userId: "u1" });
+    expect(r.error).toBe(false);
+    expect(r.message).toMatch(/email failed/i);
+  });
+});
+
+describe("rejectRequest", () => {
+  it("rejects invalid input", async () => {
+    const r = await rejectRequest({ eventId: "", userId: "u1" });
+    expect(r.error).toBe(true);
+  });
+
+  it("returns error when no pending request found", async () => {
+    dbMock._updateReturning = [];
+    const r = await rejectRequest({ eventId: "e1", userId: "u1" });
+    expect(r).toEqual({
+      error: true,
+      message: "No pending request found for this user on this event.",
+    });
+  });
+
+  it("succeeds when request is pending", async () => {
+    dbMock._updateReturning = [{ userId: "u1" }];
+    const r = await rejectRequest({ eventId: "e1", userId: "u1" });
+    expect(r).toEqual({ error: false, message: "Request rejected." });
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
 });

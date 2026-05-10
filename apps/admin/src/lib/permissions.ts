@@ -21,6 +21,8 @@ export const PERMISSIONS = [
   // Squad-member surface
   "SQUAD_VIEW_ASSIGNED",
   "SQUAD_REQUEST_PARTICIPATION",
+  // Admin reviews squad-member participation requests
+  "EVENT_APPROVE_REQUEST",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 

@@ -86,13 +86,69 @@ export const eventListItem = z.object({
 });
 export type EventListItem = z.infer<typeof eventListItem>;
 
+export const ASSIGNMENT_STATUSES = [
+  "assigned",
+  "requested",
+  "rejected",
+] as const;
+export type AssignmentStatus = (typeof ASSIGNMENT_STATUSES)[number];
+
+export const requestParticipationInput = z.object({
+  eventId: z.string().min(1),
+});
+export type RequestParticipationInput = z.infer<
+  typeof requestParticipationInput
+>;
+
+export const approveRequestInput = z.object({
+  eventId: z.string().min(1),
+  userId: z.string().min(1),
+});
+export type ApproveRequestInput = z.infer<typeof approveRequestInput>;
+
+export const rejectRequestInput = z.object({
+  eventId: z.string().min(1),
+  userId: z.string().min(1),
+});
+export type RejectRequestInput = z.infer<typeof rejectRequestInput>;
+
 export const eventAssignee = z.object({
   userId: z.string(),
   email: z.string(),
   displayName: z.string(),
   assignedAt: z.date(),
+  status: z.enum(ASSIGNMENT_STATUSES),
 });
 export type EventAssignee = z.infer<typeof eventAssignee>;
+
+export const myEventListItem = z.object({
+  id: z.string(),
+  name: z.string(),
+  date: z.date(),
+  venue: z.string(),
+  status: z.enum(EVENT_STATUSES),
+  assignmentStatus: z.enum(ASSIGNMENT_STATUSES),
+  createdAt: z.date(),
+});
+export type MyEventListItem = z.infer<typeof myEventListItem>;
+
+// Events eligible for squad-member participation requests — no assignment yet.
+export const upcomingEventForRequest = z.object({
+  id: z.string(),
+  name: z.string(),
+  date: z.date(),
+  venue: z.string(),
+  createdAt: z.date(),
+});
+export type UpcomingEventForRequest = z.infer<typeof upcomingEventForRequest>;
+
+export const pendingRequest = z.object({
+  userId: z.string(),
+  displayName: z.string(),
+  email: z.string(),
+  requestedAt: z.date(),
+});
+export type PendingRequest = z.infer<typeof pendingRequest>;
 
 export const eventDetail = z.object({
   id: z.string(),
@@ -104,6 +160,7 @@ export const eventDetail = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   assignees: z.array(eventAssignee),
+  pendingRequests: z.array(pendingRequest),
 });
 export type EventDetail = z.infer<typeof eventDetail>;
 

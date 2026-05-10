@@ -38,6 +38,23 @@ describe("StatusBadge", () => {
     }
   });
 
+  describe("kind=assignment", () => {
+    const cases = [
+      { status: "assigned" as const, label: "Assigned" },
+      { status: "requested" as const, label: "Requested" },
+      { status: "rejected" as const, label: "Rejected" },
+    ];
+
+    for (const { status, label } of cases) {
+      it(`renders the ${status} badge with the right label`, () => {
+        const { getByText } = render(
+          <StatusBadge kind="assignment" status={status} />,
+        );
+        expect(getByText(label)).toBeInTheDocument();
+      });
+    }
+  });
+
   it("is axe-clean", async () => {
     const { container } = render(
       <div>
@@ -47,6 +64,9 @@ describe("StatusBadge", () => {
         <StatusBadge kind="event" status="done" />
         <StatusBadge kind="user" status="invited" />
         <StatusBadge kind="user" status="verified" />
+        <StatusBadge kind="assignment" status="assigned" />
+        <StatusBadge kind="assignment" status="requested" />
+        <StatusBadge kind="assignment" status="rejected" />
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();
