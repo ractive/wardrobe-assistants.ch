@@ -2,7 +2,7 @@
 title: Iteration 27 — Offer flow (send + customer page + accept)
 type: iteration
 order: 28
-status: implemented
+status: done
 ---
 
 # Iteration 27 — Offer flow
