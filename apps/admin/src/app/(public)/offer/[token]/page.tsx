@@ -66,6 +66,7 @@ export default async function OfferPage({
       .from(auditLog)
       .where(
         and(
+          eq(auditLog.targetType, "booking"),
           eq(auditLog.targetId, booking.id),
           eq(auditLog.action, "booking.offer.revised"),
         ),
@@ -231,11 +232,11 @@ export default async function OfferPage({
       {booking.status === "offered" && (
         <section className="space-y-4">
           {showReconfirmBanner && (
-            <div className="rounded-md border border-[var(--border)] bg-amber-50 p-4">
-              <p className="font-semibold text-sm text-amber-800">
+            <div className="rounded-md border border-[var(--border)] bg-amber-50 dark:bg-amber-900/30 p-4">
+              <p className="font-semibold text-sm text-amber-800 dark:text-amber-200">
                 This offer was updated since you accepted.
               </p>
-              <p className="mt-1 text-amber-700 text-sm">
+              <p className="mt-1 text-amber-700 dark:text-amber-300 text-sm">
                 Please review the revised details above and re-confirm your
                 acceptance.
               </p>

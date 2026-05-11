@@ -973,34 +973,54 @@ export const sendRevisedOffer = withPermission(
         ),
       );
 
-    const wasAccepted = booking.status === "accepted";
     const nextVersion = booking.offerVersion + 1;
     const now = new Date();
     let snapshotTotal = 0;
     let raced = false;
+    // Determined inside the tx by which conditional UPDATE branch wins, so a
+    // concurrent customer accept that lands between the pre-tx read and the
+    // UPDATE is reflected accurately in audit + email copy.
+    let wasAccepted = false;
 
     await db.transaction(async (tx) => {
-      // Conditional UPDATE guards against double-clicks and race conditions.
-      const updated = await tx
+      const setClause = {
+        status: "offered" as const,
+        offerVersion: nextVersion,
+        lastOfferSentAt: now,
+        acceptedAt: null, // clear acceptance when revising
+        updatedAt: now,
+      };
+      // Try the accepted→offered branch first: if it wins, the prior state was
+      // actually accepted regardless of what the pre-tx read saw.
+      const acceptedUpdate = await tx
         .update(bookings)
-        .set({
-          status: "offered",
-          offerVersion: nextVersion,
-          lastOfferSentAt: now,
-          acceptedAt: null, // clear acceptance when revising
-          updatedAt: now,
-        })
+        .set(setClause)
         .where(
           and(
             eq(bookings.id, bookingId),
-            inArray(bookings.status, ["offered", "accepted"]),
+            eq(bookings.status, "accepted"),
             eq(bookings.offerVersion, booking.offerVersion),
           ),
         )
         .returning({ id: bookings.id });
-      if (updated.length === 0) {
-        raced = true;
-        return;
+      if (acceptedUpdate.length > 0) {
+        wasAccepted = true;
+      } else {
+        const offeredUpdate = await tx
+          .update(bookings)
+          .set(setClause)
+          .where(
+            and(
+              eq(bookings.id, bookingId),
+              eq(bookings.status, "offered"),
+              eq(bookings.offerVersion, booking.offerVersion),
+            ),
+          )
+          .returning({ id: bookings.id });
+        if (offeredUpdate.length === 0) {
+          raced = true;
+          return;
+        }
       }
 
       const result = await snapshotSelectionsToItems(

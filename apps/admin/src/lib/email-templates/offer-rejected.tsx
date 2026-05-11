@@ -13,7 +13,6 @@ import type { PushPayload } from "../push";
 // iter-28: notification to admins when a customer declines an offer on the
 // public offer page. Both push and email per the iter-23 dual-channel decision.
 export type OfferRejectedParams = {
-  bookingId: string;
   customerName: string;
   /** Admin booking-detail URL. */
   bookingUrl: string;

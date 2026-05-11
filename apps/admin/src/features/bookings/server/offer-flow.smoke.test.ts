@@ -799,18 +799,16 @@ describe("offer flow — smoke", () => {
   });
 
   // -------------------------------------------------------------------------
-  // sendRevisedOffer: terminal status → rejected
+  // sendRevisedOffer: non-revisable status (created)
   // -------------------------------------------------------------------------
 
-  it("sendRevisedOffer: fails on terminal status", async () => {
+  it("sendRevisedOffer: fails when booking is in created state", async () => {
     const admin = await harness.seedAdmin({
       email: "revise-admin3@offer-smoke.local",
       password: "Sup3rSecure!Pass",
     });
 
-    const { createBooking, sendRevisedOffer, adminAcceptOffer } = await import(
-      "./actions"
-    );
+    const { createBooking, sendRevisedOffer } = await import("./actions");
     const { listBookings } = await import("./queries");
 
     await harness.runAs(admin.cookies, () =>
@@ -826,13 +824,12 @@ describe("offer flow — smoke", () => {
     expect(booking).toBeDefined();
     if (!booking) return;
 
-    // Move to accepted (a non-offered/non-accepted terminal for revision).
-    // Actually accepted is valid for revision; use created instead.
+    // 'created' is neither 'offered' nor 'accepted', so revision must reject.
     const result = await harness.runAs(admin.cookies, () =>
       sendRevisedOffer({ bookingId: booking.id }),
     );
     expect(result.error).toBe(true);
-    expect(result.message).toMatch(/offered|accepted|created/i);
+    expect(result.message).toMatch(/created/i);
   });
 
   // -------------------------------------------------------------------------

@@ -488,8 +488,11 @@ export function CancelBookingDialog({
           <div className="text-sm">
             <p className="font-medium">Squad members who will be notified:</p>
             <ul className="mt-1 list-disc list-inside text-[var(--muted-foreground)]">
-              {squadMemberNames.map((name) => (
-                <li key={name}>{name}</li>
+              {squadMemberNames.map((name, idx) => (
+                // Display names can collide (e.g. two members sharing a
+                // nickname); index is stable for this render-only list.
+                // biome-ignore lint/suspicious/noArrayIndexKey: render-only list
+                <li key={idx}>{name}</li>
               ))}
             </ul>
           </div>

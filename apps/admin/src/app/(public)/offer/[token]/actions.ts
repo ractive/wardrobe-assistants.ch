@@ -143,6 +143,14 @@ export async function rejectOffer(
     };
   }
 
+  // Bound unauthenticated input so a single request can't bloat audit rows or
+  // admin emails. Trim + cap at 2000 chars, treat empty as absent.
+  const trimmedReason = reason?.trim();
+  const normalizedReason =
+    trimmedReason && trimmedReason.length > 0
+      ? trimmedReason.slice(0, 2_000)
+      : undefined;
+
   const bookingRows = await db
     .select()
     .from(bookings)
@@ -151,6 +159,10 @@ export async function rejectOffer(
   const booking = bookingRows[0];
   if (!booking) {
     return { error: true, message: "Offer not found." };
+  }
+  // Idempotent: a repeat request after a successful decline should not error.
+  if (booking.status === "rejected") {
+    return { error: false };
   }
   if (booking.status !== "offered") {
     return {
@@ -195,16 +207,15 @@ export async function rejectOffer(
     metadata: {
       offerVersion: booking.offerVersion,
       via: "customer",
-      reason: reason ?? null,
+      reason: normalizedReason ?? null,
     },
   });
 
   // Best-effort admin notification.
   notifyAdmins("offerRejected", {
-    bookingId: booking.id,
     customerName: booking.customerName ?? "Customer",
     bookingUrl: `${env.betterAuthUrl}/bookings/${booking.id}`,
-    reason: reason ?? undefined,
+    reason: normalizedReason,
   }).catch((err) => {
     console.error("[rejectOffer] notifyAdmins failed", err);
   });
