@@ -9,6 +9,7 @@ import {
 } from "@react-email/components";
 import type { PushPayload } from "../push";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 // iter-27: notification to admins when a customer accepts an offer on the
 // public offer page. Both push and email per the iter-23 dual-channel decision.
@@ -30,8 +31,6 @@ export function pushPayload(p: OfferAcceptedParams): PushPayload {
     url: p.bookingUrl,
   };
 }
-
-const brand = "#1a1a1a";
 
 export default function OfferAccepted(p: OfferAcceptedParams) {
   return (

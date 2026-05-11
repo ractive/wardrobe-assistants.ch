@@ -32,7 +32,7 @@ export function pushPayload(p: OfferAcceptedAdminParams): PushPayload {
   };
 }
 
-const brand = "#1a1a1a";
+import { brand } from "./_tokens";
 
 export default function OfferAcceptedAdmin(p: OfferAcceptedAdminParams) {
   return (

@@ -2,7 +2,7 @@
 title: Iteration 32 — Admin bordeaux theme
 type: iteration
 order: 33
-status: planned
+status: in-progress
 ---
 
 # Iteration 32 — Admin bordeaux theme

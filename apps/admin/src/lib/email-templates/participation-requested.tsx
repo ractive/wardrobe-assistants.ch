@@ -8,6 +8,7 @@ import {
   Text,
 } from "@react-email/components";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 export type ParticipationRequestedParams = {
   actorName: string;
@@ -26,8 +27,6 @@ export function pushPayload(p: ParticipationRequestedParams): PushPayload {
     url: p.reviewUrl,
   };
 }
-
-const brand = "#1a1a1a";
 
 export default function ParticipationRequested(
   p: ParticipationRequestedParams,

@@ -5,7 +5,7 @@ describe("manifest()", () => {
   it("matches snapshot", () => {
     expect(manifest()).toMatchInlineSnapshot(`
       {
-        "background_color": "#ffffff",
+        "background_color": "#fdfbf9",
         "description": "Squad coordination for Wardrobe Assistants",
         "display": "standalone",
         "icons": [
@@ -29,13 +29,13 @@ describe("manifest()", () => {
         "name": "Wardrobe Assistants Admin",
         "short_name": "WA Admin",
         "start_url": "/",
-        "theme_color": "#7d2b3b",
+        "theme_color": "#b94e3a",
       }
     `);
   });
 
   it("has bordeaux theme_color", () => {
-    expect(manifest().theme_color).toBe("#7d2b3b");
+    expect(manifest().theme_color).toBe("#b94e3a");
   });
 
   it("start_url is /", () => {

@@ -8,6 +8,7 @@ import {
   Text,
 } from "@react-email/components";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 // iter-28: sent to the customer when an admin sends a revised offer.
 // Email-only — customer has no user account and no push subscription.
@@ -21,8 +22,6 @@ export type OfferRevisedParams = {
   /** True when the prior offer had already been accepted by the customer. */
   wasAccepted?: boolean;
 };
-
-const brand = "#1a1a1a";
 
 export default function OfferRevised(p: OfferRevisedParams) {
   return (

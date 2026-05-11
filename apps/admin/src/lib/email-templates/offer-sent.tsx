@@ -8,6 +8,7 @@ import {
   Text,
 } from "@react-email/components";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 // iter-27: sent to the customer when an admin sends them an offer.
 // Email-only — customer has no user account and no push subscription.
@@ -24,8 +25,6 @@ export type OfferSentParams = {
   /** Grand total, pre-formatted ("CHF 1,234.-"). */
   totalFormatted: string;
 };
-
-const brand = "#1a1a1a";
 
 export default function OfferSent(p: OfferSentParams) {
   return (

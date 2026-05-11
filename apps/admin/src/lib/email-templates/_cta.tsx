@@ -1,8 +1,5 @@
 import { Button } from "@react-email/components";
-
-// Brand colour matches the per-template `brand` constant used across the
-// templates. Centralised here so a future palette change is a single edit.
-const brand = "#1a1a1a";
+import { brand, brandForeground } from "./_tokens";
 
 type Variant = "primary" | "secondary";
 
@@ -20,10 +17,10 @@ const baseStyle = {
 const variantStyle = {
   primary: {
     backgroundColor: brand,
-    color: "#ffffff",
+    color: brandForeground,
   },
   secondary: {
-    backgroundColor: "#ffffff",
+    backgroundColor: brandForeground,
     color: brand,
     border: `1px solid ${brand}`,
   },

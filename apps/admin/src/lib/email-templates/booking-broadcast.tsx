@@ -28,7 +28,7 @@ export function pushPayload(p: BookingBroadcastParams): PushPayload {
   };
 }
 
-const brand = "#1a1a1a";
+import { brand } from "./_tokens";
 
 export default function BookingBroadcast(p: BookingBroadcastParams) {
   const paragraphs = p.body.split(/\r?\n/).map((line, pos) => ({

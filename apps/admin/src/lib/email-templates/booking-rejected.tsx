@@ -29,7 +29,7 @@ export function pushPayload(p: BookingRejectedParams): PushPayload {
   };
 }
 
-const brand = "#1a1a1a";
+import { brand } from "./_tokens";
 
 export default function BookingRejected(p: BookingRejectedParams) {
   return (
