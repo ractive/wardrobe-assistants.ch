@@ -11,6 +11,8 @@ The first end-to-end customer round-trip. Admin clicks "Send offer" on a `create
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. [iter-28](iteration-28-offer-revisions-cancellation.md) adds revisions and post-acceptance cancellation; this iteration only covers the first send and first accept.
 
+> **Heads-up from iter-26**: the `services` table uses a whole-CHF integer column `services.price` (no centimes). The pseudocode below still references `unitPriceCents` / `totalCents` — when implementing, use `price` (whole CHF) and rename the snapshot fields accordingly (e.g. `unitPrice`, `totalPrice`) to match the iter-25/iter-26 convention. Also reuse iter-26's hardened `clientIpFromHeaders` (rightmost-trust XFF) for the `offerView` and `offerAccept` rate-limit buckets — no extra work needed since both buckets live in `lib/rate-limit.ts`.
+
 ## Decisions
 
 - **Snapshot at every "send offer" action.** A `booking_service_item` row set is created (with `offerVersion = current + 1`) every time `sendOffer` runs. The previous snapshot stays in the table (different `offerVersion`) so history is queryable; the customer-facing page reads `MAX(offerVersion)`.
