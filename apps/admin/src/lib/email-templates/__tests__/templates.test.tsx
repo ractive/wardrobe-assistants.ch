@@ -1,29 +1,32 @@
 import { render } from "@react-email/render";
 import { describe, expect, it } from "vitest";
-import BookingAssigned from "../booking-assigned";
+import AssignmentInvite from "../assignment-invite";
 import BookingBroadcast from "../booking-broadcast";
 import ParticipationRequested from "../participation-requested";
 import PasswordReset from "../password-reset";
 import UserDirectMessage from "../user-direct-message";
 import VerifyEmail from "../verify-email";
 
-describe("bookingAssigned template", () => {
+describe("assignmentInvite template", () => {
   const params = {
     recipientName: "Alex",
     bookingName: "Spring Show",
     bookingDate: "Sunday, 1 March 2026",
     bookingVenue: "Theatre 1",
     bookingNotes: "Bring black",
-    bookingUrl: "https://admin.wardrobe-assistants.ch/bookings/abc",
+    confirmUrl:
+      "https://admin.wardrobe-assistants.ch/my-bookings/abc?action=confirm",
+    declineUrl:
+      "https://admin.wardrobe-assistants.ch/my-bookings/abc?action=decline",
   };
 
   it("renders html snapshot", async () => {
-    const html = await render(<BookingAssigned {...params} />);
+    const html = await render(<AssignmentInvite {...params} />);
     expect(html).toMatchSnapshot();
   });
 
   it("renders plaintext snapshot", async () => {
-    const text = await render(<BookingAssigned {...params} />, {
+    const text = await render(<AssignmentInvite {...params} />, {
       plainText: true,
     });
     expect(text).toMatchSnapshot();

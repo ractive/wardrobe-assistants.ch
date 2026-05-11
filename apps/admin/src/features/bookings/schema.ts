@@ -302,6 +302,23 @@ export const cancelBookingInput = z.object({
 });
 export type CancelBookingInput = z.infer<typeof cancelBookingInput>;
 
+// iter-29: squad-member assignment lifecycle inputs.
+export const confirmAssignmentInput = z.object({
+  bookingId: z.string().min(1),
+});
+export type ConfirmAssignmentInput = z.infer<typeof confirmAssignmentInput>;
+
+export const declineAssignmentInput = z.object({
+  bookingId: z.string().min(1),
+});
+export type DeclineAssignmentInput = z.infer<typeof declineAssignmentInput>;
+
+export const withdrawAssignmentInput = z.object({
+  bookingId: z.string().min(1),
+  reason: optionalTrimmedText(500),
+});
+export type WithdrawAssignmentInput = z.infer<typeof withdrawAssignmentInput>;
+
 export const actionResult = z.discriminatedUnion("error", [
   z.object({ error: z.literal(false), message: z.string() }),
   z.object({ error: z.literal(true), message: z.string() }),

@@ -3,7 +3,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "./db";
 import { sendTemplated } from "./email";
 import type { ParamsFor } from "./email-templates";
-import { pushPayload as bookingAssignedPushPayload } from "./email-templates/booking-assigned";
+import { pushPayload as assignmentConfirmedPushPayload } from "./email-templates/assignment-confirmed";
+import { pushPayload as assignmentDeclinedPushPayload } from "./email-templates/assignment-declined";
+import { pushPayload as assignmentInvitePushPayload } from "./email-templates/assignment-invite";
+import { pushPayload as assignmentWithdrawnPushPayload } from "./email-templates/assignment-withdrawn";
 import { pushPayload as bookingBroadcastPushPayload } from "./email-templates/booking-broadcast";
 import { pushPayload as bookingCancelledPushPayload } from "./email-templates/booking-cancelled";
 import { pushPayload as bookingRequestedPushPayload } from "./email-templates/booking-requested";
@@ -20,7 +23,10 @@ import { sendPush } from "./push";
 //   - offerSent, offerRevised: customer has no user account / push subscription
 //   - offerAcceptedAdmin: customer email-only (no user account)
 export type NotifiableTemplateKey =
-  | "bookingAssigned"
+  | "assignmentConfirmed"
+  | "assignmentDeclined"
+  | "assignmentInvite"
+  | "assignmentWithdrawn"
   | "bookingBroadcast"
   | "bookingCancelled"
   | "bookingRequested"
@@ -36,8 +42,22 @@ function pushPayloadFor<K extends NotifiableTemplateKey>(
   params: ParamsFor<K>,
 ) {
   switch (key) {
-    case "bookingAssigned":
-      return bookingAssignedPushPayload(params as ParamsFor<"bookingAssigned">);
+    case "assignmentConfirmed":
+      return assignmentConfirmedPushPayload(
+        params as ParamsFor<"assignmentConfirmed">,
+      );
+    case "assignmentDeclined":
+      return assignmentDeclinedPushPayload(
+        params as ParamsFor<"assignmentDeclined">,
+      );
+    case "assignmentInvite":
+      return assignmentInvitePushPayload(
+        params as ParamsFor<"assignmentInvite">,
+      );
+    case "assignmentWithdrawn":
+      return assignmentWithdrawnPushPayload(
+        params as ParamsFor<"assignmentWithdrawn">,
+      );
     case "bookingBroadcast":
       return bookingBroadcastPushPayload(
         params as ParamsFor<"bookingBroadcast">,

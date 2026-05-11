@@ -26,6 +26,10 @@ export const PERMISSIONS = [
   // Squad-member surface
   "SQUAD_VIEW_ASSIGNED",
   "SQUAD_REQUEST_PARTICIPATION",
+  // iter-29: squad-member assignment confirmation lifecycle.
+  "SQUAD_CONFIRM_ASSIGNMENT",
+  "SQUAD_DECLINE_ASSIGNMENT",
+  "SQUAD_WITHDRAW_ASSIGNMENT",
   // Admin reviews squad-member participation requests
   "BOOKING_APPROVE_REQUEST",
 ] as const;
@@ -37,6 +41,9 @@ export const ROLE_PERMISSIONS = {
     "BOOKING_VIEW",
     "SQUAD_VIEW_ASSIGNED",
     "SQUAD_REQUEST_PARTICIPATION",
+    "SQUAD_CONFIRM_ASSIGNMENT",
+    "SQUAD_DECLINE_ASSIGNMENT",
+    "SQUAD_WITHDRAW_ASSIGNMENT",
   ]),
 } satisfies Record<Role, ReadonlySet<Permission>>;
 
