@@ -275,7 +275,7 @@ describe("assignUser", () => {
     expect(notifyUserMock).toHaveBeenCalledOnce();
     expect(notifyUserMock).toHaveBeenCalledWith(
       "u1",
-      "bookingAssigned",
+      "assignmentInvite",
       expect.objectContaining({ bookingName: "Spring" }),
     );
   });
@@ -507,7 +507,7 @@ describe("approveRequest", () => {
     expect(notifyUserMock).toHaveBeenCalledOnce();
     expect(notifyUserMock).toHaveBeenCalledWith(
       "u1",
-      "bookingAssigned",
+      "assignmentInvite",
       expect.objectContaining({ bookingName: "Booking" }),
     );
   });

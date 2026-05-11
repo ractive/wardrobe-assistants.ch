@@ -57,25 +57,30 @@ afterEach(() => {
 });
 
 describe("notifyUser", () => {
-  it("fires both email and push for bookingAssigned", async () => {
-    await notifyUser("user-1", "bookingAssigned", {
+  it("fires both email and push for assignmentInvite", async () => {
+    await notifyUser("user-1", "assignmentInvite", {
       recipientName: "Alice",
       bookingName: "Spring Gala",
       bookingDate: "Saturday, 1 March 2026",
       bookingVenue: "Studio A",
-      bookingUrl: "https://admin.example.com/bookings/b1",
+      confirmUrl: "https://admin.example.com/my-bookings/b1?action=confirm",
+      declineUrl: "https://admin.example.com/my-bookings/b1?action=decline",
     });
 
     expect(sendTemplatedMock).toHaveBeenCalledOnce();
     expect(sendTemplatedMock).toHaveBeenCalledWith(
-      "bookingAssigned",
+      "assignmentInvite",
       "user@example.com",
-      expect.objectContaining({ bookingName: "Spring Gala" }),
+      expect.objectContaining({
+        bookingName: "Spring Gala",
+        confirmUrl: expect.any(String),
+        declineUrl: expect.any(String),
+      }),
     );
     expect(sendPushMock).toHaveBeenCalledOnce();
     expect(sendPushMock).toHaveBeenCalledWith(
       "user-1",
-      expect.objectContaining({ title: "Assigned to Spring Gala" }),
+      expect.objectContaining({ title: "New assignment" }),
     );
   });
 

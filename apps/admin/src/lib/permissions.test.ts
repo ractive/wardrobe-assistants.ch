@@ -35,12 +35,21 @@ describe("ROLES + PERMISSIONS catalog", () => {
   });
 
   it("SQUAD_MEMBER has only the squad-surface perms plus BOOKING_VIEW", () => {
-    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.size).toBe(3);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.size).toBe(6);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("BOOKING_VIEW")).toBe(true);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_VIEW_ASSIGNED")).toBe(true);
     expect(
       ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_REQUEST_PARTICIPATION"),
     ).toBe(true);
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_CONFIRM_ASSIGNMENT")).toBe(
+      true,
+    );
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_DECLINE_ASSIGNMENT")).toBe(
+      true,
+    );
+    expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("SQUAD_WITHDRAW_ASSIGNMENT")).toBe(
+      true,
+    );
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("USER_INVITE")).toBe(false);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("BOOKING_CREATE")).toBe(false);
     expect(ROLE_PERMISSIONS.SQUAD_MEMBER.has("BOOKING_DELETE")).toBe(false);

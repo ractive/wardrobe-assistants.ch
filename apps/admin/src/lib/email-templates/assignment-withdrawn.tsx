@@ -8,34 +8,35 @@ import {
   Preview,
   Text,
 } from "@react-email/components";
+import type { PushPayload } from "../push";
 
-export type BookingAssignedParams = {
+export type AssignmentWithdrawnParams = {
   recipientName: string;
   bookingName: string;
-  /** Pre-formatted date string, e.g. "Saturday, 1 March 2026" */
   bookingDate: string;
   bookingVenue: string;
-  bookingNotes?: string;
+  squadMemberName: string;
+  reason?: string;
   bookingUrl: string;
 };
 
-import type { PushPayload } from "../push";
-
-export function pushPayload(p: BookingAssignedParams): PushPayload {
+export function pushPayload(p: AssignmentWithdrawnParams): PushPayload {
   return {
-    title: `Assigned to ${p.bookingName}`,
-    body: `${p.bookingDate} — ${p.bookingVenue}`,
+    title: "Assignment withdrawn",
+    body: `${p.squadMemberName} withdrew from ${p.bookingName}`,
     url: p.bookingUrl,
   };
 }
 
 const brand = "#1a1a1a";
 
-export default function BookingAssigned(p: BookingAssignedParams) {
+export default function AssignmentWithdrawn(p: AssignmentWithdrawnParams) {
   return (
     <Html lang="en">
       <Head />
-      <Preview>You've been assigned to {p.bookingName}</Preview>
+      <Preview>
+        {p.squadMemberName} withdrew from {p.bookingName}
+      </Preview>
       <Body style={{ backgroundColor: "#ffffff", fontFamily: "sans-serif" }}>
         <Container
           style={{ maxWidth: "560px", margin: "40px auto", padding: "0 16px" }}
@@ -43,24 +44,24 @@ export default function BookingAssigned(p: BookingAssignedParams) {
           <Heading
             style={{ color: brand, fontSize: "22px", marginBottom: "16px" }}
           >
-            Assigned to {p.bookingName}
+            Assignment withdrawn
           </Heading>
           <Text style={{ color: "#333333", fontSize: "15px" }}>
             Hi {p.recipientName},
           </Text>
           <Text style={{ color: "#333333", fontSize: "15px" }}>
-            You've been assigned to <strong>{p.bookingName}</strong>.
+            <strong>{p.squadMemberName}</strong> has withdrawn from{" "}
+            <strong>{p.bookingName}</strong> after previously confirming. You'll
+            need to reassign.
           </Text>
           <Text style={{ color: "#555555", fontSize: "14px" }}>
             <strong>When:</strong> {p.bookingDate}
             <br />
             <strong>Where:</strong> {p.bookingVenue}
           </Text>
-          {p.bookingNotes ? (
-            <Text style={{ color: "#555555", fontSize: "14px" }}>
-              <strong>Notes:</strong> {p.bookingNotes}
-            </Text>
-          ) : null}
+          <Text style={{ color: "#555555", fontSize: "14px" }}>
+            <strong>Reason:</strong> {p.reason ?? "(no reason given)"}
+          </Text>
           <Link
             href={p.bookingUrl}
             style={{
@@ -70,7 +71,7 @@ export default function BookingAssigned(p: BookingAssignedParams) {
               fontSize: "14px",
             }}
           >
-            Open booking in Wardrobe Assistants
+            Reassign in admin
           </Link>
         </Container>
       </Body>

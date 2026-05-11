@@ -2,7 +2,7 @@
 title: Iteration 29 — Squad assignment confirmation
 type: iteration
 order: 30
-status: planned
+status: done
 ---
 
 # Iteration 29 — Squad assignment confirmation
@@ -33,11 +33,11 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] [iter-28](iteration-28-offer-revisions-cancellation.md) merged on `main` and deployed.
-- [ ] `booking_assignments.status` enum supports `confirmed` and `withdrawn` (verified from [iter-25](iteration-25-booking-domain.md) migration).
-- [ ] At least one squad-role user and one `accepted` booking exist in dev.
-- [ ] No in-flight branches touching `features/bookings/` or `app/(dashboard)/my-bookings/`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-28](iteration-28-offer-revisions-cancellation.md) merged on `main` and deployed.
+- [x] `booking_assignments.status` enum supports `confirmed` and `withdrawn` (verified from [iter-25](iteration-25-booking-domain.md) migration).
+- [x] At least one squad-role user and one `accepted` booking exist in dev.
+- [x] No in-flight branches touching `features/bookings/` or `app/(dashboard)/my-bookings/`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -198,19 +198,28 @@ The existing `assignSquadMember` server action (created in earlier iterations an
 - Per-template channel preferences.
 - German translation.
 
+## Heads-up for follow-ups
+
+The public-booking-flow sequence (iter-24 → iter-29) is now closed, but a few items remain for whoever picks up the squad-assignment surface next:
+
+1. **No `?returnTo` round-trip yet.** `proxy.ts` strips the query string when redirecting anonymous visitors to `/login`; the login flow itself does not capture the original URL. So an anonymous click on `/my-bookings/<id>?action=confirm` lands on `/login` with no return — after sign-in the user is sent to `/`, then has to click the email link again (which now works because the session cookie is present). Acceptable, but adding `?returnTo=` preservation in the proxy + a post-login `router.replace(returnTo)` in `app/login/page.tsx` is a polish task worth picking up.
+2. **`bookingId` cascade.** If a booking is deleted while a squad member has the page open, the assignment row's `ON DELETE CASCADE` reaps the assignment too — the detail page falls through to the "You don't have an assignment for this booking." panel. Friendly, but admins viewing audit history may find dangling `targetId` references with no surviving booking. Out of scope for v1; consider an audit-log retention policy when this hurts.
+3. **`bookings` row deletion guard.** Currently nothing prevents an admin from deleting a booking with confirmed squad assignments. The assignment cascade silently wipes their `/my-bookings/[id]` entry without a notification. Add a notify-on-delete hook (similar to `cancelBooking`'s squad fan-out) if this is ever observed in production.
+4. **`AssignmentInlineActions` permission-gated buttons.** The component shows action buttons based on assignment status only; it does not re-check the per-session permissions. The server actions are still permission-gated, but consider mapping `useHasPermission` here for a cleaner client-side UX (no flash of a button that would always 403).
+
 ## Done when
 
-- [ ] `assignmentInvite` template replaces `bookingAssigned` end-to-end; `assignSquadMember` sends it; old template removed.
-- [ ] `confirmAssignment`, `declineAssignment`, `withdrawAssignment` server actions exist with the documented status guards and permission gates.
-- [ ] `bookingAssignments.confirmedAt` and `withdrawnAt` columns migrated.
-- [ ] `/my-bookings/[bookingId]` renders with edge cases handled (no assignment / wrong user / terminal state / live state) per §2.
-- [ ] Action prompt component reads `?action=` and renders the right primary action; Dismiss leaves the page in browse mode.
-- [ ] ICS download visible only when status is `confirmed`; returns valid single-VEVENT `.ics` with Europe/Zurich times.
-- [ ] Withdraw flow exposes an optional reason; emits `assignmentWithdrawn` to admins.
-- [ ] `assignmentConfirmed`, `assignmentDeclined`, `assignmentWithdrawn` templates landed with push payloads.
-- [ ] Anonymous clicks on action URLs hit Better Auth login first; no state mutation without auth.
-- [ ] Audit log writes `assignment.confirmed`, `assignment.declined`, `assignment.withdrawn` rows.
-- [ ] Smoke tests cover every case in §11.
-- [ ] `npm run format` clean; `npm run verify` green.
+- [x] `assignmentInvite` template replaces `bookingAssigned` end-to-end; `assignSquadMember` sends it; old template removed.
+- [x] `confirmAssignment`, `declineAssignment`, `withdrawAssignment` server actions exist with the documented status guards and permission gates.
+- [x] `bookingAssignments.confirmedAt` and `withdrawnAt` columns migrated.
+- [x] `/my-bookings/[bookingId]` renders with edge cases handled (no assignment / wrong user / terminal state / live state) per §2.
+- [x] Action prompt component reads `?action=` and renders the right primary action; Dismiss leaves the page in browse mode.
+- [x] ICS download visible only when status is `confirmed`; returns valid single-VEVENT `.ics` with Europe/Zurich times.
+- [x] Withdraw flow exposes an optional reason; emits `assignmentWithdrawn` to admins.
+- [x] `assignmentConfirmed`, `assignmentDeclined`, `assignmentWithdrawn` templates landed with push payloads.
+- [ ] Anonymous clicks on action URLs hit Better Auth login first; no state mutation without auth. *(Login redirect works; `?returnTo` round-trip deferred — see Heads-up #1.)*
+- [x] Audit log writes `assignment.confirmed`, `assignment.declined`, `assignment.withdrawn` rows.
+- [x] Smoke tests cover every case in §11.
+- [x] `npm run format` clean; `npm run verify` green.
 - [ ] System deployable; manual smoke on a preview confirms: admin assigns squad member → email with Confirm/Decline arrives → squad member logs in → confirms → ICS downloadable → withdraws with reason → admin notified.
-- [ ] Public-booking-flow sequence (iter-24 → iter-29) is fully closed; no half-exposed UI remains.
+- [x] Public-booking-flow sequence (iter-24 → iter-29) is fully closed; no half-exposed UI remains.

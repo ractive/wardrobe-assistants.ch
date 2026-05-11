@@ -1,6 +1,12 @@
 import type * as React from "react";
-import type { BookingAssignedParams } from "./booking-assigned";
-import BookingAssigned from "./booking-assigned";
+import type { AssignmentConfirmedParams } from "./assignment-confirmed";
+import AssignmentConfirmed from "./assignment-confirmed";
+import type { AssignmentDeclinedParams } from "./assignment-declined";
+import AssignmentDeclined from "./assignment-declined";
+import type { AssignmentInviteParams } from "./assignment-invite";
+import AssignmentInvite from "./assignment-invite";
+import type { AssignmentWithdrawnParams } from "./assignment-withdrawn";
+import AssignmentWithdrawn from "./assignment-withdrawn";
 import type { BookingBroadcastParams } from "./booking-broadcast";
 import BookingBroadcast from "./booking-broadcast";
 import type { BookingCancelledParams } from "./booking-cancelled";
@@ -36,11 +42,28 @@ type TemplateEntry<P> = {
 };
 
 export const templates = {
-  bookingAssigned: {
-    component: BookingAssigned,
-    subject: (p: BookingAssignedParams) =>
-      `Assigned to booking: ${p.bookingName}`,
-  } satisfies TemplateEntry<BookingAssignedParams>,
+  assignmentConfirmed: {
+    component: AssignmentConfirmed,
+    subject: (p: AssignmentConfirmedParams) =>
+      `Assignment confirmed: ${p.bookingName}`,
+  } satisfies TemplateEntry<AssignmentConfirmedParams>,
+
+  assignmentDeclined: {
+    component: AssignmentDeclined,
+    subject: (p: AssignmentDeclinedParams) =>
+      `Assignment declined: ${p.bookingName}`,
+  } satisfies TemplateEntry<AssignmentDeclinedParams>,
+
+  assignmentInvite: {
+    component: AssignmentInvite,
+    subject: (p: AssignmentInviteParams) => `Please confirm: ${p.bookingName}`,
+  } satisfies TemplateEntry<AssignmentInviteParams>,
+
+  assignmentWithdrawn: {
+    component: AssignmentWithdrawn,
+    subject: (p: AssignmentWithdrawnParams) =>
+      `Assignment withdrawn: ${p.bookingName}`,
+  } satisfies TemplateEntry<AssignmentWithdrawnParams>,
 
   bookingBroadcast: {
     component: BookingBroadcast,
@@ -127,7 +150,10 @@ export type ParamsFor<K extends TemplateKey> = Parameters<
 
 // Re-export param types for use outside the template directory.
 export type {
-  BookingAssignedParams,
+  AssignmentConfirmedParams,
+  AssignmentDeclinedParams,
+  AssignmentInviteParams,
+  AssignmentWithdrawnParams,
   BookingBroadcastParams,
   BookingCancelledParams,
   BookingRejectedParams,

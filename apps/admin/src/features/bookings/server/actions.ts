@@ -284,13 +284,14 @@ export const assignUser = withPermission(
 
     let notifyFailed = false;
     try {
-      await notifyUser(userId, "bookingAssigned", {
+      await notifyUser(userId, "assignmentInvite", {
         recipientName: target.name ?? target.email,
         bookingName: booking.name,
         bookingDate: format(booking.date, "EEEE, d MMMM yyyy"),
         bookingVenue: booking.venue,
         bookingNotes: booking.notes ?? undefined,
-        bookingUrl: `${env.betterAuthUrl}/bookings/${booking.id}`,
+        confirmUrl: `${env.betterAuthUrl}/my-bookings/${booking.id}?action=confirm`,
+        declineUrl: `${env.betterAuthUrl}/my-bookings/${booking.id}?action=decline`,
       });
     } catch (err) {
       notifyFailed = true;
@@ -580,13 +581,14 @@ export const approveRequest = withPermission(
     let notifyFailed = false;
     if (booking) {
       try {
-        await notifyUser(userId, "bookingAssigned", {
+        await notifyUser(userId, "assignmentInvite", {
           recipientName: target?.name ?? target?.email ?? userId,
           bookingName: booking.name,
           bookingDate: format(booking.date, "EEEE, d MMMM yyyy"),
           bookingVenue: booking.venue,
           bookingNotes: booking.notes ?? undefined,
-          bookingUrl: `${env.betterAuthUrl}/bookings/${bookingId}`,
+          confirmUrl: `${env.betterAuthUrl}/my-bookings/${bookingId}?action=confirm`,
+          declineUrl: `${env.betterAuthUrl}/my-bookings/${bookingId}?action=decline`,
         });
       } catch (err) {
         notifyFailed = true;

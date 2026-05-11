@@ -22,6 +22,8 @@ export const bookingAssignments = sqliteTable(
     })
       .notNull()
       .default("assigned"),
+    confirmedAt: integer("confirmed_at", { mode: "timestamp_ms" }),
+    withdrawnAt: integer("withdrawn_at", { mode: "timestamp_ms" }),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.bookingId, t.userId] }),
