@@ -7,6 +7,8 @@ import {
   Preview,
   Text,
 } from "@react-email/components";
+import type { PushPayload } from "../push";
+import { brand } from "./_tokens";
 
 export type BookingBroadcastParams = {
   /** Dynamic subject supplied by the sender */
@@ -15,8 +17,6 @@ export type BookingBroadcastParams = {
   /** Message body — newlines preserved as separate Text paragraphs */
   body: string;
 };
-
-import type { PushPayload } from "../push";
 
 export function pushPayload(p: BookingBroadcastParams): PushPayload {
   // Show the first non-empty body line as the preview so the recipient can
@@ -27,8 +27,6 @@ export function pushPayload(p: BookingBroadcastParams): PushPayload {
     body: firstLine?.slice(0, 120) || `Re: ${p.bookingName}`,
   };
 }
-
-const brand = "#1a1a1a";
 
 export default function BookingBroadcast(p: BookingBroadcastParams) {
   const paragraphs = p.body.split(/\r?\n/).map((line, pos) => ({

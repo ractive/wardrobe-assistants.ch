@@ -9,6 +9,7 @@ import {
 } from "@react-email/components";
 import type { PushPayload } from "../push";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 // One template with a `recipient` discriminant — keeps the email visually
 // consistent across all three audiences while letting the copy vary.
@@ -35,8 +36,6 @@ export function pushPayload(p: BookingCancelledParams): PushPayload {
     url: p.bookingUrl ?? "/bookings",
   };
 }
-
-const brand = "#1a1a1a";
 
 function audienceCopy(recipient: BookingCancelledParams["recipient"]) {
   switch (recipient) {

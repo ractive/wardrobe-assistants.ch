@@ -9,6 +9,7 @@ import {
 } from "@react-email/components";
 import type { PushPayload } from "../push";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 // iter-26: notification to admins when a new public booking request lands.
 // Push body deliberately compact: "<customer> · <date> · <city>".
@@ -36,8 +37,6 @@ export function pushPayload(p: BookingRequestedParams): PushPayload {
     url: `/bookings/${p.bookingId}`,
   };
 }
-
-const brand = "#1a1a1a";
 
 export default function BookingRequested(p: BookingRequestedParams) {
   return (

@@ -7,6 +7,7 @@ import {
   Preview,
   Text,
 } from "@react-email/components";
+import { brand } from "./_tokens";
 
 // iter-26: customer-side autoreply confirming a booking request was received.
 // Email only — customers don't have user accounts, so no push payload.
@@ -15,8 +16,6 @@ export type BookingRequestReceivedParams = {
   /** Short, pre-formatted human-readable summary lines. */
   summary: string[];
 };
-
-const brand = "#1a1a1a";
 
 export default function BookingRequestReceived(
   p: BookingRequestReceivedParams,

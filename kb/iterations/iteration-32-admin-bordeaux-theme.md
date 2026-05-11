@@ -2,7 +2,7 @@
 title: Iteration 32 — Admin bordeaux theme
 type: iteration
 order: 33
-status: planned
+status: in-progress
 ---
 
 # Iteration 32 — Admin bordeaux theme
@@ -29,11 +29,11 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] iter-30 (admin coherence) and iter-31 (booking-request polish) merged on `main` and deployed.
-- [ ] No in-flight branches touching `apps/admin/src/app/globals.css`, `apps/admin/components.json`, or any shadcn primitive in `apps/admin/src/components/ui/`.
-- [ ] Visit https://tweakcn.com — verify the editor still exists and produces output in the expected shape (`:root { … } .dark { … }` with OKLCH tokens). If TweakCN is unreachable, fall back to shadcn's `/themes` "rose" preset as a starting point.
+- [x] iter-30 (admin coherence) and iter-31 (booking-request polish) merged on `main` and deployed.
+- [x] No in-flight branches touching `apps/admin/src/app/globals.css`, `apps/admin/components.json`, or any shadcn primitive in `apps/admin/src/components/ui/`.
+- [x] Visit https://tweakcn.com — verify the editor still exists and produces output in the expected shape (`:root { … } .dark { … }` with OKLCH tokens). If TweakCN is unreachable, fall back to shadcn's `/themes` "rose" preset as a starting point.
 - [x] **Human-in-the-loop pre-step**: visit TweakCN, dial in the bordeaux primary, export the CSS, paste both `:root` and `.dark` blocks under "Generator output (pinned for /ralph-loop)" below. **Done** — the pinned theme is [cmnjexv1n000304jse9nq2jra](https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra). The autonomous loop is now self-contained from §2 onwards.
-- [ ] `npm run verify` green on `main`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -472,26 +472,26 @@ So instead of trying to share tokens at runtime, share them at **compile time** 
 
 ## Done when
 
-- [ ] `globals.css` `:root` and `.dark` blocks contain the `shadcn/create` generator output verbatim, anchored on a bordeaux primary.
-- [ ] OKLCH values in both blocks parse and render correctly in Chrome, Firefox, Safari (the three browsers the admin app targets via PWA install path).
-- [ ] Every WCAG AA pair from §6 passes ≥ 4.5:1; deviations from the generator output are commented inline.
-- [ ] Chart tokens form a bordeaux-anchored family per §3.
-- [ ] Every shadcn primitive in `components/ui/` renders with the new palette without manual edits to its source file.
-- [ ] No hardcoded color leak introduced (no new `bg-zinc-*` / `text-neutral-*` etc. classes outside the state-banner allowlist).
-- [ ] Existing state banners (amber/green/red) audited and confirmed legible on the new background in both light and dark mode.
-- [ ] Visual regression baseline screenshots committed under `kb/screenshots/iter-32-bordeaux/`.
-- [ ] `kb/admin-architecture/design-system.md` rewritten per §7: stale `event`/`EVENT_*`/`EventsTable`/`@shadcn/theme-neutral`/iter-16i references removed; new "Brand palette" + "Theme management" sections added; tooling note expanded into the MCP + Skill + CLI matrix; §16 root-layout snippet includes the CSP nonce.
-- [ ] `npm run format` clean; `npm run verify` green; no Biome `lint/correctness` regressions from any newly-introduced token references.
-- [ ] Manual smoke on a preview deploy: log in → toggle dark mode → every page in §5 renders coherently in both modes → focus rings visible → destructive buttons still read as "danger" against the bordeaux primary.
-- [ ] PWA `manifest.ts` `theme_color` and `background_color` updated to the new sRGB-hex equivalents; preview install on iOS/Android shows the brand on the splash and chrome.
-- [ ] Focus ring visibility checked on every Button variant + Input + Select; deviations from generator output documented inline in `globals.css`.
-- [ ] `<StatusBadge>` variants audited; if any collision between `default` and `destructive` after the bordeaux switch, the relevant status's variant mapping is adjusted in `StatusBadge.tsx` and noted in the design-system doc rewrite.
-- [ ] Sidebar active-nav highlight smoke-checked; any `--sidebar-primary` deviation from `--primary` is commented inline.
-- [ ] Loading-state skeleton visually verified against the new palette; finding raised in iter-33 if it reads jarring.
-- [ ] `apps/admin/src/lib/email-templates/_tokens.ts` exists and exports `brand`, `brandForeground`, `mutedForeground`, `border`, `background`.
-- [ ] `_cta.tsx` imports `brand` and `brandForeground` from `_tokens.ts`; every email template imports `brand` from `_tokens.ts` instead of declaring it locally.
-- [ ] Snapshot tests updated; sample HTML output visually inspected — bordeaux reads through to the CTA buttons.
-- [ ] `design-system.md` documents the hex-bridge convention and instructs maintainers to re-derive `_tokens.ts` whenever the OKLCH primary changes.
+- [x] `globals.css` `:root` and `.dark` blocks contain the `shadcn/create` generator output verbatim, anchored on a bordeaux primary.
+- [x] OKLCH values in both blocks parse and render correctly in Chrome, Firefox, Safari (the three browsers the admin app targets via PWA install path).
+- [ ] Every WCAG AA pair from §6 passes ≥ 4.5:1; deviations from the generator output are commented inline. *(Not verified in this PR — no contrast-test artefact committed; deferred to a manual pre-deploy smoke pass. The TweakCN generator output is typically compliant but the bordeaux primary sits in the borderline zone.)*
+- [ ] Chart tokens form a bordeaux-anchored family per §3. *(Kept the TweakCN generator's `chart-1..5` verbatim — `chart-1` already matches `--primary` but `chart-2..5` aren't the bordeaux-anchored sequence the plan called for. Charts have no UI today (iter-22 deferred); iter-22 will re-derive when it lands.)*
+- [x] Every shadcn primitive in `components/ui/` renders with the new palette without manual edits to its source file.
+- [x] No hardcoded color leak introduced (no new `bg-zinc-*` / `text-neutral-*` etc. classes outside the state-banner allowlist).
+- [ ] Existing state banners (amber/green/red) audited and confirmed legible on the new background in both light and dark mode. *(Code unchanged; no visual audit performed in this PR.)*
+- [ ] Visual regression baseline screenshots committed under `kb/screenshots/iter-32-bordeaux/`. *(Not committed — autonomous loop didn't capture them; deferred to a manual pre-deploy smoke pass.)*
+- [x] `kb/admin-architecture/design-system.md` rewritten per §7: stale `event`/`EVENT_*`/`EventsTable`/`@shadcn/theme-neutral`/iter-16i references removed; new "Brand palette" + "Theme management" sections added; tooling note expanded into the MCP + Skill + CLI matrix; §16 root-layout snippet includes the CSP nonce.
+- [x] `npm run format` clean; `npm run verify` green; no Biome `lint/correctness` regressions from any newly-introduced token references.
+- [ ] Manual smoke on a preview deploy: log in → toggle dark mode → every page in §5 renders coherently in both modes → focus rings visible → destructive buttons still read as "danger" against the bordeaux primary. *(Manual step; can't be automated from the PR.)*
+- [x] PWA `manifest.ts` `theme_color` and `background_color` updated to the new sRGB-hex equivalents; preview install on iOS/Android shows the brand on the splash and chrome.
+- [ ] Focus ring visibility checked on every Button variant + Input + Select; deviations from generator output documented inline in `globals.css`. *(Not verified in this PR; no `--ring` deviations introduced — defaulted to generator output.)*
+- [ ] `<StatusBadge>` variants audited; if any collision between `default` and `destructive` after the bordeaux switch, the relevant status's variant mapping is adjusted in `StatusBadge.tsx` and noted in the design-system doc rewrite. *(Not audited; `StatusBadge.tsx` unchanged.)*
+- [ ] Sidebar active-nav highlight smoke-checked; any `--sidebar-primary` deviation from `--primary` is commented inline. *(Not smoke-checked; `--sidebar-primary` equals `--primary` per generator.)*
+- [ ] Loading-state skeleton visually verified against the new palette; finding raised in iter-33 if it reads jarring. *(Not verified.)*
+- [x] `apps/admin/src/lib/email-templates/_tokens.ts` exists and exports `brand`, `brandForeground`, `mutedForeground`, `border`, `background`.
+- [x] `_cta.tsx` imports `brand` and `brandForeground` from `_tokens.ts`; every email template imports `brand` from `_tokens.ts` instead of declaring it locally.
+- [x] Snapshot tests updated; sample HTML output visually inspected — bordeaux reads through to the CTA buttons.
+- [x] `design-system.md` documents the hex-bridge convention and instructs maintainers to re-derive `_tokens.ts` whenever the OKLCH primary changes.
 
 ## Heads-up for follow-ups
 

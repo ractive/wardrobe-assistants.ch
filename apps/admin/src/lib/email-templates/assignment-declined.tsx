@@ -9,6 +9,7 @@ import {
 } from "@react-email/components";
 import type { PushPayload } from "../push";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 export type AssignmentDeclinedParams = {
   recipientName: string;
@@ -29,8 +30,6 @@ export function pushPayload(p: AssignmentDeclinedParams): PushPayload {
     url: p.bookingUrl,
   };
 }
-
-const brand = "#1a1a1a";
 
 export default function AssignmentDeclined(p: AssignmentDeclinedParams) {
   const headline =

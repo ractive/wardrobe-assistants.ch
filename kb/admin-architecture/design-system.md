@@ -12,35 +12,46 @@ The audience is admins managing events from their phones — **mobile is the pri
 
 Companion docs: [`overview.md`](overview.md) (architecture rules), [`feature-slice-template.md`](feature-slice-template.md) (file-by-file checklist), [`ui-stack.md`](ui-stack.md) (library inventory).
 
-> **Tooling note for Claude:** for any shadcn/ui task in `apps/admin/` (adding, searching, debugging, or composing primitives), invoke the `shadcn` Skill via Claude Code's Skill tool rather than running `npx shadcn@latest …` from memory or guessing component shapes. The skill reads the live registry and our `components.json`, so it stays current as shadcn evolves. This document still owns the *conventions* (tokens, spacing, a11y, etc.) — the skill owns *how to bring components in*.
+> **Tooling matrix (when working in `apps/admin/`):**
+>
+> 1. **First — finding / exploring / choosing** — the `shadcn` **MCP server** (`mcp__shadcn__*` tools). Read-only. Examples: `search_items_in_registries({ registries: ["@shadcn"], query: "popover" })`, `view_items_in_registries({ items: ["@shadcn/popover"] })`, `get_item_examples_from_registries`. Use this to discover what's available before reaching for anything else.
+> 2. **Second — actually vendoring** — the `shadcn` **Claude Code Skill**. It reads our `components.json` (`style: "new-york"`, `iconLibrary: "lucide"`, `cssVariables: true`), runs the right `npx shadcn@latest add` command, and knows our aliases (`@/components`, `@/lib`, `@/hooks`).
+> 3. **Third — manual / emergency** — the CLI directly: `npx shadcn@latest add <item> -c apps/admin`. Verify the result against `components.json` afterwards.
+>
+> One-line rule: **this document owns the conventions** (tokens, spacing, a11y, etc.); MCP and the Skill own discovery and installation.
 
-## 1. Tokens
+## 1. Brand palette
 
-Tokens are sourced from **`@shadcn/theme-neutral`** (oklch, light + dark, full semantic set including chart palette and `--radius`). To re-sync after a theme-neutral release, re-run:
+The admin's brand is **Bordeaux** — a deep wine-red primary anchoring a warm-neutral palette, generated via [**TweakCN**](https://tweakcn.com) and pinned at theme [`cmnjexv1n000304jse9nq2jra`](https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra) (iter-32). TweakCN is the de facto round-trip tool for shadcn palettes; the admin treats it as the source of truth.
 
-```bash
-npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite
-```
+Tokens follow the shadcn theming contract — see [shadcn theming docs](https://ui.shadcn.com/docs/theming) for the canonical token catalog (`--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--card`, `--popover`, `--sidebar*`, `--chart-1..5`). The full OKLCH values for both light (`:root`) and dark (`.dark`) modes live in `apps/admin/src/app/globals.css`. Canonical primary: `oklch(0.5596 0.1431 32.4368)`.
 
-This overwrites `apps/admin/src/app/globals.css` wholesale. The admin ships light + dark + system (driven by `next-themes`; see §16).
+To swap palettes: open TweakCN → export both blocks → paste into `globals.css`. The full procedure is documented in **[README "Admin theme"](../../README.md#admin-theme)** — don't duplicate it here.
 
-**Project-specific overrides** land in **iter-16i** (Bordeaux re-application on `--primary` and derivatives) — currently none. The override surface iter-16i will touch:
+**State banners stay as Tailwind palette colors**, not theme tokens. Amber/green/red banners communicate transient state (pending, withdrawn, etc.) and must not bind to `--primary`. The four current call-sites are:
 
-| Token | Planned override |
-|---|---|
-| `--primary` | Bordeaux (`oklch(…)`) |
-| `--primary-foreground` | Light neutral for contrast on Bordeaux |
-| `--ring` | Match `--primary` |
-| `--sidebar-primary` | Match `--primary` |
-| `--sidebar-primary-foreground` | Match `--primary-foreground` |
+- `apps/admin/src/app/(public)/offer/[token]/page.tsx`
+- `apps/admin/src/app/(dashboard)/my-bookings/[bookingId]/page.tsx`
+- `apps/admin/src/features/bookings/components/AssignmentActionPrompt.tsx`
+- `apps/admin/src/features/bookings/components/WithdrawAssignmentDialog.tsx`
 
-Until iter-16i lands, all of these are the `@shadcn/theme-neutral` defaults.
+These are the only allowed Tailwind palette colours outside `components/ui/`. Audit on contrast after any palette swap; do not migrate them onto the token system.
+
+**Email-template hex bridge.** Email clients don't support CSS custom properties or OKLCH reliably, so `apps/admin/src/lib/email-templates/_tokens.ts` exports the same brand as sRGB hex (`brand`, `brandForeground`, `mutedForeground`, `border`, `background`). If the OKLCH primary changes, convert the new values to hex and update `_tokens.ts` — this is a maintenance convention, not a compile-time link. See README "Admin theme" step 5.
 
 **Don't:**
-- Hex literals (`#…`) in components or pages under `apps/admin/src/`. Always `var(--…)` or a Tailwind-mapped token (`bg-card`, `text-muted-foreground`, etc.). The token *definitions* in `apps/admin/src/app/globals.css` are the only allowed hex literals — that's where the palette lives. Vendored shadcn files in `components/ui/` are also exempt (Biome already excludes that path).
-- Inventing new tokens. If you need a colour not covered by `@shadcn/theme-neutral`, raise it in the decision log and add a token; don't inline a hex.
+- Hex literals (`#…`) in components or pages under `apps/admin/src/`. Always `var(--…)` or a Tailwind-mapped token (`bg-card`, `text-muted-foreground`, etc.). The token *definitions* in `apps/admin/src/app/globals.css` are the only allowed hex literals — that's where the palette lives. Vendored shadcn files in `components/ui/` are also exempt (Biome already excludes that path). The email-template tokens are a deliberate exception, scoped to `lib/email-templates/`.
+- Inventing new tokens. If you need a colour not covered by the shadcn token catalog, raise it in the decision log and add a token; don't inline a hex.
 
 **Contrast note (F-FE-27):** `--muted-foreground` on `--background` is borderline WCAG AA at small sizes. Reserve `text-muted-foreground` for help/caption (`text-xs`/`text-sm` non-essential). Do not use it for body copy that conveys primary information; use `--foreground` instead.
+
+### Theme management
+
+- **Source of truth**: TweakCN (the pinned theme above), exported and pasted into `apps/admin/src/app/globals.css`. Not hand-edited.
+- **Where tokens live**: the `:root` and `.dark` blocks in `globals.css`. The `@theme inline { … }` block maps them to Tailwind utility names — leave it alone when swapping palettes.
+- **Swap procedure**: the 7-step recipe in [README "Admin theme"](../../README.md#admin-theme). Re-derive `_tokens.ts` in step 5.
+- **WCAG AA obligation**: every foreground/background pair (`--primary-foreground`/`--primary`, `--accent-foreground`/`--accent`, `--muted-foreground`/`--background`, `--sidebar-foreground`/`--sidebar`, `--destructive-foreground`/`--destructive`) must hit ≥ 4.5:1. If a TweakCN export falls short, deviate the lighter token's lightness up and **comment the deviation inline in `globals.css`** so the next swap retains the override.
+- **PWA chrome**: `apps/admin/src/app/manifest.ts` carries the brand twice — `theme_color` mirrors `--primary` as sRGB hex (browser address-bar tint) and `background_color` mirrors `--background` (PWA splash). Update both when the OKLCH primary changes.
 
 ## 2. Breakpoints + responsive baseline
 
@@ -100,24 +111,19 @@ Font is `Inter, ui-sans-serif, system-ui, sans-serif` — already wired in `glob
 
 ## 5. Layout primitives (signatures)
 
-Built lazily — the first slice that needs each primitive lifts it from inline code. Documented here so the shape is fixed before the first implementation.
+What's actually in `apps/admin/src/components/` today. Add new layout primitives here as they're lifted from inline code.
 
 ```tsx
 // PageHeader — every dashboard page top
+// apps/admin/src/components/PageHeader.tsx
 type PageHeaderProps = {
   title: string;
   description?: string;
   actions?: React.ReactNode; // mobile: stacks below; md: inline-right
 };
-
-// Section — wraps a logical block under a PageHeader
-type SectionProps = { title?: string; children: React.ReactNode };
-
-// TableSkeleton — used by loading.tsx alongside data tables
-type TableSkeletonProps = { rows?: number; columns?: number };
 ```
 
-**Empty state:** use the canonical **`@shadcn/empty`** primitive vendored in iter-16h as `apps/admin/src/components/ui/empty.tsx`. Registry source: [`https://ui.shadcn.com/r/empty`](https://ui.shadcn.com/r/empty). The hand-rolled `<EmptyState>` signature planned earlier is replaced by `<Empty>` from this component. Used by the dashboard chart placeholder and the recent-events empty state.
+**Empty state:** the canonical **`@shadcn/empty`** primitive is vendored at `apps/admin/src/components/ui/empty.tsx`. Registry source: [`https://ui.shadcn.com/r/empty`](https://ui.shadcn.com/r/empty). Used by the dashboard chart placeholder and the recent-bookings empty state.
 
 **Mobile-first answer:** `<PageHeader>` stacks `actions` below the title at base width, inlines them at `md:`. `<Empty>` centres its content; CTA is full-width on mobile.
 
@@ -184,7 +190,7 @@ Tables with **>3 columns** must render as **stacked cards on mobile, table on de
 
 The mobile card is a label-value `<dl>` — accessible, scannable, no horizontal scroll.
 
-**TanStack Table.** Do **not** introduce `@tanstack/react-table` for read-only data. It's currently used in `UsersTable` and `EventsTable` without sorting/filtering/pagination — that's the F-FE-03 finding to be cleaned up in iter-16d. Only adopt TanStack Table if the page genuinely needs sorting, multi-column filtering, or client-side pagination, and document the justification in the iteration plan.
+**TanStack Table.** Do **not** introduce `@tanstack/react-table` for read-only data. Only adopt it if the page genuinely needs sorting, multi-column filtering, or client-side pagination, and document the justification in the iteration plan. The current `BookingsTable` (`apps/admin/src/features/bookings/components/BookingsTable.tsx`) is a plain `<Table>`.
 
 **Mobile-first answer:** stacked cards.
 
@@ -216,23 +222,31 @@ Destructive `Dialog`s **disable Esc-to-close while pending** (`onEscapeKeyDown={
 
 ## 9. Status badges
 
-One shared component, per-`kind` variant maps co-located with the schema that defines the values.
+One shared component (`apps/admin/src/components/StatusBadge.tsx`), per-`kind` variant maps mirrored from each feature's `schema.ts` (cross-feature imports are forbidden, so the maps are inlined here).
 
 ```tsx
-// components/StatusBadge.tsx
-type Kind = "user" | "event" | "service";
-type Variant = "default" | "secondary" | "destructive" | "outline";
-
-const VARIANTS: Record<Kind, Record<string, Variant>> = {
-  user: { active: "default", invited: "secondary", suspended: "destructive" },
-  event: { draft: "secondary", published: "default", cancelled: "destructive" },
-  service: { active: "default", retired: "outline" },
+// Sketch — the live file maps booking / user / serviceType / serviceStatus / assignment.
+type StatusByKind = {
+  booking: "created" | "offered" | "accepted" | "rejected" | "cancelled";
+  user: "invited" | "verified";
+  serviceStatus: "active" | "archived";
+  // …
 };
+type BadgeVariant = "default" | "outline" | "secondary";
 
-export function StatusBadge({ kind, status }: { kind: Kind; status: string }) {
-  return <Badge variant={VARIANTS[kind][status] ?? "outline"}>{status}</Badge>;
-}
+const VARIANTS: { [K in keyof StatusByKind]: Record<StatusByKind[K], { label: string; variant: BadgeVariant }> } = {
+  booking: {
+    created: { label: "Created", variant: "outline" },
+    offered: { label: "Offered", variant: "default" },
+    accepted: { label: "Accepted", variant: "default" },
+    rejected: { label: "Rejected", variant: "secondary" },
+    cancelled: { label: "Cancelled", variant: "secondary" },
+  },
+  // …
+};
 ```
+
+**Bordeaux palette note (iter-32).** Under the bordeaux primary, a `default` badge (e.g. accepted booking) and a `destructive` badge (e.g. cancelled) sit visually close because both are red-family. The current `StatusBadge.tsx` deliberately maps `cancelled` and `rejected` to `secondary` (not `destructive`) so the two coloured states (`default` bordeaux, `outline` neutral, `secondary` muted) read as distinct at list-scan distance. Don't introduce a `destructive` badge variant on the booking statuses without re-auditing this trade-off.
 
 **Mobile-first answer:** identical to desktop.
 
@@ -281,15 +295,15 @@ Server `<HasPermission perm="…">` is the **authoritative** gate — it runs in
 
 Permission keys are entity-scoped:
 
-| Key shape | Use |
-|---|---|
-| `<ENTITY>_VIEW` | Reads (list, detail) |
-| `<ENTITY>_CREATE` | Creates |
-| `<ENTITY>_UPDATE` | Updates |
-| `<ENTITY>_DELETE` | Deletes |
-| `<ENTITY>_<ACTION>` | Domain verbs (`USER_INVITE`, `USER_MESSAGE`) |
+| Key shape | Use | Examples |
+|---|---|---|
+| `<ENTITY>_VIEW` | Reads (list, detail) | `BOOKING_VIEW` |
+| `<ENTITY>_CREATE` | Creates | `BOOKING_CREATE`, `SERVICE_CREATE` |
+| `<ENTITY>_UPDATE` | Updates | — |
+| `<ENTITY>_DELETE` | Deletes | `BOOKING_DELETE`, `USER_DELETE` |
+| `<ENTITY>_<ACTION>` | Domain verbs | `USER_INVITE`, `USER_MESSAGE`, `BOOKING_ASSIGN`, `BOOKING_OFFER_SEND` |
 
-**Never reuse a write permission to gate a read.** F-FE-08 records the precedent: `EVENT_CREATE` was used to gate the event-detail page, which silently hid event details from squad members who could legitimately *view* them. iter-16d adds `EVENT_VIEW` to fix this.
+**Never reuse a write permission to gate a read.** F-FE-08 records the precedent: a write permission was used to gate a detail page, which silently hid the entity from users who could legitimately *view* it. The fix is a dedicated `<ENTITY>_VIEW`.
 
 **Mobile-first answer:** identical to desktop — gates run on the server.
 
@@ -373,15 +387,15 @@ A condensed list of things the rest of the doc forbids — useful in code review
 
 ## 15. Blocks adopted
 
-Shadcn blocks vendored or referenced in iter-16h. See [ui-stack.md §Blocks](ui-stack.md) and [`https://ui.shadcn.com/blocks`](https://ui.shadcn.com/blocks).
+Shadcn blocks vendored today. See [ui-stack.md §Blocks](ui-stack.md) and [`https://ui.shadcn.com/blocks`](https://ui.shadcn.com/blocks).
 
 | Block | How used |
 |---|---|
-| `@shadcn/sidebar-07` | Grafted into `apps/admin/src/components/DashboardSidebar.tsx` — icon-collapse on desktop, offcanvas on mobile, footer with user menu + theme toggle, grouped nav. `<HasPermission>` gates preserved around each link. |
-| `@shadcn/login-03` | Chrome only: muted-bg full-screen flex shell, `max-w-sm` column, `<BrandBadge>` above the form. Form bodies remain the iter-16g `credentials-step.tsx` + `totp-step.tsx` — those were not overwritten. |
-| `@shadcn/dashboard-01` | Layout reference only; not vendored. Hand-written `(dashboard)/page.tsx` matches its KPI grid (1×4 mobile → 2×2 `md:` → 4×1 `xl:`) + chart placeholder + recent-events split, without pulling in the `@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul` bundle. |
-| `@shadcn/mode-toggle` | Vendored as `components/ThemeToggle.tsx` (renamed to PascalCase convention). Anchored in the sidebar footer. |
-| `@shadcn/empty` | Vendored as `components/ui/empty.tsx`. Used by the dashboard chart placeholder and the recent-events empty state. Replaces the planned hand-rolled `<EmptyState>` (see §5). |
+| `@shadcn/sidebar-07` | Grafted into `apps/admin/src/components/DashboardSidebar.tsx` — icon-collapse on desktop, offcanvas on mobile, footer with user menu + theme toggle, grouped nav. `<HasPermission>` gates around each link. |
+| `@shadcn/login-03` | Chrome only: muted-bg full-screen flex shell, `max-w-sm` column, `<BrandBadge>` above the form. Form bodies are local components. |
+| `@shadcn/dashboard-01` | Layout reference only; not vendored. Hand-written `(dashboard)/page.tsx` matches its KPI grid (1×4 mobile → 2×2 `md:` → 4×1 `xl:`) + chart placeholder + recent-bookings split, without pulling in the `@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul` bundle. |
+| `@shadcn/mode-toggle` | Vendored as `components/ThemeToggle.tsx`. Anchored in the sidebar footer. |
+| `@shadcn/empty` | Vendored as `components/ui/empty.tsx`. Used by the dashboard chart placeholder and the recent-bookings empty state. |
 
 ## 16. Theme switcher
 
@@ -389,9 +403,11 @@ The admin ships **light / dark / system** mode toggle:
 
 - Toggle component: `<ThemeToggle />` (`components/ThemeToggle.tsx`), vendored from `@shadcn/mode-toggle`. Anchored in the `DashboardSidebar` footer.
 - Provider: `components/ThemeProvider.tsx` — thin wrapper around `NextThemesProvider` from `next-themes` (`^0.4.6`).
-- Root layout wiring:
+- Root layout wiring (CSP-nonce aware — `next-themes`'s anti-FOUC inline script must carry the proxy's per-request nonce or `strict-dynamic` blocks it):
   ```tsx
   // apps/admin/src/app/layout.tsx
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  // …
   <html lang="en" suppressHydrationWarning>
     <body>
       <ThemeProvider
@@ -399,6 +415,7 @@ The admin ships **light / dark / system** mode toggle:
         defaultTheme="system"
         enableSystem
         disableTransitionOnChange
+        nonce={nonce}
       >
         {children}
       </ThemeProvider>
@@ -406,6 +423,6 @@ The admin ships **light / dark / system** mode toggle:
   </html>
   ```
 - `suppressHydrationWarning` on `<html>` prevents React from complaining about the class mismatch between server (no theme class) and client (theme class injected by `next-themes`).
-- **No custom inline pre-hydration script** — `next-themes` injects its own when `attribute="class"`.
+- **No custom inline pre-hydration script** — `next-themes` injects its own when `attribute="class"`, and the `nonce` prop above is what keeps that script alive under the admin's strict CSP.
 - **Client-only persistence** — theme is stored in `localStorage`; no server round-trip, no cookie.
 - System mode reflects OS-level changes in real time without a page reload.

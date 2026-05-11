@@ -9,6 +9,7 @@ import {
 } from "@react-email/components";
 import type { PushPayload } from "../push";
 import { CtaButton } from "./_cta";
+import { brand } from "./_tokens";
 
 export type AssignmentInviteParams = {
   recipientName: string;
@@ -28,8 +29,6 @@ export function pushPayload(p: AssignmentInviteParams): PushPayload {
     url: p.confirmUrl,
   };
 }
-
-const brand = "#1a1a1a";
 
 export default function AssignmentInvite(p: AssignmentInviteParams) {
   return (
