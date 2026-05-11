@@ -130,7 +130,7 @@ describe("assignment flow — smoke", () => {
       .where(
         and(
           eq(auditLog.targetType, "booking_assignment"),
-          eq(auditLog.targetId, bookingId),
+          eq(auditLog.targetId, `${bookingId}:${sm.userId}`),
           eq(auditLog.action, "assignment.confirmed"),
         ),
       );
@@ -358,7 +358,7 @@ describe("assignment flow — smoke", () => {
       .where(
         and(
           eq(auditLog.targetType, "booking_assignment"),
-          eq(auditLog.targetId, id1),
+          eq(auditLog.targetId, `${id1}:${sm.userId}`),
           eq(auditLog.action, "assignment.withdrawn"),
         ),
       );
@@ -370,7 +370,7 @@ describe("assignment flow — smoke", () => {
     expect(meta.reason).toBe("Schedule conflict");
   });
 
-  it("withdrawAssignment: reason > 500 chars trimmed by zod max — rejected as input", async () => {
+  it("withdrawAssignment: reason > 500 chars rejected by zod validation", async () => {
     const admin = await harness.seedAdmin({
       email: "assign-admin6@assign-smoke.local",
       password: "Sup3rSecure!Pass",

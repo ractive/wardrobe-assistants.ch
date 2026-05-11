@@ -3,6 +3,7 @@
 import {
   bookingAssignments,
   bookings,
+  user,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
 import { format } from "date-fns";
@@ -29,20 +30,33 @@ import {
 // UPDATE — a squad member can only mutate their own assignment row.
 
 async function fetchSquadDisplayName(userId: string): Promise<string> {
+  // Join user_profile with the Better Auth user table so we can fall back to
+  // user.name / user.email when the profile row is missing (e.g. user invited
+  // but not yet completed onboarding).
   const rows = await db
     .select({
       firstName: userProfile.firstName,
       lastName: userProfile.lastName,
       nickname: userProfile.nickname,
+      userName: user.name,
+      userEmail: user.email,
     })
-    .from(userProfile)
-    .where(eq(userProfile.userId, userId))
+    .from(user)
+    .leftJoin(userProfile, eq(userProfile.userId, user.id))
+    .where(eq(user.id, userId))
     .limit(1);
   const row = rows[0];
   if (!row) return "A squad member";
   const nick = row.nickname?.trim();
   if (nick) return nick;
-  return `${row.firstName} ${row.lastName}`.trim() || "A squad member";
+  const fullName =
+    row.firstName && row.lastName
+      ? `${row.firstName} ${row.lastName}`.trim()
+      : null;
+  if (fullName) return fullName;
+  if (row.userName?.trim()) return row.userName.trim();
+  if (row.userEmail?.trim()) return row.userEmail.trim();
+  return "A squad member";
 }
 
 async function fetchBookingForNotify(bookingId: string) {
@@ -123,7 +137,7 @@ export const confirmAssignment = withPermission(
       actorUserId: actorId,
       action: "assignment.confirmed",
       targetType: "booking_assignment",
-      targetId: bookingId,
+      targetId: `${bookingId}:${actorId}`,
       metadata: { fromStatus: result.fromStatus, userId: actorId },
     });
 
@@ -211,7 +225,7 @@ export const declineAssignment = withPermission(
       actorUserId: actorId,
       action: "assignment.declined",
       targetType: "booking_assignment",
-      targetId: bookingId,
+      targetId: `${bookingId}:${actorId}`,
       metadata: { fromStatus: result.fromStatus, userId: actorId },
     });
 
@@ -296,7 +310,7 @@ export const withdrawAssignment = withPermission(
       actorUserId: actorId,
       action: "assignment.withdrawn",
       targetType: "booking_assignment",
-      targetId: bookingId,
+      targetId: `${bookingId}:${actorId}`,
       metadata: { userId: actorId, reason: reason ?? null },
     });
 

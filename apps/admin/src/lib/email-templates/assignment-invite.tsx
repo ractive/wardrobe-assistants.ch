@@ -62,7 +62,7 @@ export default function AssignmentInvite(p: AssignmentInviteParams) {
               <strong>Notes:</strong> {p.bookingNotes}
             </Text>
           ) : null}
-          <Container style={{ margin: "24px 0" }}>
+          <Text style={{ margin: "24px 0 8px" }}>
             <Button
               href={p.confirmUrl}
               style={{
@@ -71,12 +71,13 @@ export default function AssignmentInvite(p: AssignmentInviteParams) {
                 padding: "10px 18px",
                 borderRadius: "6px",
                 fontSize: "14px",
-                marginRight: "8px",
                 textDecoration: "none",
               }}
             >
               Confirm
             </Button>
+          </Text>
+          <Text style={{ margin: "0 0 24px" }}>
             <Button
               href={p.declineUrl}
               style={{
@@ -91,7 +92,7 @@ export default function AssignmentInvite(p: AssignmentInviteParams) {
             >
               Decline
             </Button>
-          </Container>
+          </Text>
           <Text style={{ color: "#777777", fontSize: "13px" }}>
             You'll be asked to sign in. Both buttons take you to your booking
             page where you can confirm or decline.

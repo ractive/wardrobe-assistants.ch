@@ -148,16 +148,12 @@ export default async function MyBookingDetailPage({
       </Card>
 
       <div className="flex flex-wrap items-center gap-2">
-        <AssignmentInlineActions
-          bookingId={bookingId}
-          status={
-            assignment.status as
-              | "assigned"
-              | "confirmed"
-              | "rejected"
-              | "withdrawn"
-          }
-        />
+        {assignment.status !== "requested" && (
+          <AssignmentInlineActions
+            bookingId={bookingId}
+            status={assignment.status}
+          />
+        )}
         {isConfirmed && <IcsDownloadButton bookingId={bookingId} />}
         {isConfirmed && <WithdrawAssignmentDialog bookingId={bookingId} />}
       </div>

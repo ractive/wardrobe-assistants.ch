@@ -41,7 +41,10 @@ export default function AssignmentDeclined(p: AssignmentDeclinedParams) {
     <Html lang="en">
       <Head />
       <Preview>
-        {p.squadMemberName} declined {p.bookingName}
+        {p.squadMemberName}{" "}
+        {p.fromStatus === "confirmed"
+          ? `backed out of ${p.bookingName}`
+          : `declined ${p.bookingName}`}
       </Preview>
       <Body style={{ backgroundColor: "#ffffff", fontFamily: "sans-serif" }}>
         <Container

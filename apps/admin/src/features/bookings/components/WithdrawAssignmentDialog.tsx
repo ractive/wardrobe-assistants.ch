@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,13 +21,15 @@ type Props = { bookingId: string };
 const MAX_REASON = 500;
 
 export function WithdrawAssignmentDialog({ bookingId }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [pending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    startTransition(async () => {
+    setIsSubmitting(true);
+    try {
       const result = await withdrawAssignment({
         bookingId,
         reason: reason.trim() || undefined,
@@ -38,7 +41,10 @@ export function WithdrawAssignmentDialog({ bookingId }: Props) {
       toast.success(result.message);
       setOpen(false);
       setReason("");
-    });
+      router.refresh();
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -79,13 +85,16 @@ export function WithdrawAssignmentDialog({ bookingId }: Props) {
             <Button
               type="button"
               variant="ghost"
-              disabled={pending}
-              onClick={() => setOpen(false)}
+              disabled={isSubmitting}
+              onClick={() => {
+                setOpen(false);
+                setReason("");
+              }}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Withdrawing…" : "Withdraw"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Withdrawing…" : "Withdraw"}
             </Button>
           </DialogFooter>
         </form>

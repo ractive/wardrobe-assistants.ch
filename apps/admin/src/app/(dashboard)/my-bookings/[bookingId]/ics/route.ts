@@ -3,6 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCachedSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
+import { assertPermission, PermissionError } from "@/lib/permissions";
 
 // Static VTIMEZONE block for Europe/Zurich. RFC 5545 §3.6.5. Standard CET/CEST
 // transition rules on the last Sunday of March / October. Embedding the block
@@ -41,6 +43,12 @@ function pad(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
+// bookings.date is stored as midnight UTC (a date-only field). Using getUTC*
+// getters here is intentional and correct: the value was written as
+// YYYY-MM-DD with no time component, so the UTC date parts equal the
+// calendar date that was stored. The local time-of-day (hh/mm) comes from
+// the separate startTime column and is emitted as a TZID-qualified timestamp
+// (Europe/Zurich), so no UTC-to-local conversion is needed here.
 function toLocalIcsDate(date: Date, hh: number, mm: number): string {
   const y = date.getUTCFullYear();
   const mo = pad(date.getUTCMonth() + 1);
@@ -62,6 +70,15 @@ export async function GET(
   const session = await getCachedSession();
   if (!session) {
     return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  try {
+    await assertPermission("SQUAD_VIEW_ASSIGNED");
+  } catch (err) {
+    if (err instanceof PermissionError) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+    throw err;
   }
 
   const { bookingId } = await params;
@@ -94,30 +111,61 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  // Default 09:00 if no start time was captured; default 2h if no duration.
-  const [hStr, mStr] = (row.startTime ?? "09:00").split(":");
-  const startHour = Number(hStr ?? "9");
-  const startMin = Number(mStr ?? "0");
+  // Validate startTime: must match HH:MM with numeric range checks.
+  // Fall back to 09:00 if missing or invalid.
+  const START_TIME_RE = /^\d{1,2}:\d{1,2}$/;
+  let startHour = 9;
+  let startMin = 0;
+  if (row.startTime && START_TIME_RE.test(row.startTime)) {
+    const [hStr, mStr] = row.startTime.split(":");
+    const h = Number(hStr);
+    const m = Number(mStr);
+    if (
+      Number.isFinite(h) &&
+      Number.isFinite(m) &&
+      h >= 0 &&
+      h <= 23 &&
+      m >= 0 &&
+      m <= 59
+    ) {
+      startHour = h;
+      startMin = m;
+    }
+  }
+
   const durHours = row.durationHours ?? 2;
   const endTotalMin = startHour * 60 + startMin + durHours * 60;
+
+  // Cross-midnight: when endTotalMin >= 1440 (24 * 60), the end falls on the
+  // next calendar day. Compute proper Date objects so DTEND uses the correct date.
+  const startDate = row.date;
+  let endDate: Date;
+  if (endTotalMin >= 1440) {
+    endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + Math.floor(endTotalMin / 1440));
+  } else {
+    endDate = startDate;
+  }
   const endHour = Math.floor(endTotalMin / 60) % 24;
   const endMin = endTotalMin % 60;
 
-  const dtStart = toLocalIcsDate(row.date, startHour, startMin);
-  const dtEnd = toLocalIcsDate(row.date, endHour, endMin);
+  const dtStart = toLocalIcsDate(startDate, startHour, startMin);
+  const dtEnd = toLocalIcsDate(endDate, endHour, endMin);
 
   const venueParts = [row.venueName ?? row.venue, row.venueCity].filter(
     (s): s is string => Boolean(s),
   );
   const location = escapeIcsText(venueParts.join(", "));
   const summary = escapeIcsText(`Wardrobe Assistants — ${row.name}`);
-  const detailUrl = `/my-bookings/${row.bookingId}`;
+  const detailUrl = `${env.betterAuthUrl}/my-bookings/${row.bookingId}`;
   const descLines = [row.comment ?? "", `\n\nDetails: ${detailUrl}`]
     .filter(Boolean)
     .join("");
   const description = escapeIcsText(
     descLines || `See ${detailUrl} for booking details.`,
   );
+
+  const safeBookingId = row.bookingId.replace(/[^a-zA-Z0-9_-]/g, "");
 
   const lines = [
     "BEGIN:VCALENDAR",
@@ -144,7 +192,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": `attachment; filename="booking-${row.bookingId}.ics"`,
+      "Content-Disposition": `attachment; filename="booking-${safeBookingId}.ics"`,
     },
   });
 }

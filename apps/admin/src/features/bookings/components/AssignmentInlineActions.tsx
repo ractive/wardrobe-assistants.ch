@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,26 +17,33 @@ type Props = {
 // Inline confirm/decline/re-confirm depending on current assignment state.
 // Hidden when the assignment has no inverse action available.
 export function AssignmentInlineActions({ bookingId, status }: Props) {
-  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  function call(action: "confirm" | "decline") {
-    startTransition(async () => {
+  async function call(action: "confirm" | "decline") {
+    setIsProcessing(true);
+    try {
       const fn = action === "confirm" ? confirmAssignment : declineAssignment;
       const result = await fn({ bookingId });
       if (result.error) toast.error(result.message);
-      else toast.success(result.message);
-    });
+      else {
+        toast.success(result.message);
+        router.refresh();
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   if (status === "assigned") {
     return (
       <div className="flex flex-wrap gap-2">
-        <Button disabled={pending} onClick={() => call("confirm")}>
+        <Button disabled={isProcessing} onClick={() => call("confirm")}>
           Confirm
         </Button>
         <Button
           variant="outline"
-          disabled={pending}
+          disabled={isProcessing}
           onClick={() => call("decline")}
         >
           Decline
@@ -47,7 +55,7 @@ export function AssignmentInlineActions({ bookingId, status }: Props) {
     return (
       <Button
         variant="outline"
-        disabled={pending}
+        disabled={isProcessing}
         onClick={() => call("decline")}
       >
         Decline
@@ -56,7 +64,7 @@ export function AssignmentInlineActions({ bookingId, status }: Props) {
   }
   if (status === "rejected" || status === "withdrawn") {
     return (
-      <Button disabled={pending} onClick={() => call("confirm")}>
+      <Button disabled={isProcessing} onClick={() => call("confirm")}>
         Confirm again
       </Button>
     );

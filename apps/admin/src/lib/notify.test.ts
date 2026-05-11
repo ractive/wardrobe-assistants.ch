@@ -71,7 +71,11 @@ describe("notifyUser", () => {
     expect(sendTemplatedMock).toHaveBeenCalledWith(
       "assignmentInvite",
       "user@example.com",
-      expect.objectContaining({ bookingName: "Spring Gala" }),
+      expect.objectContaining({
+        bookingName: "Spring Gala",
+        confirmUrl: expect.any(String),
+        declineUrl: expect.any(String),
+      }),
     );
     expect(sendPushMock).toHaveBeenCalledOnce();
     expect(sendPushMock).toHaveBeenCalledWith(

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,15 +16,18 @@ type Props = {
 };
 
 export function AssignmentActionPrompt({ bookingId, defaultAction }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [dismissed, setDismissed] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (defaultAction === null || dismissed) return null;
 
   const confirmIsPrimary = defaultAction === "confirm";
 
-  function handle(action: "confirm" | "decline") {
-    startTransition(async () => {
+  async function handle(action: "confirm" | "decline") {
+    setIsProcessing(true);
+    try {
       const fn = action === "confirm" ? confirmAssignment : declineAssignment;
       const result = await fn({ bookingId });
       if (result.error) {
@@ -32,7 +36,11 @@ export function AssignmentActionPrompt({ bookingId, defaultAction }: Props) {
       }
       toast.success(result.message);
       setDismissed(true);
-    });
+      // Strip the ?action= query param now that the action is complete.
+      router.replace(pathname);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   return (
@@ -53,7 +61,7 @@ export function AssignmentActionPrompt({ bookingId, defaultAction }: Props) {
         <Button
           type="button"
           variant={confirmIsPrimary ? "default" : "outline"}
-          disabled={pending}
+          disabled={isProcessing}
           onClick={() => handle("confirm")}
         >
           Confirm
@@ -61,7 +69,7 @@ export function AssignmentActionPrompt({ bookingId, defaultAction }: Props) {
         <Button
           type="button"
           variant={confirmIsPrimary ? "outline" : "default"}
-          disabled={pending}
+          disabled={isProcessing}
           onClick={() => handle("decline")}
         >
           Decline
@@ -69,7 +77,7 @@ export function AssignmentActionPrompt({ bookingId, defaultAction }: Props) {
         <Button
           type="button"
           variant="ghost"
-          disabled={pending}
+          disabled={isProcessing}
           onClick={() => setDismissed(true)}
         >
           Dismiss
