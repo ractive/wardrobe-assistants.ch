@@ -7,6 +7,25 @@
 //     so OpenTofu tracks the app's identity (name, regions, autoscaling)
 //     but neither reads nor writes its inner contents.
 //   - Image registry token is write-only and managed via GitHub Actions.
+//
+// Required container env (set via `scripts/set-app-env.sh` or directly via
+// `hoppy container template env --add`):
+//   BETTER_AUTH_SECRET    64-hex; rotate via hoppy when length != 64
+//   BETTER_AUTH_URL       https://admin.wardrobe-assistants.ch
+//   DATABASE_URL          libsql://<…>.turso.io (also output by database.tf)
+//   DATABASE_AUTH_TOKEN   libSQL JWT
+//   RESEND_API_KEY        re_xxx
+//   EMAIL_FROM            "Wardrobe Assistants <info@wardrobe-assistants.ch>"
+//   NODE_ENV              "production"
+//   PORT                  3000
+//   HOSTNAME              0.0.0.0
+//
+// Required for iter-23 web push (admin PWA notifications):
+//   NEXT_PUBLIC_VAPID_PUBLIC_KEY   ~87 base64url chars; exposed to browser
+//   VAPID_PRIVATE_KEY              ~43 base64url chars; NEVER expose
+//   VAPID_SUBJECT                  mailto:info@wardrobe-assistants.ch
+// Generate with `npx web-push generate-vapid-keys --json`. Rotation
+// invalidates every existing browser subscription — treat as permanent.
 
 resource "bunnynet_compute_container_imageregistry" "ghcr_ractive" {
   registry = "GitHub"
