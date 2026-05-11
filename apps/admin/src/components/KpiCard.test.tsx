@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { CalendarClock } from "lucide-react";
 import { describe, expect, it } from "vitest";
 import { axe } from "vitest-axe";
@@ -36,6 +36,27 @@ describe("KpiCard", () => {
     expect(container.querySelector("p")).toBeNull();
   });
 
+  it("renders as a link when href is provided", () => {
+    const { container } = render(
+      <KpiCard
+        title="New requests"
+        value={3}
+        icon={CalendarClock}
+        href="/bookings?status=new-requests"
+      />,
+    );
+    const link = within(container).getByRole("link");
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/bookings?status=new-requests");
+  });
+
+  it("does not render a link element when href is omitted", () => {
+    const { container } = render(
+      <KpiCard title="No-link card" value={5} icon={CalendarClock} />,
+    );
+    expect(within(container).queryByRole("link")).toBeNull();
+  });
+
   it("is axe-clean with a numeric value", async () => {
     const { container } = render(
       <KpiCard title="Upcoming events" value={42} icon={CalendarClock} />,
@@ -46,6 +67,18 @@ describe("KpiCard", () => {
   it("is axe-clean with a dash placeholder", async () => {
     const { container } = render(
       <KpiCard title="Open invoices" value="—" icon={CalendarClock} />,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("is axe-clean as a link", async () => {
+    const { container } = render(
+      <KpiCard
+        title="New requests"
+        value={3}
+        icon={CalendarClock}
+        href="/bookings?status=new-requests"
+      />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });

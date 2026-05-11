@@ -7,7 +7,18 @@ import {
   user,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
-import { and, asc, desc, eq, gte, notExists, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  notExists,
+  sql,
+} from "drizzle-orm";
 import { db } from "@/lib/db";
 import { assertPermission } from "@/lib/permissions";
 import {
@@ -32,9 +43,42 @@ function buildDisplayName(input: {
   return `${input.firstName} ${input.lastName}`.trim();
 }
 
-export async function listBookings() {
+export type BookingStatusFilter =
+  | "new-requests"
+  | "offered"
+  | "accepted"
+  | "upcoming"
+  | "cancelled"
+  | "all";
+
+export async function listBookings(filter: BookingStatusFilter = "all") {
   // iter-16f / C-SEC-09: query is a security boundary on its own.
   await assertPermission("BOOKING_VIEW");
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  // Build the WHERE clause from the filter.
+  const whereClause = (() => {
+    switch (filter) {
+      case "new-requests":
+        return and(eq(bookings.status, "created"), isNull(bookings.createdBy));
+      case "offered":
+        return eq(bookings.status, "offered");
+      case "accepted":
+        return eq(bookings.status, "accepted");
+      case "upcoming":
+        return and(
+          eq(bookings.status, "accepted"),
+          gte(bookings.date, startOfToday),
+        );
+      case "cancelled":
+        return inArray(bookings.status, ["cancelled", "rejected"]);
+      case "all":
+        return undefined;
+    }
+  })();
+
   const rows = await db
     .select({
       id: bookings.id,
@@ -51,6 +95,7 @@ export async function listBookings() {
       )`,
     })
     .from(bookings)
+    .where(whereClause)
     .orderBy(desc(bookings.date));
 
   return rows.map((r) =>
@@ -65,6 +110,16 @@ export async function listBookings() {
       createdAt: r.createdAt,
     }),
   );
+}
+
+/** Count of public booking requests awaiting admin review. */
+export async function countNewRequests(): Promise<number> {
+  await assertPermission("BOOKING_VIEW");
+  const rows = await db
+    .select({ cnt: count() })
+    .from(bookings)
+    .where(and(eq(bookings.status, "created"), isNull(bookings.createdBy)));
+  return rows[0]?.cnt ?? 0;
 }
 
 export async function getBookingById(
@@ -124,6 +179,7 @@ export async function getBookingById(
     notes: row.notes,
     status: row.status,
     createdBy: row.createdBy,
+    offerToken: row.offerToken,
     offerVersion: row.offerVersion,
     acceptedAt: row.acceptedAt,
     invoicedAt: row.invoicedAt,

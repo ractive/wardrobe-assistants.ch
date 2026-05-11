@@ -2,7 +2,7 @@
 title: Iteration 30 — Admin coherence pass
 type: iteration
 order: 31
-status: planned
+status: done
 ---
 
 # Iteration 30 — Admin coherence pass
