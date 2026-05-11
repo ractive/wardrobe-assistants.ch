@@ -11,6 +11,16 @@ Closes the squad side of the booking lifecycle. When an admin assigns a squad me
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. This is the final iteration of the public-booking-flow sequence.
 
+> **Heads-up from iter-28** (carry these patterns over so PR review doesn't have to flag them again):
+>
+> 1. **Use `recordAudit` for new audit rows, after the tx commits.** The §4 example below uses `tx.insert(auditLog).values(...)` for illustration only — actually use `recordAudit(...)` from `@/lib/audit-log` *after* the transaction commits, so a transient audit failure cannot roll back a status change. Add `assignment.confirmed`, `assignment.declined`, `assignment.withdrawn` to the `AUDIT_ACTIONS` catalog in `lib/audit-log.ts`.
+> 2. **Conditional status UPDATEs with `.returning()`.** Guard every transition with `WHERE id = ? AND status IN (<expected>)` and `.returning({ id })` so lost races (concurrent admin reassignment, double-click) are detected — don't blindly UPDATE on a stale `findFirst` read. Pattern lives in iter-27/iter-28's `acceptOffer` / `sendRevisedOffer`.
+> 3. **Capture pre-update state from the winning UPDATE branch, not from the pre-tx read.** When `declineAssignment` records `fromStatus`, derive it from which conditional UPDATE branch (`assigned` vs `confirmed`) actually matched inside the transaction, not from the read before the tx. Same fix iter-28 had to apply for `sendRevisedOffer`'s `wasAccepted`.
+> 4. **Bound unauthenticated / user-provided text.** `withdrawAssignment` already caps `reason` at 500 chars in this plan — keep that in the server-action zod schema (trim + max + collapse-empty-to-undefined), not just the UI.
+> 5. **Filter audit-log reads by `targetType` AND `targetId`.** When/if any consumer reads the audit log for this domain, always include `eq(auditLog.targetType, "booking_assignment")` alongside the `targetId` predicate — `audit_log` is multi-entity and ids could theoretically collide.
+> 6. **Email templates: drop unused param fields.** iter-28's `OfferRejectedParams` shipped with an unused `bookingId` that review flagged. Keep param shapes minimal — only fields the component or `pushPayload` actually consume.
+> 7. **Dark-mode variants on coloured alert/banner blocks.** iter-28 had to retrofit `dark:bg-amber-…` / `dark:text-amber-…` on the re-confirm banner; add dark variants up front for any new amber/red/green banners on the squad-member detail page.
+
 ## Decisions
 
 - **Both buttons in the invite email deep-link to `/my-bookings/<bookingId>?action=confirm|decline`.** No state mutation from the email click. Defense against Outlook Safe Links and Gmail-Image-Proxy-style link prefetch.
