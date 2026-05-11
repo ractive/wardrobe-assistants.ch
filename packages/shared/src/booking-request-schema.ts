@@ -22,7 +22,7 @@ export const bookingRequestInputSchema = z
       .string()
       .trim()
       .regex(
-        /^\+?[0-9 ./()-]{7,20}$/,
+        /^(?=(?:\D*\d){7,})\+?[0-9 ./()-]{7,20}$/,
         "Please enter a phone number with at least 7 digits.",
       ),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please enter a valid date."),

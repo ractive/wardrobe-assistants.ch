@@ -29,6 +29,7 @@ const SUBMIT_URL = "https://admin.example.com/api/public/booking-requests";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("BookingRequestForm — a11y", () => {

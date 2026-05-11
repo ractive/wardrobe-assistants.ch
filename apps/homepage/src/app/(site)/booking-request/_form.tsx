@@ -82,12 +82,23 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
     setToken(TOKEN_VALUE);
   }, []);
 
+  // Mirror the externally-managed quantity inputs into RHF state so the
+  // zodResolver sees the real serviceSelections at validation time. Without
+  // this, the .refine() that requires `serviceSelections.length > 0 ||
+  // nonEmptyComment` would block "picked services, no comment" submissions.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: services/setValue stable, only quantities should trigger sync.
+  useEffect(() => {
+    const selections = services
+      .map((s) => ({ serviceId: s.id, quantity: quantities[s.id] ?? 0 }))
+      .filter((s) => s.quantity > 0);
+    setValue("serviceSelections", selections, { shouldValidate: false });
+  }, [quantities]);
+
   const {
     register,
     handleSubmit,
     watch,
-    setError,
-    setFocus,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<BookingRequestInput>({
@@ -114,35 +125,14 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
     setStatus("submitting");
     setServerErrorMessage(null);
 
-    const selectedSelections = services
-      .map((s) => ({ serviceId: s.id, quantity: quantities[s.id] ?? 0 }))
-      .filter((s) => s.quantity > 0);
-
-    // Inject the computed serviceSelections into the validated data. RHF
-    // doesn't track the quantity inputs directly — the schema refine validates
-    // them via the serviceSelections field that we populate here.
+    // serviceSelections is already in `data` (mirrored from `quantities` via
+    // the useEffect above) and was validated by the resolver. Normalize empty
+    // comments to undefined so the server stores NULL (not "") for "no comment".
+    const trimmedComment = data.comment?.trim();
     const payload: BookingRequestInput = {
       ...data,
-      serviceSelections: selectedSelections,
+      comment: trimmedComment ? trimmedComment : undefined,
     };
-
-    // Re-run the refine check so if quantities are zero and comment is empty
-    // the error shows inline rather than going to the server.
-    const refineResult = bookingRequestInputSchema.safeParse(payload);
-    if (!refineResult.success) {
-      const fieldErrors = refineResult.error.flatten().fieldErrors;
-      const formErrors = refineResult.error.flatten().formErrors;
-      if (fieldErrors.serviceSelections?.[0]) {
-        setError("serviceSelections", {
-          message: fieldErrors.serviceSelections[0],
-        });
-      } else if (formErrors[0]) {
-        setError("serviceSelections", { message: formErrors[0] });
-      }
-      setStatus("idle");
-      setFocus("comment");
-      return;
-    }
 
     // Snapshot display values for the success state before resetting the form.
     setSubmittedEmail(data.customerEmail);

@@ -34,7 +34,7 @@ const SESSION_COOKIE_NAMES = [
 // to /login. The boundary anchor `(?:$|[/?])` ensures `/api/publicly-evil`
 // cannot slip through.
 const PUBLIC_PATH_RE =
-  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth|api\/public(?:$|[/?]))/;
+  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth(?:$|[/?])|api\/public(?:$|[/?]))/;
 
 export type CspOptions = {
   nonce: string;
