@@ -3,6 +3,7 @@ import { Menu } from "@/components/icons";
 
 const links = [
   { label: "Services", href: "/services/" },
+  { label: "Request booking", href: "/booking-request/" },
   { label: "Contact", href: "/#contact" },
 ];
 

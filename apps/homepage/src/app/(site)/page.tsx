@@ -74,7 +74,7 @@ export default function Home() {
           changes from call to curtain.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <LinkButton href="#contact">Book the squad</LinkButton>
+          <LinkButton href="/booking-request/">Request a booking</LinkButton>
           <LinkButton variant="outline" href="#services">
             See services
           </LinkButton>

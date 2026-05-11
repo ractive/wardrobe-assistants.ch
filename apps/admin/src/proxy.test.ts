@@ -68,6 +68,38 @@ describe("proxy — auth gate", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
+  it("does NOT redirect /api/public/services (public catalog endpoint)", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/api/public/services"),
+    );
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("does NOT redirect /api/public/booking-requests (public submission endpoint)", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/api/public/booking-requests"),
+    );
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("does NOT redirect /api/public root (exact match)", () => {
+    const res = proxy(makeRequest("https://admin.example.com/api/public"));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("does NOT redirect /api/public/ (trailing slash)", () => {
+    const res = proxy(makeRequest("https://admin.example.com/api/public/"));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("rejects /api/publicly-evil prefix-bypass attempts", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/api/publicly-evil"),
+    );
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toMatch(/\/login$/u);
+  });
+
   it("rejects /login-evil prefix-bypass attempts", () => {
     const res = proxy(makeRequest("https://admin.example.com/login-evil"));
     expect(res.status).toBe(307);
