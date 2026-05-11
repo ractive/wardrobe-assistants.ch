@@ -3,7 +3,6 @@ import {
   cleanup,
   fireEvent,
   render,
-  screen,
   waitFor,
   within,
 } from "@testing-library/react";
@@ -98,6 +97,8 @@ describe("PushSubscribeToggle", () => {
     delete (navigator as unknown as Record<string, unknown>)["serviceWorker"];
     // biome-ignore lint/suspicious/noExplicitAny: cleanup
     delete (window as unknown as Record<string, unknown>)["PushManager"];
+    // biome-ignore lint/suspicious/noExplicitAny: cleanup
+    delete (window as unknown as Record<string, unknown>)["Notification"];
   });
 
   it("returns null when NEXT_PUBLIC_VAPID_PUBLIC_KEY is unset", async () => {
@@ -123,6 +124,26 @@ describe("PushSubscribeToggle", () => {
           name: /enable push notifications/i,
         }),
       ).toBeInTheDocument();
+    });
+  });
+
+  it("calls subscribePush with endpoint+keys and shows success on happy path", async () => {
+    setupServiceWorkerEnv();
+    const { container } = render(<PushSubscribeToggle />);
+
+    const btn = await within(container).findByRole("button", {
+      name: /enable push notifications/i,
+    });
+    fireEvent.click(btn);
+
+    await waitFor(() => {
+      expect(subscribePush).toHaveBeenCalledWith(
+        expect.objectContaining({
+          endpoint: "https://push.example.com/sub",
+          keys: { p256dh: "key123", auth: "auth456" },
+        }),
+      );
+      expect(toast.success).toHaveBeenCalled();
     });
   });
 

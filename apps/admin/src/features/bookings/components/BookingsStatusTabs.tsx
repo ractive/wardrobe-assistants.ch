@@ -16,6 +16,7 @@ const TABS: { label: string; value: BookingStatusFilter }[] = [
   { label: "New requests", value: "new-requests" },
   { label: "Offered", value: "offered" },
   { label: "Accepted", value: "accepted" },
+  { label: "Upcoming", value: "upcoming" },
   { label: "Cancelled", value: "cancelled" },
   { label: "All", value: "all" },
 ];

@@ -109,8 +109,10 @@ export function PushSubscribeToggle() {
       }
       // Only flip UI state once both browser and server agree.
       setSubscription(sub);
+      toast.success("Notifications enabled.");
     } catch (err) {
       console.error("[PushSubscribeToggle] subscribe failed", err);
+      toast.error("Couldn't enable notifications. Try again.");
     } finally {
       setLoading(false);
     }
@@ -132,8 +134,10 @@ export function PushSubscribeToggle() {
       }
       await subscription.unsubscribe();
       setSubscription(null);
+      toast.success("Notifications disabled.");
     } catch (err) {
       console.error("[PushSubscribeToggle] unsubscribe failed", err);
+      toast.error("Couldn't disable notifications. Try again.");
     } finally {
       setLoading(false);
     }

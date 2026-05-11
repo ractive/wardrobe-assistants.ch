@@ -22,7 +22,7 @@ export function KpiCard({
     <Card
       className={
         href
-          ? "motion-safe:transition-colors motion-safe:duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          ? "motion-safe:transition-colors motion-safe:duration-200 hover:bg-muted"
           : undefined
       }
     >

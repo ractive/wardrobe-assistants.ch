@@ -139,7 +139,9 @@ export default async function DashboardHome() {
       canViewBookings ? fetchRecentBookings() : Promise.resolve(null),
     ]);
 
-  // Empty state: zero bookings, zero new requests, zero squad members → welcome
+  // Empty state: zero new requests, zero upcoming, zero recent → welcome panel.
+  // Squad count is intentionally excluded — a brand-new admin still sees the
+  // welcome panel before inviting anyone.
   const showWelcome =
     canViewBookings &&
     newRequestsCount === 0 &&
@@ -199,7 +201,9 @@ export default async function DashboardHome() {
                 Share the public booking-request URL
               </p>
               <p className="break-all text-xs text-muted-foreground">
-                https://wardrobe-assistants.ch/booking-request
+                {process.env.PUBLIC_SITE_URL ??
+                  "https://wardrobe-assistants.ch"}
+                /booking-request
               </p>
             </div>
           </div>
