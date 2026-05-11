@@ -2,7 +2,7 @@
 title: Iteration 25 — Booking domain expansion
 type: iteration
 order: 26
-status: implemented
+status: done
 ---
 
 # Iteration 25 — Booking domain expansion

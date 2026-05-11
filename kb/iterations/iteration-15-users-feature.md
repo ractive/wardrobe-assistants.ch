@@ -2,7 +2,7 @@
 title: Iteration 15 — Users feature (invite, list, delete, message)
 type: iteration
 order: 16
-status: implemented
+status: done
 ---
 
 # Iteration 15 — Users feature
