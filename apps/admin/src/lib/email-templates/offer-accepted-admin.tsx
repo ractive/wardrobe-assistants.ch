@@ -8,6 +8,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { brand } from "./_tokens";
 
 // Sent to the customer when an admin manually accepts the booking offline.
 // Mirrors the user-facing "your offer was accepted" mail that iter-27 will
@@ -31,8 +32,6 @@ export function pushPayload(p: OfferAcceptedAdminParams): PushPayload {
     url: "/",
   };
 }
-
-import { brand } from "./_tokens";
 
 export default function OfferAcceptedAdmin(p: OfferAcceptedAdminParams) {
   return (

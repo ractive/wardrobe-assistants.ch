@@ -8,6 +8,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { brand } from "./_tokens";
 
 export type BookingRejectedParams = {
   recipientName: string;
@@ -28,8 +29,6 @@ export function pushPayload(p: BookingRejectedParams): PushPayload {
     url: "/",
   };
 }
-
-import { brand } from "./_tokens";
 
 export default function BookingRejected(p: BookingRejectedParams) {
   return (
