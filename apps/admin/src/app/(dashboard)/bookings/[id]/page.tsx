@@ -2,7 +2,6 @@ import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { HasPermission } from "@/components/HasPermission";
 import { NoPermissionCard } from "@/components/NoPermissionCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +50,7 @@ export default async function BookingDetailPage({
     canDelete,
     canMessage,
     canApproveRequests,
+    canSendOffer,
     canAccept,
     canReject,
     canCancel,
@@ -60,6 +60,7 @@ export default async function BookingDetailPage({
     userHasPermission("BOOKING_DELETE"),
     userHasPermission("BOOKING_MESSAGE_ASSIGNED"),
     userHasPermission("BOOKING_APPROVE_REQUEST"),
+    userHasPermission("BOOKING_OFFER_SEND"),
     userHasPermission("BOOKING_ACCEPT_MANUAL"),
     userHasPermission("BOOKING_REJECT"),
     userHasPermission("BOOKING_CANCEL"),
@@ -124,16 +125,27 @@ export default async function BookingDetailPage({
         />
       </header>
 
-      {/* Lifecycle action buttons — visible if any of accept/reject/cancel is
-          held. `BookingLifecycleButtons` further hides individual buttons
+      {/* Lifecycle action buttons — visible if any of send-offer/accept/reject/cancel
+          is held. `BookingLifecycleButtons` further hides individual buttons
           based on the per-action `can*` flags. */}
-      {(canAccept || canReject || canCancel) && (
+      {(canSendOffer || canAccept || canReject || canCancel) && (
         <BookingLifecycleButtons
           bookingId={booking.id}
           status={booking.status}
+          canSendOffer={canSendOffer}
           canAccept={canAccept}
           canReject={canReject}
           canCancel={canCancel}
+          customerEmail={booking.customerEmail}
+          selectionCount={booking.selections.length}
+          lineItemsTotal={booking.selections.reduce((sum, s) => {
+            if (s.priceType === "hourly") {
+              const mins =
+                booking.durationHours !== null ? booking.durationHours * 60 : 0;
+              return sum + Math.round((s.unitPrice * s.quantity * mins) / 60);
+            }
+            return sum + s.unitPrice * s.quantity;
+          }, 0)}
         />
       )}
 

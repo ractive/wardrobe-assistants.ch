@@ -125,6 +125,16 @@ export const RATE_LIMITS = {
     limit: 60,
     windowMs: 60 * 1000,
   } satisfies Bucket,
+  // iter-27: public offer page — cheap defense against scrapers.
+  offerView: {
+    limit: 60,
+    windowMs: 60 * 1000,
+  } satisfies Bucket,
+  // iter-27: customer offer-accept — prevents accept-spam if a token leaks.
+  offerAccept: {
+    limit: 10,
+    windowMs: 60 * 60 * 1000,
+  } satisfies Bucket,
 } as const;
 
 // Standard `Retry-After` header value (seconds, ceiled to 1 minimum when

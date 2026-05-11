@@ -11,6 +11,15 @@ Completes the offer state machine. Admins can send a revised offer (from `offere
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. After this iteration the booking state machine matches the locked spec end-to-end except for squad confirmation, which is [iter-29](iteration-29-squad-assignment-confirmation.md).
 
+> **Heads-up from iter-27** (carry these patterns over so PR review doesn't have to flag them again):
+>
+> 1. **Shared snapshot helper already exists.** iter-27 landed `snapshotSelectionsToItems(tx, bookingId, nextVersion, durationHours)` in `apps/admin/src/features/bookings/server/actions.ts`. Reuse it for `sendRevisedOffer` — do **not** write a parallel `snapshotSelections` helper.
+> 2. **Always use `recordAudit` for new audit rows.** Insert audit entries via `recordAudit(...)` from `@/lib/audit-log` *after* the transaction commits — never `tx.insert(auditLog).values(...)` inside the transaction. A transient audit failure must not roll back a status change. Add `booking.offer.snapshot.archived`, `booking.offer.revised`, and `booking.offer.rejected` to the `AUDIT_ACTIONS` catalog.
+> 3. **Conditional status UPDATEs.** Guard every status transition with `WHERE id = ? AND status = '<expected>' AND offerVersion = ?` and use `.returning(...)` to detect lost races. iter-27's `acceptOffer` and `sendOffer` both do this — copy the pattern for `sendRevisedOffer` and `rejectOffer`.
+> 4. **Rate-limit keys for public actions include the token.** `clientIpFromHeaders` falls back to `"unknown"` when no XFF/X-Real-IP is present, which would collapse every caller into one bucket. Key as `offerAccept:${ip}:${token}` for `rejectOffer`.
+> 5. **CHF formatting.** The customer offer page uses `Intl.NumberFormat("en-CH", { style: "currency", currency: "CHF" })`. Any new customer-facing totals should reuse that formatter, not raw `CHF ${n}` interpolation.
+> 6. **Email param types match conditional rendering.** `offerSent` made `startTime` / `venueCity` optional because the template renders them conditionally. Do the same for any new templates with optional fields (`offerRevised` likely needs this treatment).
+
 ## Decisions
 
 - **Selection editor unlocks in `offered` state.** Drop the [iter-25](iteration-25-booking-domain.md) restriction that line-item selections are editable only in `created`. Editable also in `offered` and `accepted`. Editing the selections does **not** change the customer-visible snapshot — only the next `sendRevisedOffer` re-snapshots. Document this prominently in the UI.

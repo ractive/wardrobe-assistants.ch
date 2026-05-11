@@ -2,7 +2,7 @@
 title: Iteration 27 — Offer flow (send + customer page + accept)
 type: iteration
 order: 28
-status: planned
+status: implemented
 ---
 
 # Iteration 27 — Offer flow
@@ -27,10 +27,10 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] [iter-26](iteration-26-public-booking-request.md) merged on `main` and deployed; customer submissions flow into `bookings`.
-- [ ] At least one `bookings` row in status `created` exists in dev for end-to-end testing (submit via the public form, or seed).
-- [ ] No in-flight branches touching `features/bookings/` or `app/api/public/`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-26](iteration-26-public-booking-request.md) merged on `main` and deployed; customer submissions flow into `bookings`.
+- [x] At least one `bookings` row in status `created` exists in dev for end-to-end testing (submit via the public form, or seed).
+- [x] No in-flight branches touching `features/bookings/` or `app/api/public/`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -218,14 +218,14 @@ Add:
 
 ## Done when
 
-- [ ] `sendOffer` server action exists, gated by `BOOKING_OFFER_SEND`, creates `booking_service_item` rows at the new offer version with correct math, and emails the customer.
-- [ ] Admin UI exposes "Send offer" only for `created` bookings with ≥1 line item.
-- [ ] `/offer/[token]` renders for all four relevant statuses; rate-limited at 60/min/IP.
-- [ ] `acceptOffer` server action enforces T&C, transitions `offered → accepted`, and notifies admins.
-- [ ] `adminAcceptOffer` works from both `created` and `offered`; sends `offerAcceptedAdmin`.
-- [ ] `offerSent` and `offerAccepted` templates landed with push payloads colocated.
-- [ ] Audit log writes `booking.offer.sent` and `booking.offer.accepted` rows.
-- [ ] Smoke tests cover every case in §9.
-- [ ] `npm run format` clean; `npm run verify` green.
-- [ ] System deployable; manual smoke on a preview confirms send-offer → email → click link → accept → admin notification round-trip.
-- [ ] No UI exposes "Send revised offer" or "Cancel booking" yet — those land in [iter-28](iteration-28-offer-revisions-cancellation.md).
+- [x] `sendOffer` server action exists, gated by `BOOKING_OFFER_SEND`, creates `booking_service_item` rows at the new offer version with correct math, and emails the customer.
+- [x] Admin UI exposes "Send offer" only for `created` bookings with ≥1 line item.
+- [x] `/offer/[token]` renders for all four relevant statuses; rate-limited at 60/min/IP.
+- [x] `acceptOffer` server action enforces T&C, transitions `offered → accepted`, and notifies admins.
+- [x] `adminAcceptOffer` works from both `created` and `offered`; sends `offerAcceptedAdmin`.
+- [x] `offerSent` and `offerAccepted` templates landed with push payloads colocated.
+- [x] Audit log writes `booking.offer.sent` and `booking.offer.accepted` rows.
+- [x] Smoke tests cover every case in §9.
+- [x] `npm run format` clean; `npm run verify` green.
+- [ ] System deployable; manual smoke on a preview confirms send-offer → email → click link → accept → admin notification round-trip. <!-- pending: post-merge manual smoke on preview -->
+- [x] No UI exposes "Send revised offer" or "Cancel booking" yet — those land in [iter-28](iteration-28-offer-revisions-cancellation.md).
