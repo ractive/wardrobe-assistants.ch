@@ -588,13 +588,15 @@ describe("bookings feature — smoke", () => {
     expect(detail?.selections[0]?.serviceName).toBe("Sewing kit");
   });
 
-  it("replaceBookingSelections refuses non-'created' bookings", async () => {
+  // iter-28: replaceBookingSelections now allows offered/accepted — only
+  // terminal states (rejected, cancelled) block edits.
+  it("replaceBookingSelections refuses rejected/cancelled bookings", async () => {
     const admin = await harness.seedAdmin({
       email: "lifecycle-admin2@bookings-smoke.local",
       password: "Sup3rSecure!Pass",
     });
 
-    const { createBooking, replaceBookingSelections, adminAcceptOffer } =
+    const { createBooking, replaceBookingSelections, rejectBooking } =
       await import("./actions");
     const { listBookings } = await import("./queries");
 
@@ -607,10 +609,12 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Locked-edit booking")!;
+    const booking = list.find((b) => b.name === "Locked-edit booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
 
     await harness.runAs(admin.cookies, () =>
-      adminAcceptOffer({ bookingId: booking.id }),
+      rejectBooking({ bookingId: booking.id, reason: undefined }),
     );
 
     const r = await harness.runAs(admin.cookies, () =>
@@ -620,7 +624,7 @@ describe("bookings feature — smoke", () => {
       }),
     );
     expect(r.error).toBe(true);
-    expect(r.message).toMatch(/created/i);
+    expect(r.message).toMatch(/rejected|cancelled/i);
   });
 
   it("squad member is denied replaceBookingSelections", async () => {

@@ -1,11 +1,16 @@
-import { bookingServiceItem, bookings } from "@wardrobe-assistants/db/schema";
+import {
+  auditLog,
+  bookingServiceItem,
+  bookings,
+} from "@wardrobe-assistants/db/schema";
 import { format } from "date-fns";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { clientIpFromHeaders, consume, RATE_LIMITS } from "@/lib/rate-limit";
 import { AcceptForm } from "./AcceptForm";
+import { DeclineForm } from "./DeclineForm";
 
 export default async function OfferPage({
   params,
@@ -50,6 +55,41 @@ export default async function OfferPage({
           )
           .orderBy(asc(bookingServiceItem.position))
       : [];
+
+  // iter-28: detect re-revision-after-acceptance to show a re-confirm banner.
+  // Read the most recent booking.offer.revised audit row for this booking.
+  // If wasAccepted=true in its metadata, the customer needs to re-confirm.
+  let showReconfirmBanner = false;
+  if (booking.status === "offered" && booking.offerVersion > 1) {
+    const revisionRows = await db
+      .select({ metadata: auditLog.metadata })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.targetType, "booking"),
+          eq(auditLog.targetId, booking.id),
+          eq(auditLog.action, "booking.offer.revised"),
+        ),
+      )
+      .orderBy(desc(auditLog.createdAt))
+      .limit(1);
+    const latestRevision = revisionRows[0];
+    if (latestRevision?.metadata) {
+      try {
+        const parsed: unknown = JSON.parse(latestRevision.metadata);
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          "wasAccepted" in parsed &&
+          (parsed as Record<string, unknown>).wasAccepted === true
+        ) {
+          showReconfirmBanner = true;
+        }
+      } catch {
+        // Malformed metadata — ignore gracefully.
+      }
+    }
+  }
 
   const grandTotal = lineItems.reduce((sum, r) => sum + (r.total ?? 0), 0);
   const dateStr = format(booking.date, "EEEE, d MMMM yyyy");
@@ -191,6 +231,17 @@ export default async function OfferPage({
 
       {booking.status === "offered" && (
         <section className="space-y-4">
+          {showReconfirmBanner && (
+            <div className="rounded-md border border-[var(--border)] bg-amber-50 dark:bg-amber-900/30 p-4">
+              <p className="font-semibold text-sm text-amber-800 dark:text-amber-200">
+                This offer was updated since you accepted.
+              </p>
+              <p className="mt-1 text-amber-700 dark:text-amber-300 text-sm">
+                Please review the revised details above and re-confirm your
+                acceptance.
+              </p>
+            </div>
+          )}
           <h2 className="font-medium text-sm text-[var(--muted-foreground)] uppercase tracking-wide">
             Accept offer
           </h2>
@@ -203,6 +254,9 @@ export default async function OfferPage({
             bookingId={booking.id}
             offerVersion={booking.offerVersion}
           />
+          <div className="pt-2">
+            <DeclineForm token={token} />
+          </div>
         </section>
       )}
 

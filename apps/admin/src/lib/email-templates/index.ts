@@ -15,6 +15,10 @@ import type { OfferAcceptedParams } from "./offer-accepted";
 import OfferAccepted from "./offer-accepted";
 import type { OfferAcceptedAdminParams } from "./offer-accepted-admin";
 import OfferAcceptedAdmin from "./offer-accepted-admin";
+import type { OfferRejectedParams } from "./offer-rejected";
+import OfferRejected from "./offer-rejected";
+import type { OfferRevisedParams } from "./offer-revised";
+import OfferRevised from "./offer-revised";
 import type { OfferSentParams } from "./offer-sent";
 import OfferSent from "./offer-sent";
 import type { ParticipationRequestedParams } from "./participation-requested";
@@ -77,6 +81,16 @@ export const templates = {
       `Booking confirmed: ${p.bookingName}`,
   } satisfies TemplateEntry<OfferAcceptedAdminParams>,
 
+  offerRejected: {
+    component: OfferRejected,
+    subject: (p: OfferRejectedParams) => `Offer declined: ${p.customerName}`,
+  } satisfies TemplateEntry<OfferRejectedParams>,
+
+  offerRevised: {
+    component: OfferRevised,
+    subject: () => "Your wardrobe offer has been updated",
+  } satisfies TemplateEntry<OfferRevisedParams>,
+
   offerSent: {
     component: OfferSent,
     subject: () => "Your wardrobe offer is ready to review",
@@ -121,6 +135,8 @@ export type {
   BookingRequestReceivedParams,
   OfferAcceptedAdminParams,
   OfferAcceptedParams,
+  OfferRejectedParams,
+  OfferRevisedParams,
   OfferSentParams,
   ParticipationRequestedParams,
   PasswordResetParams,

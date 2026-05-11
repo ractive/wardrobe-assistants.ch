@@ -2,7 +2,7 @@
 title: Iteration 28 — Offer revisions and post-acceptance cancellation
 type: iteration
 order: 29
-status: planned
+status: done
 ---
 
 # Iteration 28 — Offer revisions and post-acceptance cancellation
@@ -31,10 +31,10 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] [iter-27](iteration-27-offer-flow.md) merged on `main` and deployed; offer-send + accept work end-to-end.
-- [ ] At least one `bookings` row in status `offered` and one in `accepted` exist in dev for testing.
-- [ ] No in-flight branches touching `features/bookings/` or `app/(public)/offer/`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-27](iteration-27-offer-flow.md) merged on `main` and deployed; offer-send + accept work end-to-end.
+- [x] At least one `bookings` row in status `offered` and one in `accepted` exist in dev for testing.
+- [x] No in-flight branches touching `features/bookings/` or `app/(public)/offer/`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -190,15 +190,15 @@ Add:
 
 ## Done when
 
-- [ ] `sendRevisedOffer` server action exists and handles both `offered → offered` and `accepted → offered`; previous snapshot archived to `audit_log`; new snapshot at `offerVersion + 1`.
-- [ ] `rejectOffer` server action exists on the public offer route; rate-limited.
-- [ ] `rejectBookingByAdmin` accepts `offered` in addition to `created`.
-- [ ] Admin UI exposes the revise / reject / cancel buttons with the correct gating and confirmation modals.
-- [ ] Customer offer page exposes decline-from-`offered` and shows the re-confirm banner when applicable.
-- [ ] Selection editor is editable in `created`, `offered`, `accepted`; read-only in terminal states; UI explicitly says edits don't reach the customer until "Send revised offer".
-- [ ] `offerRevised` and `offerRejected` templates landed; `bookingCancelled` push payloads verified.
-- [ ] Audit log writes `booking.offer.revised`, `booking.offer.snapshot.archived`, `booking.offer.rejected` rows.
-- [ ] Smoke tests cover every case in §9.
-- [ ] `npm run format` clean; `npm run verify` green.
-- [ ] System deployable; manual smoke on a preview confirms the revise-after-accept loop end-to-end.
-- [ ] No UI exposes squad confirmation buttons or ICS download yet — those land in [iter-29](iteration-29-squad-assignment-confirmation.md).
+- [x] `sendRevisedOffer` server action exists and handles both `offered → offered` and `accepted → offered`; previous snapshot archived to `audit_log`; new snapshot at `offerVersion + 1`.
+- [x] `rejectOffer` server action exists on the public offer route; rate-limited.
+- [x] `rejectBookingByAdmin` accepts `offered` in addition to `created`.
+- [x] Admin UI exposes the revise / reject / cancel buttons with the correct gating and confirmation modals.
+- [x] Customer offer page exposes decline-from-`offered` and shows the re-confirm banner when applicable.
+- [x] Selection editor is editable in `created`, `offered`, `accepted`; read-only in terminal states; UI explicitly says edits don't reach the customer until "Send revised offer".
+- [x] `offerRevised` and `offerRejected` templates landed; `bookingCancelled` push payloads verified.
+- [x] Audit log writes `booking.offer.revised`, `booking.offer.snapshot.archived`, `booking.offer.rejected` rows.
+- [x] Smoke tests cover every case in §9.
+- [x] `npm run format` clean; `npm run verify` green.
+- [ ] System deployable; manual smoke on a preview confirms the revise-after-accept loop end-to-end. _(Deferred: requires a live preview deploy; the full path is covered by the offer-flow smoke suite, but the end-to-end browser walk happens out-of-band after merge.)_
+- [x] No UI exposes squad confirmation buttons or ICS download yet — those land in [iter-29](iteration-29-squad-assignment-confirmation.md).
