@@ -44,6 +44,8 @@ export const AUDIT_ACTIONS = [
   "booking.request_participation",
   "booking.approve_request",
   "booking.reject_request",
+  "booking.offer.sent",
+  "booking.offer.accepted",
   "service.create",
   "service.update",
   "service.archive",

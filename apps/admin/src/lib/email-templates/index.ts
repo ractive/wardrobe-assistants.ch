@@ -11,8 +11,12 @@ import type { BookingRequestReceivedParams } from "./booking-request-received";
 import BookingRequestReceived from "./booking-request-received";
 import type { BookingRequestedParams } from "./booking-requested";
 import BookingRequested from "./booking-requested";
+import type { OfferAcceptedParams } from "./offer-accepted";
+import OfferAccepted from "./offer-accepted";
 import type { OfferAcceptedAdminParams } from "./offer-accepted-admin";
 import OfferAcceptedAdmin from "./offer-accepted-admin";
+import type { OfferSentParams } from "./offer-sent";
+import OfferSent from "./offer-sent";
 import type { ParticipationRequestedParams } from "./participation-requested";
 import ParticipationRequested from "./participation-requested";
 import type { PasswordResetParams } from "./password-reset";
@@ -61,11 +65,22 @@ export const templates = {
     subject: () => "We received your booking request",
   } satisfies TemplateEntry<BookingRequestReceivedParams>,
 
+  offerAccepted: {
+    component: OfferAccepted,
+    subject: (p: OfferAcceptedParams) =>
+      `Offer accepted: ${p.customerName} — ${p.date}`,
+  } satisfies TemplateEntry<OfferAcceptedParams>,
+
   offerAcceptedAdmin: {
     component: OfferAcceptedAdmin,
     subject: (p: OfferAcceptedAdminParams) =>
       `Booking confirmed: ${p.bookingName}`,
   } satisfies TemplateEntry<OfferAcceptedAdminParams>,
+
+  offerSent: {
+    component: OfferSent,
+    subject: () => "Your wardrobe offer is ready to review",
+  } satisfies TemplateEntry<OfferSentParams>,
 
   participationRequested: {
     component: ParticipationRequested,
@@ -105,6 +120,8 @@ export type {
   BookingRequestedParams,
   BookingRequestReceivedParams,
   OfferAcceptedAdminParams,
+  OfferAcceptedParams,
+  OfferSentParams,
   ParticipationRequestedParams,
   PasswordResetParams,
   UserDirectMessageParams,

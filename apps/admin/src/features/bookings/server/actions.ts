@@ -805,6 +805,102 @@ async function snapshotSelectionsToItems(
   return { total };
 }
 
+export const sendOffer = withPermission(
+  "BOOKING_OFFER_SEND",
+  async (actorId, raw: { bookingId: string }): Promise<ActionResult> => {
+    const bookingId = String(raw?.bookingId ?? "");
+    if (!bookingId) {
+      return { error: true, message: "Invalid input" };
+    }
+
+    const bookingRows = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (booking.status !== "created") {
+      return {
+        error: true,
+        message: `Cannot send offer for a booking in '${booking.status}' state.`,
+      };
+    }
+
+    const selectionCount = await db
+      .select({ id: bookingServiceSelection.id })
+      .from(bookingServiceSelection)
+      .where(eq(bookingServiceSelection.bookingId, bookingId))
+      .limit(1);
+    if (selectionCount.length === 0) {
+      return {
+        error: true,
+        message: "Cannot send offer with no line items selected.",
+      };
+    }
+
+    const nextVersion = booking.offerVersion + 1;
+    const now = new Date();
+    let snapshotTotal = 0;
+
+    await db.transaction(async (tx) => {
+      const result = await snapshotSelectionsToItems(
+        tx,
+        bookingId,
+        nextVersion,
+        booking.durationHours,
+      );
+      snapshotTotal = result.total;
+
+      await tx
+        .update(bookings)
+        .set({
+          status: "offered",
+          offerVersion: nextVersion,
+          lastOfferSentAt: now,
+          updatedAt: now,
+        })
+        .where(eq(bookings.id, bookingId));
+    });
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.offer.sent",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { offerVersion: nextVersion },
+    });
+
+    if (booking.customerEmail) {
+      try {
+        await sendTemplated("offerSent", booking.customerEmail, {
+          customerName: booking.customerName ?? "there",
+          date: format(booking.date, "EEEE, d MMMM yyyy"),
+          startTime: booking.startTime ?? "",
+          venueName: booking.venueName ?? booking.venue,
+          venueCity: booking.venueCity ?? "",
+          offerVersion: nextVersion,
+          offerUrl: `${env.betterAuthUrl}/offer/${booking.offerToken}`,
+          totalFormatted: formatChfTotal(snapshotTotal),
+        });
+      } catch (err) {
+        console.error("sendOffer: customer email failed", err);
+        revalidatePath(`/bookings/${bookingId}`);
+        return {
+          error: false,
+          message: "Offer sent, but customer email failed to deliver.",
+        };
+      }
+    }
+
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Offer sent." };
+  },
+);
+
 export const adminAcceptOffer = withPermission(
   "BOOKING_ACCEPT_MANUAL",
   async (actorId, raw: { bookingId: string }): Promise<ActionResult> => {
@@ -872,6 +968,14 @@ export const adminAcceptOffer = withPermission(
         byUserId: actorId,
         manual: true,
       },
+    });
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.offer.accepted",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { offerVersion: newOfferVersion, via: "admin" },
     });
 
     // Best-effort customer notification — only if we have a customer email

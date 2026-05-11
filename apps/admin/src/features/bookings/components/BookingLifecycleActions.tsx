@@ -17,7 +17,108 @@ import {
   adminAcceptOffer,
   cancelBooking,
   rejectBooking,
+  sendOffer,
 } from "../server/actions";
+
+// ---------------------------------------------------------------------------
+// Send offer dialog
+// ---------------------------------------------------------------------------
+
+export function SendOfferDialog({
+  bookingId,
+  customerEmail,
+  totalFormatted,
+  open,
+  onOpenChange,
+}: {
+  bookingId: string;
+  customerEmail: string | null;
+  totalFormatted: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  function onConfirm() {
+    setServerError(null);
+    startTransition(async () => {
+      try {
+        const result = await sendOffer({ bookingId });
+        if (result.error) {
+          setServerError(result.message);
+          toast.error(result.message);
+          return;
+        }
+        toast.success(result.message);
+        onOpenChange(false);
+        router.refresh();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Could not send offer.";
+        setServerError(message);
+        toast.error(message);
+      }
+    });
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (isPending && !next) return;
+        if (!next) setServerError(null);
+        onOpenChange(next);
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Send offer?</DialogTitle>
+          <DialogDescription>
+            This will snapshot the current line items and email the offer to the
+            customer.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1 text-sm">
+          {customerEmail ? (
+            <p>
+              <span className="text-[var(--muted-foreground)]">To: </span>
+              {customerEmail}
+            </p>
+          ) : (
+            <p className="text-[var(--destructive)]">
+              No customer email on file — the offer will be sent without
+              notifying the customer.
+            </p>
+          )}
+          <p>
+            <span className="text-[var(--muted-foreground)]">Total: </span>
+            {totalFormatted}
+          </p>
+        </div>
+        {serverError ? (
+          <p className="text-[var(--destructive)] text-sm" role="alert">
+            {serverError}
+          </p>
+        ) : null}
+        <DialogFooter className="gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="button" onClick={onConfirm} disabled={isPending}>
+            {isPending ? "Sending…" : "Send offer"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Accept booking dialog
@@ -316,37 +417,66 @@ export function CancelBookingDialog({
 export function BookingLifecycleButtons({
   bookingId,
   status,
+  canSendOffer,
   canAccept,
   canReject,
   canCancel,
+  customerEmail,
+  selectionCount,
+  lineItemsTotal,
 }: {
   bookingId: string;
   status: string;
+  canSendOffer: boolean;
   canAccept: boolean;
   canReject: boolean;
   canCancel: boolean;
+  customerEmail: string | null;
+  selectionCount: number;
+  lineItemsTotal: number;
 }) {
+  const [sendOfferOpen, setSendOfferOpen] = useState(false);
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
 
+  const showSendOffer = canSendOffer && status === "created";
   const showAccept =
     canAccept && (status === "created" || status === "offered");
   const showReject = canReject && status === "created";
   const showCancel = canCancel && status === "accepted";
 
-  if (!showAccept && !showReject && !showCancel) return null;
+  if (!showSendOffer && !showAccept && !showReject && !showCancel) return null;
+
+  const totalFormatted = `CHF ${lineItemsTotal.toLocaleString("en-CH")}.-`;
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {showAccept && (
+        {showSendOffer && (
           <Button
             type="button"
             variant="default"
+            onClick={() => setSendOfferOpen(true)}
+            disabled={selectionCount === 0}
+            title={
+              selectionCount === 0
+                ? "Add line items before sending the offer"
+                : undefined
+            }
+          >
+            Send offer
+          </Button>
+        )}
+        {showAccept && (
+          <Button
+            type="button"
+            variant={status === "offered" ? "outline" : "default"}
             onClick={() => setAcceptOpen(true)}
           >
-            Accept booking
+            {status === "offered"
+              ? "Accept on customer's behalf"
+              : "Accept booking"}
           </Button>
         )}
         {showReject && (
@@ -368,6 +498,13 @@ export function BookingLifecycleButtons({
           </Button>
         )}
       </div>
+      <SendOfferDialog
+        bookingId={bookingId}
+        customerEmail={customerEmail}
+        totalFormatted={totalFormatted}
+        open={sendOfferOpen}
+        onOpenChange={setSendOfferOpen}
+      />
       <AcceptBookingDialog
         bookingId={bookingId}
         open={acceptOpen}
