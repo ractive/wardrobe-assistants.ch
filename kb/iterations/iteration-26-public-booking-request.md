@@ -2,7 +2,7 @@
 title: Iteration 26 — Public booking-request flow
 type: iteration
 order: 27
-status: planned
+status: done
 ---
 
 # Iteration 26 — Public booking-request flow
