@@ -1,11 +1,12 @@
-import { user } from "@wardrobe-assistants/db/schema";
-import { eq } from "drizzle-orm";
+import { user, userProfile } from "@wardrobe-assistants/db/schema";
+import { and, eq } from "drizzle-orm";
 import { db } from "./db";
 import { sendTemplated } from "./email";
 import type { ParamsFor } from "./email-templates";
 import { pushPayload as bookingAssignedPushPayload } from "./email-templates/booking-assigned";
 import { pushPayload as bookingBroadcastPushPayload } from "./email-templates/booking-broadcast";
 import { pushPayload as bookingCancelledPushPayload } from "./email-templates/booking-cancelled";
+import { pushPayload as bookingRequestedPushPayload } from "./email-templates/booking-requested";
 import { pushPayload as participationRequestedPushPayload } from "./email-templates/participation-requested";
 import { pushPayload as userDirectMessagePushPayload } from "./email-templates/user-direct-message";
 import { sendPush } from "./push";
@@ -13,10 +14,12 @@ import { sendPush } from "./push";
 // Templates for which push is meaningful. Excludes:
 //   - userInvited: recipient has no account / subscription yet
 //   - passwordReset, verifyEmail: transactional — email only
+//   - bookingRequestReceived: customer-side autoreply, no user account
 export type NotifiableTemplateKey =
   | "bookingAssigned"
   | "bookingBroadcast"
   | "bookingCancelled"
+  | "bookingRequested"
   | "participationRequested"
   | "userDirectMessage";
 
@@ -36,6 +39,10 @@ function pushPayloadFor<K extends NotifiableTemplateKey>(
     case "bookingCancelled":
       return bookingCancelledPushPayload(
         params as ParamsFor<"bookingCancelled">,
+      );
+    case "bookingRequested":
+      return bookingRequestedPushPayload(
+        params as ParamsFor<"bookingRequested">,
       );
     case "participationRequested":
       return participationRequestedPushPayload(
@@ -98,4 +105,25 @@ export async function notifyUser<K extends NotifiableTemplateKey>(
       `[notify] both channels failed for ${templateKey}`,
     );
   }
+}
+
+/**
+ * Fan out a single notification to every verified ADMIN. Each admin receives
+ * both push and email per `notifyUser`. `Promise.allSettled` so one bad
+ * recipient does not drop notifications for the rest. Errors from the inner
+ * `notifyUser` calls are logged by `notifyUser` itself.
+ */
+export async function notifyAdmins<K extends NotifiableTemplateKey>(
+  templateKey: K,
+  params: ParamsFor<K>,
+): Promise<void> {
+  const admins = await db
+    .select({ id: userProfile.userId })
+    .from(userProfile)
+    .where(
+      and(eq(userProfile.role, "ADMIN"), eq(userProfile.status, "verified")),
+    );
+  await Promise.allSettled(
+    admins.map((a) => notifyUser(a.id, templateKey, params)),
+  );
 }

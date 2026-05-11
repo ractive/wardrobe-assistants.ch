@@ -101,6 +101,21 @@ export default function DatenschutzPage() {
           manage that engagement. Legal basis: contractual measures at your
           request and legitimate interest in responding to enquiries.
         </p>
+        <h3 className={subHeading}>Booking-request form</h3>
+        <p className={paragraph}>
+          If you submit the booking-request form at{" "}
+          <Link href="/booking-request/" className={linkClass}>
+            /booking-request
+          </Link>
+          , we receive the data you enter: your name, email address, phone
+          number, the date, time, duration and venue of the production, the
+          services you'd like covered and any free-text comment. We use this
+          data to prepare a tailored offer and, if a booking follows, to manage
+          that engagement. Legal basis: contractual measures at your request and
+          legitimate interest in responding to enquiries. The form posts
+          directly to our admin application; no third-party form processor sees
+          the submission.
+        </p>
         <h3 className={subHeading}>No analytics, no tracking, no cookies</h3>
         <p className={paragraph}>
           We do not run analytics, advertising pixels, social plugins or any
@@ -177,6 +192,19 @@ export default function DatenschutzPage() {
             enquiry or, if a booking follows, for the duration of the engagement
             plus the statutory retention period under Swiss law (commercial
             records: 10 years under Art. 958f CO).
+          </li>
+          <li>
+            Booking-request submissions (customer name, email, phone, services
+            requested, venue and timing details) are kept only as long as needed
+            to handle the request. If a booking follows, the related records are
+            retained for the duration of the engagement plus the Swiss 10-year
+            commercial-records retention period (Art. 958f CO). Submissions that
+            do not lead to an engagement are deleted within 12 months. You can
+            ask for earlier deletion at any time by emailing{" "}
+            <a href={`mailto:${operator.email}`} className={linkClass}>
+              {operator.email}
+            </a>
+            .
           </li>
         </ul>
       </section>

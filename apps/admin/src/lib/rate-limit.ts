@@ -99,6 +99,32 @@ export const RATE_LIMITS = {
   // Invite action: 10 per hour per admin. Server-action call site, so
   // keying on actor user-id rather than IP.
   invite: { limit: 10, windowMs: 60 * 60 * 1000 } satisfies Bucket,
+  // iter-26: public booking-request route. Three buckets keyed independently:
+  //   - 3 / hour  per IP
+  //   - 10 / day  per IP
+  //   - 3 / day   per customerEmail (normalized lowercase + trim)
+  // The route consumes all three on every accepted POST; rejection on any one
+  // returns 429 with `Retry-After`. Numbers are deliberately low — a real
+  // customer never submits more than a handful per day; bots hit the ceiling
+  // before they hit the DB.
+  bookingRequestPerIpHour: {
+    limit: 3,
+    windowMs: 60 * 60 * 1000,
+  } satisfies Bucket,
+  bookingRequestPerIpDay: {
+    limit: 10,
+    windowMs: 24 * 60 * 60 * 1000,
+  } satisfies Bucket,
+  bookingRequestPerEmailDay: {
+    limit: 3,
+    windowMs: 24 * 60 * 60 * 1000,
+  } satisfies Bucket,
+  // iter-26: public services catalog. 60/min/IP — high enough that homepage
+  // build-time fetches never hit it, low enough to deter scrapers.
+  publicServicesPerIpMinute: {
+    limit: 60,
+    windowMs: 60 * 1000,
+  } satisfies Bucket,
 } as const;
 
 // Standard `Retry-After` header value (seconds, ceiled to 1 minimum when
@@ -108,14 +134,20 @@ export function retryAfterSeconds(result: RateLimitResult): number {
 }
 
 // Best-effort client-IP extraction from request headers. The bunny.net
-// edge sets `x-forwarded-for`; we trust the leftmost entry. Falls back
-// to a fixed sentinel so a missing header does not collapse all callers
-// into one bucket.
+// edge appends to `x-forwarded-for` rather than replacing it, so the IP we
+// can actually trust is the *rightmost* entry (the one bunny saw). The
+// leftmost is whatever the client claimed and is trivially spoofable.
+// Falls back to `x-real-ip`, then to a fixed sentinel so a missing header
+// does not collapse all callers into one bucket.
 export function clientIpFromHeaders(headers: Headers): string {
   const xff = headers.get("x-forwarded-for");
   if (xff) {
-    const first = xff.split(",")[0]?.trim();
-    if (first) return first;
+    const parts = xff
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return last;
   }
   const real = headers.get("x-real-ip");
   if (real) return real.trim();

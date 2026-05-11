@@ -24,10 +24,10 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] [iter-25](iteration-25-booking-domain.md) merged on `main` and deployed; new schema columns live in prod DB.
-- [ ] Verify `services` table has at least one non-archived row in prod — otherwise the form has nothing to render. Coordinate with operator if empty.
-- [ ] No in-flight branches touching `apps/homepage/src/app/` or `apps/admin/src/app/api/`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-25](iteration-25-booking-domain.md) merged on `main` and deployed; new schema columns live in prod DB.
+- [ ] Verify `services` table has at least one non-archived row in prod — otherwise the form has nothing to render. Coordinate with operator if empty. *(Not verified during autonomous run — homepage form degrades gracefully to an email fallback when the catalog is empty.)*
+- [x] No in-flight branches touching `apps/homepage/src/app/` or `apps/admin/src/app/api/`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -185,15 +185,15 @@ Used by `GET /api/public/services` and `POST /api/public/booking-requests`.
 
 ## Done when
 
-- [ ] `/booking-request` renders on the homepage with all fields; honeypot, time-check, and JS-token are wired client-side.
-- [ ] Submit success renders inline confirmation; submit failure renders the friendly error + email fallback.
-- [ ] `/datenschutz` updated to disclose the new data collection.
-- [ ] `GET /api/public/services` returns the active catalog; CORS preflight works for the allowed origins.
-- [ ] `POST /api/public/booking-requests` end-to-end creates a `bookings` row + `booking_service_selection` rows for valid submissions, and rejects every spam-defense case.
-- [ ] `notifyAdmins` helper present in `lib/notify.ts`; `bookingRequested` and `bookingRequestReceived` templates landed; both push payloads and email bodies render against the harness fixtures.
-- [ ] Rate limiter has a `bookingRequest` bucket with the documented limits; 429 returns `Retry-After`.
-- [ ] Admin booking list shows the "Public" indicator for `createdBy IS NULL` rows.
-- [ ] Smoke tests pass for every step in §10.
-- [ ] `npm run format` clean; `npm run verify` green.
-- [ ] System deployable; manual smoke on a preview deploy confirms a real cross-origin submit creates the booking and emits both notifications.
-- [ ] No UI exposes "Send offer" or the customer-facing offer page yet — those land in [iter-27](iteration-27-offer-flow.md).
+- [x] `/booking-request` renders on the homepage with all fields; honeypot, time-check, and JS-token are wired client-side.
+- [x] Submit success renders inline confirmation; submit failure renders the friendly error + email fallback.
+- [x] `/datenschutz` updated to disclose the new data collection.
+- [x] `GET /api/public/services` returns the active catalog; CORS preflight works for the allowed origins.
+- [x] `POST /api/public/booking-requests` end-to-end creates a `bookings` row + `booking_service_selection` rows for valid submissions, and rejects every spam-defense case.
+- [x] `notifyAdmins` helper present in `lib/notify.ts`; `bookingRequested` and `bookingRequestReceived` templates landed; both push payloads and email bodies render against the harness fixtures.
+- [x] Rate limiter has a `bookingRequest` bucket with the documented limits; 429 returns `Retry-After`.
+- [x] Admin booking list shows the "Public" indicator for `createdBy IS NULL` rows.
+- [x] Smoke tests pass for every step in §10.
+- [x] `npm run format` clean; `npm run verify` green.
+- [ ] System deployable; manual smoke on a preview deploy confirms a real cross-origin submit creates the booking and emits both notifications. *(Pending — needs human verification on a preview deploy after merge; PR review hardened the route with required Origin header, XFF rightmost-trust, fetch timeout, and a /500 fallback on the services route.)*
+- [x] No UI exposes "Send offer" or the customer-facing offer page yet — those land in [iter-27](iteration-27-offer-flow.md).
