@@ -200,5 +200,5 @@ Add:
 - [x] Audit log writes `booking.offer.revised`, `booking.offer.snapshot.archived`, `booking.offer.rejected` rows.
 - [x] Smoke tests cover every case in §9.
 - [x] `npm run format` clean; `npm run verify` green.
-- [ ] System deployable; manual smoke on a preview confirms the revise-after-accept loop end-to-end.
+- [ ] System deployable; manual smoke on a preview confirms the revise-after-accept loop end-to-end. _(Deferred: requires a live preview deploy; the full path is covered by the offer-flow smoke suite, but the end-to-end browser walk happens out-of-band after merge.)_
 - [x] No UI exposes squad confirmation buttons or ICS download yet — those land in [iter-29](iteration-29-squad-assignment-confirmation.md).
