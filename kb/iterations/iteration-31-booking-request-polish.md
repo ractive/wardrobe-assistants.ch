@@ -2,7 +2,7 @@
 title: Iteration 31 — Booking-request page polish + proxy fix
 type: iteration
 order: 32
-status: implemented
+status: done
 ---
 
 # Iteration 31 — Booking-request page polish + proxy fix
