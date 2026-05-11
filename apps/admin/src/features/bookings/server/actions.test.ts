@@ -164,7 +164,14 @@ describe("createBooking", () => {
     date: new Date("2026-06-01"),
     venue: "Studio A",
     notes: undefined,
-    status: "draft" as const,
+    customerName: undefined,
+    customerEmail: undefined,
+    customerPhone: undefined,
+    startTime: undefined,
+    durationHours: undefined,
+    venueName: undefined,
+    venueCity: undefined,
+    comment: undefined,
   };
 
   it("rejects invalid input", async () => {
@@ -180,31 +187,50 @@ describe("createBooking", () => {
   });
 });
 
+const updateBookingBase = {
+  name: "x",
+  date: new Date(),
+  venue: "v",
+  notes: undefined,
+  customerName: undefined,
+  customerEmail: undefined,
+  customerPhone: undefined,
+  startTime: undefined,
+  durationHours: undefined,
+  venueName: undefined,
+  venueCity: undefined,
+  comment: undefined,
+} as const;
+
 describe("updateBooking", () => {
   it("returns 'not found' when 0 rows affected", async () => {
+    dbMock.pushSelect([{ status: "created" }]); // status precondition
     dbMock._updateReturning = [];
     const r = await updateBooking({
       bookingId: "missing",
-      name: "x",
-      date: new Date(),
-      venue: "v",
-      notes: undefined,
-      status: "draft",
+      ...updateBookingBase,
     });
     expect(r).toEqual({ error: true, message: "Booking not found." });
   });
 
   it("succeeds when a row is updated", async () => {
+    dbMock.pushSelect([{ status: "created" }]); // status precondition
     dbMock._updateReturning = [{ id: "b1" }];
     const r = await updateBooking({
       bookingId: "b1",
-      name: "x",
-      date: new Date(),
-      venue: "v",
-      notes: undefined,
-      status: "draft",
+      ...updateBookingBase,
     });
     expect(r).toEqual({ error: false, message: "Booking updated." });
+  });
+
+  it("refuses to edit a terminal booking", async () => {
+    dbMock.pushSelect([{ status: "cancelled" }]);
+    const r = await updateBooking({
+      bookingId: "b1",
+      ...updateBookingBase,
+    });
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/closed/i);
   });
 });
 
@@ -386,7 +412,7 @@ describe("requestParticipation", () => {
   const baseBooking = {
     id: "b1",
     name: "Spring Booking",
-    status: "published",
+    status: "accepted",
     date: futureDate,
   };
 
@@ -401,11 +427,11 @@ describe("requestParticipation", () => {
     expect(r).toEqual({ error: true, message: "Booking not found." });
   });
 
-  it("returns error when booking is not published", async () => {
-    dbMock.pushSelect([{ ...baseBooking, status: "draft" }]);
+  it("returns error when booking is not accepted", async () => {
+    dbMock.pushSelect([{ ...baseBooking, status: "created" }]);
     const r = await requestParticipation({ bookingId: "b1" });
     expect(r.error).toBe(true);
-    expect(r.message).toMatch(/published/i);
+    expect(r.message).toMatch(/accepted/i);
   });
 
   it("returns error when booking is in the past", async () => {
@@ -415,7 +441,7 @@ describe("requestParticipation", () => {
     expect(r.message).toMatch(/past/i);
   });
 
-  it("succeeds on a valid published future booking and fans out to admins", async () => {
+  it("succeeds on a valid accepted future booking and fans out to admins", async () => {
     dbMock.pushSelect([baseBooking]); // booking lookup
     dbMock._onConflictResult = [{ userId: "actor1" }]; // new request inserted
     dbMock.pushSelect([{ id: "admin1", email: "admin@example.com" }]);

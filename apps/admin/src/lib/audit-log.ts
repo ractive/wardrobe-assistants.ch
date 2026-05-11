@@ -36,6 +36,8 @@ export const AUDIT_ACTIONS = [
   "booking.create",
   "booking.update",
   "booking.delete",
+  "booking.status.changed",
+  "booking.selections.replaced",
   "booking.assign",
   "booking.unassign",
   "booking.message_assignees",

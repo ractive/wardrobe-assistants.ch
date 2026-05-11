@@ -64,7 +64,6 @@ describe("BookingForm — create mode", () => {
     expect(callArg).toMatchObject({
       name: "Curtain Up",
       venue: "Stadttheater",
-      status: "draft",
     });
     expect(callArg.date).toBeInstanceOf(Date);
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
@@ -105,7 +104,6 @@ describe("BookingForm — edit mode", () => {
     date: new Date("2026-06-15T00:00:00Z"),
     venue: "Stadttheater",
     notes: null,
-    status: "published" as const,
   };
 
   it("submits via updateBooking with the bookingId from props", async () => {
@@ -126,7 +124,6 @@ describe("BookingForm — edit mode", () => {
       bookingId: "bk_1",
       name: "Curtain Down",
       venue: "Stadttheater",
-      status: "published",
     });
   });
 });

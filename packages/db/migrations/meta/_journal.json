@@ -57,6 +57,13 @@
       "when": 1778454629401,
       "tag": "0007_rename_events_to_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1778457038172,
+      "tag": "0008_booking_domain_expansion",
+      "breakpoints": true
     }
   ]
 }

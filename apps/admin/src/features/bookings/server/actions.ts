@@ -2,16 +2,20 @@
 
 import {
   bookingAssignments,
+  bookingServiceItem,
+  bookingServiceSelection,
   bookings,
+  services,
   user,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
 import { format } from "date-fns";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { ulid } from "ulid";
 import { recordAudit } from "@/lib/audit-log";
 import { db } from "@/lib/db";
+import { sendTemplated } from "@/lib/email";
 import { env } from "@/lib/env";
 import { notifyUser } from "@/lib/notify";
 import { withPermission } from "@/lib/permissions";
@@ -21,21 +25,55 @@ import {
   type AssignUserInput,
   approveRequestInput,
   assignUserInput,
+  type CancelBookingInput,
   type CreateBookingInput,
+  cancelBookingInput,
   createBookingInput,
   type DeleteBookingInput,
   deleteBookingInput,
   type MessageBookingAssigneesInput,
   messageBookingAssigneesInput,
+  type RejectBookingInput,
   type RejectRequestInput,
+  type ReplaceBookingSelectionsInput,
   type RequestParticipationInput,
+  rejectBookingInput,
   rejectRequestInput,
+  replaceBookingSelectionsInput,
   requestParticipationInput,
   type UnassignUserInput,
   type UpdateBookingInput,
   unassignUserInput,
   updateBookingInput,
 } from "../schema";
+
+// v4 UUID generator using crypto.randomUUID (Node 19+, Edge runtime safe).
+function newOfferToken(): string {
+  return crypto.randomUUID();
+}
+
+// Format the snapshot subtotal for the admin-accept confirmation email.
+function formatChfTotal(cents: number): string {
+  const chf = Math.round(cents / 100);
+  return `CHF ${chf.toLocaleString("en-CH")}.-`;
+}
+
+// Compute totalCents for a snapshot row given service price + quantity +
+// duration. Mirrors the iter-22 contract: hourly services multiply by
+// minutes/60 (here approximated as durationHours * 60 / 60 = durationHours,
+// but kept explicit for forward compatibility with sub-hour durations).
+function computeLineTotalCents(
+  priceType: "fixed" | "hourly",
+  unitPriceCents: number,
+  quantity: number,
+  hoursInMinutes: number | null,
+): number {
+  if (priceType === "hourly") {
+    const minutes = hoursInMinutes ?? 0;
+    return Math.round((unitPriceCents * quantity * minutes) / 60);
+  }
+  return unitPriceCents * quantity;
+}
 
 export const createBooking = withPermission(
   "BOOKING_CREATE",
@@ -56,8 +94,18 @@ export const createBooking = withPermission(
       date: input.date,
       venue: input.venue,
       notes: input.notes ?? null,
-      status: input.status,
+      status: "created",
       createdBy: actorId,
+      offerToken: newOfferToken(),
+      offerVersion: 0,
+      customerName: input.customerName ?? null,
+      customerEmail: input.customerEmail ?? null,
+      customerPhone: input.customerPhone ?? null,
+      startTime: input.startTime ?? null,
+      durationHours: input.durationHours ?? null,
+      venueName: input.venueName ?? null,
+      venueCity: input.venueCity ?? null,
+      comment: input.comment ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -83,6 +131,22 @@ export const updateBooking = withPermission(
       };
     }
     const input = parsed.data;
+    // Terminal-state guard: rejected/cancelled bookings are read-only.
+    const existingRows = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, input.bookingId))
+      .limit(1);
+    const existing = existingRows[0];
+    if (!existing) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (existing.status === "rejected" || existing.status === "cancelled") {
+      return {
+        error: true,
+        message: "This booking has been closed and can no longer be edited.",
+      };
+    }
     const updated = await db
       .update(bookings)
       .set({
@@ -90,7 +154,14 @@ export const updateBooking = withPermission(
         date: input.date,
         venue: input.venue,
         notes: input.notes ?? null,
-        status: input.status,
+        customerName: input.customerName ?? null,
+        customerEmail: input.customerEmail ?? null,
+        customerPhone: input.customerPhone ?? null,
+        startTime: input.startTime ?? null,
+        durationHours: input.durationHours ?? null,
+        venueName: input.venueName ?? null,
+        venueCity: input.venueCity ?? null,
+        comment: input.comment ?? null,
         updatedAt: new Date(),
       })
       .where(eq(bookings.id, input.bookingId))
@@ -170,10 +241,6 @@ export const assignUser = withPermission(
       return { error: true, message: "User not found." };
     }
 
-    // Existing row check: a pre-existing row in `requested`/`rejected` state
-    // is flipped to `assigned` so an admin assigning directly always wins.
-    // If the row was already `assigned`, this is a no-op and we skip the
-    // notification email.
     const existingRows = await db
       .select({ status: bookingAssignments.status })
       .from(bookingAssignments)
@@ -186,7 +253,7 @@ export const assignUser = withPermission(
       .limit(1);
     const existing = existingRows[0];
 
-    if (existing?.status === "assigned") {
+    if (existing?.status === "assigned" || existing?.status === "confirmed") {
       revalidatePath(`/bookings/${bookingId}`);
       return { error: false, message: "User was already assigned." };
     }
@@ -217,10 +284,6 @@ export const assignUser = withPermission(
       metadata: { userId },
     });
 
-    // Best-effort notification: a transient failure must not roll back the
-    // assignment row. notifyUser fires both email and push; a single-channel
-    // failure is logged and resolves successfully, but it throws an
-    // AggregateError when *both* channels fail so we surface a soft warning.
     let notifyFailed = false;
     try {
       await notifyUser(userId, "bookingAssigned", {
@@ -314,14 +377,8 @@ export const messageBookingAssignees = withPermission(
       };
     }
 
-    // Sanitize CR/LF from caller-supplied subject (header injection guard,
-    // mirrors the pattern from requestParticipation's safeBookingName).
     const safeSubject = input.subject.replace(/[\r\n]+/g, " ");
 
-    // Fan out via notifyUser — both email and push per recipient.
-    // notifyUser only rejects when *both* channels fail for that recipient,
-    // so `failed` here counts recipients who received nothing. Single-channel
-    // failures are logged inside notifyUser and resolve as fulfilled.
     const results = await Promise.allSettled(
       recipients.map((r) =>
         notifyUser(r.userId, "bookingBroadcast", {
@@ -387,19 +444,18 @@ export const requestParticipation = withPermission(
     if (!booking) {
       return { error: true, message: "Booking not found." };
     }
-    if (booking.status !== "published") {
+    // iter-25: squad members can only request participation on accepted
+    // bookings (new equivalent of the old `published` state).
+    if (booking.status !== "accepted") {
       return {
         error: true,
-        message: "You can only request participation on published bookings.",
+        message: "You can only request participation on accepted bookings.",
       };
     }
     if (booking.date < new Date()) {
       return { error: true, message: "This booking is in the past." };
     }
 
-    // Idempotent: if a row already exists (any status), do nothing — and
-    // skip the audit record + admin email fan-out so repeated clicks don't
-    // spam admins.
     const inserted = await db
       .insert(bookingAssignments)
       .values({
@@ -422,14 +478,12 @@ export const requestParticipation = withPermission(
       targetId: bookingId,
     });
 
-    // Fan-out email to all admins — best-effort, per-recipient try/catch.
     const adminRows = await db
       .select({ id: user.id, email: user.email })
       .from(userProfile)
       .innerJoin(user, eq(user.id, userProfile.userId))
       .where(eq(userProfile.role, "ADMIN"));
 
-    // Fetch the actor's display name for the email body.
     const actorProfileRows = await db
       .select({
         firstName: userProfile.firstName,
@@ -447,17 +501,10 @@ export const requestParticipation = withPermission(
         `${actorProfile.firstName} ${actorProfile.lastName}`.trim()
       : actorId;
 
-    // Defense-in-depth: strip CR/LF from interpolated values before they
-    // reach the email subject (mirrors the `messageBookingAssigneesInput`
-    // guard from audit C-SEC-07).
     const safeBookingName = booking.name.replace(/[\r\n]+/g, " ");
     const safeActorName = actorName.replace(/[\r\n]+/g, " ");
     const reviewUrl = `${env.betterAuthUrl}/bookings/${booking.id}`;
     const bookingDateStr = format(booking.date, "EEEE, d MMMM yyyy");
-    // Best-effort fan-out to all admins via notifyUser — both email and push.
-    // Errors are logged but must not prevent the participation request from
-    // being recorded. Awaited so serverless runtimes don't terminate before
-    // the fan-out completes.
     if (adminRows.length > 0) {
       await Promise.allSettled(
         adminRows.map((admin) =>
@@ -513,7 +560,6 @@ export const approveRequest = withPermission(
       metadata: { userId },
     });
 
-    // Send the same "you've been assigned" email — best-effort.
     const bookingRows = await db
       .select({
         name: bookings.name,
@@ -605,5 +651,418 @@ export const rejectRequest = withPermission(
     revalidatePath("/my-bookings");
     revalidatePath("/upcoming-bookings");
     return { error: false, message: "Request rejected." };
+  },
+);
+
+// iter-25: pre-offer selection editor. Wholesale replacement keeps the data
+// model simple — the (small) edit set never warrants a diff.
+export const replaceBookingSelections = withPermission(
+  "BOOKING_CREATE",
+  async (
+    actorId,
+    raw: ReplaceBookingSelectionsInput,
+  ): Promise<ActionResult> => {
+    const parsed = replaceBookingSelectionsInput.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+    const { bookingId, selections } = parsed.data;
+
+    const bookingRows = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (booking.status !== "created") {
+      return {
+        error: true,
+        message:
+          "Line items can only be edited while the booking is in 'created' state.",
+      };
+    }
+
+    // Validate every referenced service exists and is not archived.
+    if (selections.length > 0) {
+      const serviceIds = Array.from(
+        new Set(selections.map((s) => s.serviceId)),
+      );
+      const found = await db
+        .select({ id: services.id, archived: services.archived })
+        .from(services)
+        .where(inArray(services.id, serviceIds));
+      const foundById = new Map(found.map((f) => [f.id, f]));
+      for (const sel of selections) {
+        const svc = foundById.get(sel.serviceId);
+        if (!svc) {
+          return {
+            error: true,
+            message: `Unknown service ${sel.serviceId}.`,
+          };
+        }
+        if (svc.archived) {
+          return {
+            error: true,
+            message: "Archived services cannot be added to a booking.",
+          };
+        }
+      }
+    }
+
+    await db
+      .delete(bookingServiceSelection)
+      .where(eq(bookingServiceSelection.bookingId, bookingId));
+
+    if (selections.length > 0) {
+      await db.insert(bookingServiceSelection).values(
+        selections.map((s, idx) => ({
+          id: ulid(),
+          bookingId,
+          serviceId: s.serviceId,
+          quantity: s.quantity,
+          position: idx,
+        })),
+      );
+    }
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.selections.replaced",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { count: selections.length },
+    });
+
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Line items updated." };
+  },
+);
+
+// Internal helper: copy current bookingServiceSelection rows into
+// bookingServiceItem rows at the given offerVersion. Called by
+// adminAcceptOffer when transitioning `created → accepted` so the
+// "an accepted booking has a snapshot" invariant holds (iter-22 invoicing).
+async function snapshotSelectionsToItems(
+  bookingId: string,
+  offerVersion: number,
+  durationHours: number | null,
+): Promise<{ totalCents: number }> {
+  const selectionRows = await db
+    .select({
+      serviceId: bookingServiceSelection.serviceId,
+      quantity: bookingServiceSelection.quantity,
+      position: bookingServiceSelection.position,
+      name: services.name,
+      description: services.description,
+      priceType: services.priceType,
+      unitPriceCents: services.price,
+    })
+    .from(bookingServiceSelection)
+    .innerJoin(services, eq(services.id, bookingServiceSelection.serviceId))
+    .where(eq(bookingServiceSelection.bookingId, bookingId))
+    .orderBy(asc(bookingServiceSelection.position));
+
+  if (selectionRows.length === 0) return { totalCents: 0 };
+
+  const hoursInMinutes = durationHours !== null ? durationHours * 60 : null;
+
+  const itemRows = selectionRows.map((s) => {
+    const totalCents = computeLineTotalCents(
+      s.priceType,
+      s.unitPriceCents,
+      s.quantity,
+      s.priceType === "hourly" ? hoursInMinutes : null,
+    );
+    return {
+      id: ulid(),
+      bookingId,
+      offerVersion,
+      serviceId: s.serviceId,
+      name: s.name,
+      description: s.description ?? null,
+      priceType: s.priceType,
+      unitPriceCents: s.unitPriceCents,
+      quantity: s.quantity,
+      hoursInMinutes: s.priceType === "hourly" ? hoursInMinutes : null,
+      totalCents,
+      position: s.position,
+    };
+  });
+
+  await db.insert(bookingServiceItem).values(itemRows);
+  const totalCents = itemRows.reduce((sum, r) => sum + r.totalCents, 0);
+  return { totalCents };
+}
+
+export const adminAcceptOffer = withPermission(
+  "BOOKING_ACCEPT_MANUAL",
+  async (actorId, raw: { bookingId: string }): Promise<ActionResult> => {
+    const bookingId = String(raw?.bookingId ?? "");
+    if (!bookingId) {
+      return { error: true, message: "Invalid input" };
+    }
+
+    const bookingRows = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (booking.status !== "created" && booking.status !== "offered") {
+      return {
+        error: true,
+        message: `Cannot accept a booking in '${booking.status}' state.`,
+      };
+    }
+
+    const fromStatus = booking.status;
+    const now = new Date();
+
+    // For `created → accepted` we snapshot now (no prior offer existed). For
+    // `offered → accepted` the snapshot was already written when the offer
+    // was sent (iter-27); just bump status + acceptedAt.
+    let snapshotTotalCents: number | null = null;
+    let newOfferVersion = booking.offerVersion;
+    if (fromStatus === "created") {
+      newOfferVersion = 1;
+      const result = await snapshotSelectionsToItems(
+        bookingId,
+        newOfferVersion,
+        booking.durationHours,
+      );
+      snapshotTotalCents = result.totalCents;
+    }
+
+    await db
+      .update(bookings)
+      .set({
+        status: "accepted",
+        acceptedAt: now,
+        offerVersion: newOfferVersion,
+        updatedAt: now,
+      })
+      .where(eq(bookings.id, bookingId));
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.status.changed",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: {
+        from: fromStatus,
+        to: "accepted",
+        byUserId: actorId,
+        manual: true,
+      },
+    });
+
+    // Best-effort customer notification — only if we have a customer email
+    // on file. Customer is not a user, so we send via sendTemplated directly.
+    if (booking.customerEmail) {
+      try {
+        // Total comes from the snapshot we just wrote (created→accepted) or
+        // we re-read the latest snapshot (offered→accepted).
+        let totalCents = snapshotTotalCents;
+        if (totalCents === null) {
+          const itemRows = await db
+            .select({ totalCents: bookingServiceItem.totalCents })
+            .from(bookingServiceItem)
+            .where(
+              and(
+                eq(bookingServiceItem.bookingId, bookingId),
+                eq(bookingServiceItem.offerVersion, newOfferVersion),
+              ),
+            );
+          totalCents = itemRows.reduce((sum, r) => sum + r.totalCents, 0);
+        }
+        await sendTemplated("offerAcceptedAdmin", booking.customerEmail, {
+          recipientName: booking.customerName ?? "there",
+          bookingName: booking.name,
+          bookingDate: format(booking.date, "EEEE, d MMMM yyyy"),
+          bookingVenue: booking.venue,
+          totalFormatted: formatChfTotal(totalCents),
+        });
+      } catch (err) {
+        console.error("adminAcceptOffer: customer email failed", err);
+      }
+    }
+
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Booking accepted." };
+  },
+);
+
+export const rejectBooking = withPermission(
+  "BOOKING_REJECT",
+  async (actorId, raw: RejectBookingInput): Promise<ActionResult> => {
+    const parsed = rejectBookingInput.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+    const { bookingId, reason } = parsed.data;
+
+    const bookingRows = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (booking.status !== "created") {
+      return {
+        error: true,
+        message: `Cannot reject a booking in '${booking.status}' state.`,
+      };
+    }
+
+    const now = new Date();
+    await db
+      .update(bookings)
+      .set({ status: "rejected", updatedAt: now })
+      .where(eq(bookings.id, bookingId));
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.status.changed",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: {
+        from: "created",
+        to: "rejected",
+        byUserId: actorId,
+        reason: reason ?? null,
+      },
+    });
+
+    if (booking.customerEmail) {
+      try {
+        await sendTemplated("bookingRejected", booking.customerEmail, {
+          recipientName: booking.customerName ?? "there",
+          bookingName: booking.name,
+          bookingDate: format(booking.date, "EEEE, d MMMM yyyy"),
+          reason: reason ?? undefined,
+        });
+      } catch (err) {
+        console.error("rejectBooking: customer email failed", err);
+      }
+    }
+
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Booking rejected." };
+  },
+);
+
+export const cancelBooking = withPermission(
+  "BOOKING_CANCEL",
+  async (actorId, raw: CancelBookingInput): Promise<ActionResult> => {
+    const parsed = cancelBookingInput.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+    const { bookingId, reason } = parsed.data;
+
+    const bookingRows = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (booking.status !== "accepted") {
+      return {
+        error: true,
+        message: `Cannot cancel a booking in '${booking.status}' state.`,
+      };
+    }
+
+    const now = new Date();
+    await db
+      .update(bookings)
+      .set({ status: "cancelled", updatedAt: now })
+      .where(eq(bookings.id, bookingId));
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.status.changed",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: {
+        from: "accepted",
+        to: "cancelled",
+        byUserId: actorId,
+        reason: reason ?? null,
+      },
+    });
+
+    const bookingDateStr = format(booking.date, "EEEE, d MMMM yyyy");
+    const bookingUrl = `${env.betterAuthUrl}/bookings/${bookingId}`;
+
+    // Notify any active squad members (assigned or confirmed). Best-effort.
+    const squadRows = await db
+      .select({ userId: bookingAssignments.userId, name: user.name })
+      .from(bookingAssignments)
+      .innerJoin(user, eq(user.id, bookingAssignments.userId))
+      .where(
+        and(
+          eq(bookingAssignments.bookingId, bookingId),
+          inArray(bookingAssignments.status, ["assigned", "confirmed"]),
+        ),
+      );
+    if (squadRows.length > 0) {
+      await Promise.allSettled(
+        squadRows.map((s) =>
+          notifyUser(s.userId, "bookingCancelled", {
+            recipient: "squad",
+            recipientName: s.name ?? "there",
+            bookingName: booking.name,
+            bookingDate: bookingDateStr,
+            bookingVenue: booking.venue,
+            reason: reason ?? undefined,
+            bookingUrl,
+          }),
+        ),
+      );
+    }
+
+    // Notify customer (if email on file). Best-effort.
+    if (booking.customerEmail) {
+      try {
+        await sendTemplated("bookingCancelled", booking.customerEmail, {
+          recipient: "customer",
+          recipientName: booking.customerName ?? "there",
+          bookingName: booking.name,
+          bookingDate: bookingDateStr,
+          bookingVenue: booking.venue,
+          reason: reason ?? undefined,
+        });
+      } catch (err) {
+        console.error("cancelBooking: customer email failed", err);
+      }
+    }
+
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Booking cancelled." };
   },
 );

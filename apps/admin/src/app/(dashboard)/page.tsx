@@ -22,7 +22,13 @@ import { getCachedSession, roleForUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { userHasPermission } from "@/lib/permissions";
 
-const VALID_STATUSES = ["draft", "published", "cancelled", "done"] as const;
+const VALID_STATUSES = [
+  "created",
+  "offered",
+  "accepted",
+  "rejected",
+  "cancelled",
+] as const;
 type BookingStatus = (typeof VALID_STATUSES)[number];
 
 function parseBookingStatus(value: string): BookingStatus {

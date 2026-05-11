@@ -11,14 +11,14 @@ const sampleBookings: RecentBookingItem[] = [
     id: "bkg-1",
     title: "Spring Showcase",
     startAt: new Date("2026-06-15T18:00:00Z"),
-    status: "published",
+    status: "accepted",
     assigneeCount: 4,
   },
   {
     id: "bkg-2",
     title: "Summer Gala",
     startAt: new Date("2026-07-20T20:00:00Z"),
-    status: "draft",
+    status: "created",
     assigneeCount: 0,
   },
   {
@@ -73,8 +73,8 @@ describe("RecentBookingsTable", () => {
     it("renders status badges for each booking", () => {
       render(<RecentBookingsTable bookings={sampleBookings} />);
       // Status badges appear in both mobile and desktop — just assert at least one each
-      expect(screen.getAllByText("Published").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Draft").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Accepted").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Created").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Cancelled").length).toBeGreaterThan(0);
     });
 

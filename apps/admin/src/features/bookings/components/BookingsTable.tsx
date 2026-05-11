@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -44,8 +45,13 @@ export function BookingsTable({
               className="block p-4 hover:bg-[var(--muted)]"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-base">{booking.name}</span>
+                  {booking.isPublicRequest && (
+                    <Badge variant="outline" className="text-xs">
+                      Public request
+                    </Badge>
+                  )}
                   {pendingRequestsCountByBooking && (
                     <RequestsBadge
                       count={pendingRequestsCountByBooking.get(booking.id) ?? 0}
@@ -85,13 +91,18 @@ export function BookingsTable({
             {bookings.map((booking) => (
               <TableRow key={booking.id}>
                 <TableCell>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/bookings/${booking.id}`}
                       className="font-medium hover:underline"
                     >
                       {booking.name}
                     </Link>
+                    {booking.isPublicRequest && (
+                      <Badge variant="outline" className="text-xs">
+                        Public request
+                      </Badge>
+                    )}
                     {pendingRequestsCountByBooking && (
                       <RequestsBadge
                         count={

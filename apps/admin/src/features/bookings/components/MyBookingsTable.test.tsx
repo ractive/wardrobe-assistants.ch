@@ -13,7 +13,7 @@ const baseBooking: MyBookingListItem = {
   name: "Spring kickoff",
   date: new Date("2026-06-01T18:00:00.000Z"),
   venue: "Studio A",
-  status: "published",
+  status: "accepted",
   assignmentStatus: "assigned",
   createdAt: new Date("2026-01-01"),
 };

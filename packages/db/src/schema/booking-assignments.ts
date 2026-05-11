@@ -18,7 +18,7 @@ export const bookingAssignments = sqliteTable(
       .references(() => user.id, { onDelete: "cascade" }),
     assignedAt: integer("assigned_at", { mode: "timestamp_ms" }).notNull(),
     status: text("status", {
-      enum: ["assigned", "requested", "rejected"],
+      enum: ["assigned", "requested", "confirmed", "rejected", "withdrawn"],
     })
       .notNull()
       .default("assigned"),

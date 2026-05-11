@@ -1,15 +1,19 @@
-import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+
+afterEach(cleanup);
+
 import { axe } from "vitest-axe";
 import { StatusBadge } from "./StatusBadge";
 
 describe("StatusBadge", () => {
   describe("kind=booking", () => {
     const cases = [
-      { status: "draft" as const, label: "Draft" },
-      { status: "published" as const, label: "Published" },
+      { status: "created" as const, label: "Created" },
+      { status: "offered" as const, label: "Offered" },
+      { status: "accepted" as const, label: "Accepted" },
+      { status: "rejected" as const, label: "Rejected" },
       { status: "cancelled" as const, label: "Cancelled" },
-      { status: "done" as const, label: "Done" },
     ];
 
     for (const { status, label } of cases) {
@@ -42,7 +46,9 @@ describe("StatusBadge", () => {
     const cases = [
       { status: "assigned" as const, label: "Assigned" },
       { status: "requested" as const, label: "Requested" },
+      { status: "confirmed" as const, label: "Confirmed" },
       { status: "rejected" as const, label: "Rejected" },
+      { status: "withdrawn" as const, label: "Withdrawn" },
     ];
 
     for (const { status, label } of cases) {
@@ -58,15 +64,18 @@ describe("StatusBadge", () => {
   it("is axe-clean", async () => {
     const { container } = render(
       <div>
-        <StatusBadge kind="booking" status="draft" />
-        <StatusBadge kind="booking" status="published" />
+        <StatusBadge kind="booking" status="created" />
+        <StatusBadge kind="booking" status="offered" />
+        <StatusBadge kind="booking" status="accepted" />
+        <StatusBadge kind="booking" status="rejected" />
         <StatusBadge kind="booking" status="cancelled" />
-        <StatusBadge kind="booking" status="done" />
         <StatusBadge kind="user" status="invited" />
         <StatusBadge kind="user" status="verified" />
         <StatusBadge kind="assignment" status="assigned" />
         <StatusBadge kind="assignment" status="requested" />
+        <StatusBadge kind="assignment" status="confirmed" />
         <StatusBadge kind="assignment" status="rejected" />
+        <StatusBadge kind="assignment" status="withdrawn" />
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();

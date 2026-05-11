@@ -3,6 +3,12 @@ import type { BookingAssignedParams } from "./booking-assigned";
 import BookingAssigned from "./booking-assigned";
 import type { BookingBroadcastParams } from "./booking-broadcast";
 import BookingBroadcast from "./booking-broadcast";
+import type { BookingCancelledParams } from "./booking-cancelled";
+import BookingCancelled from "./booking-cancelled";
+import type { BookingRejectedParams } from "./booking-rejected";
+import BookingRejected from "./booking-rejected";
+import type { OfferAcceptedAdminParams } from "./offer-accepted-admin";
+import OfferAcceptedAdmin from "./offer-accepted-admin";
 import type { ParticipationRequestedParams } from "./participation-requested";
 import ParticipationRequested from "./participation-requested";
 import type { PasswordResetParams } from "./password-reset";
@@ -28,6 +34,23 @@ export const templates = {
     component: BookingBroadcast,
     subject: (p: BookingBroadcastParams) => p.subject,
   } satisfies TemplateEntry<BookingBroadcastParams>,
+
+  bookingCancelled: {
+    component: BookingCancelled,
+    subject: (p: BookingCancelledParams) => `Cancelled: ${p.bookingName}`,
+  } satisfies TemplateEntry<BookingCancelledParams>,
+
+  bookingRejected: {
+    component: BookingRejected,
+    subject: (p: BookingRejectedParams) =>
+      `About your booking request: ${p.bookingName}`,
+  } satisfies TemplateEntry<BookingRejectedParams>,
+
+  offerAcceptedAdmin: {
+    component: OfferAcceptedAdmin,
+    subject: (p: OfferAcceptedAdminParams) =>
+      `Booking confirmed: ${p.bookingName}`,
+  } satisfies TemplateEntry<OfferAcceptedAdminParams>,
 
   participationRequested: {
     component: ParticipationRequested,
@@ -62,6 +85,9 @@ export type ParamsFor<K extends TemplateKey> = Parameters<
 export type {
   BookingAssignedParams,
   BookingBroadcastParams,
+  BookingCancelledParams,
+  BookingRejectedParams,
+  OfferAcceptedAdminParams,
   ParticipationRequestedParams,
   PasswordResetParams,
   UserDirectMessageParams,

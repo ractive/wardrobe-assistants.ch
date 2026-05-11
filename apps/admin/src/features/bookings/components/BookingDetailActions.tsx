@@ -53,7 +53,14 @@ export function BookingDetailActions({
           date: booking.date,
           venue: booking.venue,
           notes: booking.notes,
-          status: booking.status,
+          customerName: booking.customerName,
+          customerEmail: booking.customerEmail,
+          customerPhone: booking.customerPhone,
+          startTime: booking.startTime,
+          durationHours: booking.durationHours,
+          venueName: booking.venueName,
+          venueCity: booking.venueCity,
+          comment: booking.comment,
         }}
         open={editOpen}
         onOpenChange={setEditOpen}

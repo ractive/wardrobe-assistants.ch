@@ -5,11 +5,11 @@ import { Badge } from "@/components/ui/badge";
 // (Biome `noRestrictedImports`). When a feature changes its enum, update the
 // matching entry below.
 type StatusByKind = {
-  booking: "draft" | "published" | "cancelled" | "done";
+  booking: "created" | "offered" | "accepted" | "rejected" | "cancelled";
   user: "invited" | "verified";
   serviceType: "fixed" | "hourly";
   serviceStatus: "active" | "archived";
-  assignment: "assigned" | "requested" | "rejected";
+  assignment: "assigned" | "requested" | "confirmed" | "rejected" | "withdrawn";
 };
 
 type BadgeVariant = "default" | "outline" | "secondary";
@@ -19,10 +19,11 @@ type Entry = { label: string; variant: BadgeVariant };
 const VARIANTS: { [K in keyof StatusByKind]: Record<StatusByKind[K], Entry> } =
   {
     booking: {
-      draft: { label: "Draft", variant: "outline" },
-      published: { label: "Published", variant: "default" },
+      created: { label: "Created", variant: "outline" },
+      offered: { label: "Offered", variant: "default" },
+      accepted: { label: "Accepted", variant: "default" },
+      rejected: { label: "Rejected", variant: "secondary" },
       cancelled: { label: "Cancelled", variant: "secondary" },
-      done: { label: "Done", variant: "secondary" },
     },
     user: {
       invited: { label: "Invited", variant: "outline" },
@@ -39,7 +40,9 @@ const VARIANTS: { [K in keyof StatusByKind]: Record<StatusByKind[K], Entry> } =
     assignment: {
       assigned: { label: "Assigned", variant: "default" },
       requested: { label: "Requested", variant: "outline" },
+      confirmed: { label: "Confirmed", variant: "default" },
       rejected: { label: "Rejected", variant: "secondary" },
+      withdrawn: { label: "Withdrawn", variant: "secondary" },
     },
   };
 
