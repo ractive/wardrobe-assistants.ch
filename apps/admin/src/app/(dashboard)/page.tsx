@@ -4,20 +4,15 @@ import {
   bookings,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
-import { count, desc, eq, gte, inArray, sql } from "drizzle-orm";
-import { CalendarClock, MailPlus, Receipt, Users } from "lucide-react";
+import { and, count, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
+import { CalendarClock, CalendarPlus, Users } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HasPermission } from "@/components/HasPermission";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
 import { RecentBookingsTable } from "@/components/RecentBookingsTable";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Button } from "@/components/ui/button";
 import { getCachedSession, roleForUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { userHasPermission } from "@/lib/permissions";
@@ -36,6 +31,14 @@ function parseBookingStatus(value: string): BookingStatus {
     throw new Error(`Unexpected booking status: ${value}`);
   }
   return value as BookingStatus;
+}
+
+async function fetchNewRequestsCount(): Promise<number> {
+  const rows = await db
+    .select({ cnt: count() })
+    .from(bookings)
+    .where(and(eq(bookings.status, "created"), isNull(bookings.createdBy)));
+  return rows[0]?.cnt ?? 0;
 }
 
 async function fetchUpcomingBookingCount(): Promise<number> {
@@ -123,29 +126,51 @@ export default async function DashboardHome() {
 
   // Fetch KPI data and recent bookings in parallel, gated by permission so users
   // who lack the relevant permission don't trigger unused DB reads.
-  const [canViewBookings, canInviteUsers] = await Promise.all([
+  const [canViewBookings, canViewUsers] = await Promise.all([
     userHasPermission("BOOKING_VIEW"),
     userHasPermission("USER_INVITE"),
   ]);
 
-  const [upcomingCount, squadCount, recentBookings] = await Promise.all([
-    canViewBookings ? fetchUpcomingBookingCount() : Promise.resolve(null),
-    canInviteUsers ? fetchActiveSquadCount() : Promise.resolve(null),
-    canViewBookings ? fetchRecentBookings() : Promise.resolve(null),
-  ]);
+  const [newRequestsCount, upcomingCount, squadCount, recentBookings] =
+    await Promise.all([
+      canViewBookings ? fetchNewRequestsCount() : Promise.resolve(null),
+      canViewBookings ? fetchUpcomingBookingCount() : Promise.resolve(null),
+      canViewUsers ? fetchActiveSquadCount() : Promise.resolve(null),
+      canViewBookings ? fetchRecentBookings() : Promise.resolve(null),
+    ]);
+
+  // Empty state: zero new requests, zero upcoming, zero recent → welcome panel.
+  // Squad count is intentionally excluded — a brand-new admin still sees the
+  // welcome panel before inviting anyone.
+  const showWelcome =
+    canViewBookings &&
+    newRequestsCount === 0 &&
+    upcomingCount === 0 &&
+    (recentBookings?.length ?? 0) === 0;
 
   return (
     <section className="flex flex-col gap-8">
       <PageHeader title="Overview" description={`Welcome back, ${greeting}`} />
 
-      {/* KPI grid: 1 col mobile → 2×2 md → 4×1 xl */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* KPI grid: 1 col mobile → 2×2 md → 3×1 xl */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <HasPermission perm="BOOKING_VIEW">
+          <KpiCard
+            title="New requests"
+            value={newRequestsCount ?? "—"}
+            icon={CalendarPlus}
+            description="Customer-submitted bookings awaiting review"
+            href="/bookings?status=new-requests"
+          />
+        </HasPermission>
+
         <HasPermission perm="BOOKING_VIEW">
           <KpiCard
             title="Upcoming bookings"
             value={upcomingCount ?? "—"}
             icon={CalendarClock}
             description="Bookings scheduled from today"
+            href="/bookings?status=upcoming"
           />
         </HasPermission>
 
@@ -155,44 +180,35 @@ export default async function DashboardHome() {
             value={squadCount ?? "—"}
             icon={Users}
             description="Admins and squad members"
-          />
-        </HasPermission>
-
-        <HasPermission perm="BOOKING_VIEW">
-          <KpiCard
-            title="Open invoices"
-            value="—"
-            icon={Receipt}
-            description="Invoice tracking lands in iter-22"
-          />
-        </HasPermission>
-
-        <HasPermission perm="USER_INVITE">
-          <KpiCard
-            title="Pending invites"
-            value="—"
-            icon={MailPlus}
-            description="Invite tracking lands in iter-22"
+            href="/users"
           />
         </HasPermission>
       </div>
 
-      {/* Activity chart placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>Charts land in iter-22</EmptyTitle>
-              <EmptyDescription>
-                Activity charts arrive with the invoice flow (iter-22).
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </CardContent>
-      </Card>
+      {/* Welcome panel for first-time / empty state */}
+      {showWelcome && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6">
+          <h2 className="text-lg font-medium">Get started</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            No bookings yet. Here are two ways to kick things off:
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button asChild>
+              <Link href="/bookings">Create a booking</Link>
+            </Button>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">
+                Share the public booking-request URL
+              </p>
+              <p className="break-all text-xs text-muted-foreground">
+                {process.env.PUBLIC_SITE_URL ??
+                  "https://wardrobe-assistants.ch"}
+                /booking-request
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent bookings */}
       <HasPermission perm="BOOKING_VIEW">

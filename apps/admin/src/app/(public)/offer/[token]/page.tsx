@@ -113,7 +113,7 @@ export default async function OfferPage({
 
       <section className="space-y-1">
         <h2 className="font-medium text-sm text-[var(--muted-foreground)] uppercase tracking-wide">
-          Event details
+          Booking details
         </h2>
         <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
           <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">

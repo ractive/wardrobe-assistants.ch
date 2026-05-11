@@ -14,6 +14,7 @@ import {
   LineItemsReadOnly,
   type ServiceOption,
 } from "@/features/bookings/components/LineItemsEditor";
+import { OfferUrlActions } from "@/features/bookings/components/OfferUrlActions";
 import { PendingRequestsPanel } from "@/features/bookings/components/PendingRequestsPanel";
 import {
   getBookingById,
@@ -21,6 +22,7 @@ import {
 } from "@/features/bookings/server/queries";
 import { listServices } from "@/features/services/server/queries";
 import { getCachedSession } from "@/lib/auth";
+import { env } from "@/lib/env";
 import { userHasPermission } from "@/lib/permissions";
 
 export default async function BookingDetailPage({
@@ -157,6 +159,19 @@ export default async function BookingDetailPage({
           squadMemberNames={squadMemberNames}
         />
       )}
+
+      {/* Offer URL actions — shown when an offer has been sent and the viewer
+          can send offers. Gate is server-side; component is client-only for
+          clipboard access. */}
+      {canSendOffer && booking.offerToken ? (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
+          <h2 className="mb-3 font-medium text-sm">Share offer</h2>
+          <OfferUrlActions
+            offerToken={booking.offerToken}
+            baseUrl={env.betterAuthUrl}
+          />
+        </div>
+      ) : null}
 
       {/* Customer contact */}
       {(booking.customerName ||

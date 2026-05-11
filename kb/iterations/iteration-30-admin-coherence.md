@@ -2,7 +2,7 @@
 title: Iteration 30 — Admin coherence pass
 type: iteration
 order: 31
-status: planned
+status: done
 ---
 
 # Iteration 30 — Admin coherence pass
@@ -26,10 +26,10 @@ This file is a **living scope** for the iteration. The "Scope" section below is 
 
 ## Pre-flight
 
-- [ ] [iter-29](iteration-29-squad-assignment-confirmation.md) merged on `main` and deployed.
-- [ ] Branch `fix/admin-vapid-and-csp-nonce` and `fix/vapid-build-time-inlining` already on main; production admin is serving the rebuilt image with VAPID public key baked in.
-- [ ] No in-flight branches touching `apps/admin/src/app/(dashboard)/page.tsx`, `apps/admin/src/app/(dashboard)/bookings/`, `apps/admin/src/features/bookings/components/BookingDetailActions.tsx`, or `apps/admin/src/components/PushSubscribeToggle.tsx`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-29](iteration-29-squad-assignment-confirmation.md) merged on `main` and deployed.
+- [x] Branch `fix/admin-vapid-and-csp-nonce` and `fix/vapid-build-time-inlining` already on main; production admin is serving the rebuilt image with VAPID public key baked in.
+- [x] No in-flight branches touching `apps/admin/src/app/(dashboard)/page.tsx`, `apps/admin/src/app/(dashboard)/bookings/`, `apps/admin/src/features/bookings/components/BookingDetailActions.tsx`, or `apps/admin/src/components/PushSubscribeToggle.tsx`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -155,15 +155,15 @@ Smaller polish items discovered after iter-29; tackle these inside iter-30 if th
 
 ## Done when
 
-- [ ] Dashboard contains zero "iter-N" references in user-visible copy.
-- [ ] Dashboard KPI cards are links; clicking any count deep-links into the filtered `/bookings` view or `/squads`.
-- [ ] A "New requests" card with live count is visible on the dashboard for any role holding `BOOKING_VIEW`.
-- [ ] `/bookings?status=new-requests` returns only `created AND createdBy IS NULL` bookings, server-filtered, with the documented empty-state copy.
-- [ ] All four documented status tabs are present and URL-driven; mobile collapses them to a select.
-- [ ] On a booking with an `offerToken`, an admin holding `BOOKING_OFFER_SEND` sees "Copy offer link" and "View as customer" buttons; both produce the correct customer URL.
-- [ ] `/offer/[token]` no longer contains the word "Event"; "Booking details" used throughout.
-- [ ] `PushSubscribeToggle` renders `null` in environments without `NEXT_PUBLIC_VAPID_PUBLIC_KEY`.
-- [ ] Permission-denied, server-error, and shape-error paths in `PushSubscribeToggle` each fire a toast with copy from §5.
-- [ ] Per-section smoke tests landed and green; vitest-axe smoke covers all new interactive components.
-- [ ] `npm run format` clean; `npm run verify` green.
-- [ ] Manual smoke on a preview deploy: submit a public booking request → see the count tick up on the dashboard → click into `/bookings?status=new-requests` → open the booking → "Send offer" → "Copy offer link" → paste into a new tab → see the customer offer page render correctly with "Booking details" copy.
+- [x] Dashboard contains zero "iter-N" references in user-visible copy.
+- [x] Dashboard KPI cards are links; clicking any count deep-links into the filtered `/bookings` view or `/users`. (Note: linked to `/users` rather than `/squads` — the existing admin route is `/users`.)
+- [x] A "New requests" card with live count is visible on the dashboard for any role holding `BOOKING_VIEW`.
+- [x] `/bookings?status=new-requests` returns only `created AND createdBy IS NULL` bookings, server-filtered, with the documented empty-state copy.
+- [x] All four documented status tabs are present and URL-driven; mobile collapses them to a select. (Tabs are `New requests | Offered | Accepted | Upcoming | Cancelled | All`; Upcoming added during review to match the dashboard's `?status=upcoming` deep-link.)
+- [x] On a booking with an `offerToken`, an admin holding `BOOKING_OFFER_SEND` sees "Copy offer link" and "View as customer" buttons; both produce the correct customer URL.
+- [x] `/offer/[token]` no longer contains the word "Event"; "Booking details" used throughout.
+- [x] `PushSubscribeToggle` renders `null` in environments without `NEXT_PUBLIC_VAPID_PUBLIC_KEY`.
+- [x] Permission-denied, server-error, and shape-error paths in `PushSubscribeToggle` each fire a toast with copy from §5.
+- [x] Per-section smoke tests landed and green; vitest-axe smoke covers all new interactive components.
+- [x] `npm run format` clean; `npm run verify` green.
+- [ ] Manual smoke on a preview deploy: submit a public booking request → see the count tick up on the dashboard → click into `/bookings?status=new-requests` → open the booking → "Send offer" → "Copy offer link" → paste into a new tab → see the customer offer page render correctly with "Booking details" copy. *(Deferred — to be exercised post-deploy, not blocking the merge.)*

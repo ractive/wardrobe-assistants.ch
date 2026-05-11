@@ -243,6 +243,7 @@ export const bookingDetail = z.object({
   notes: z.string().nullable(),
   status: z.enum(BOOKING_STATUSES),
   createdBy: z.string().nullable(),
+  offerToken: z.string().nullable(),
   offerVersion: z.number().int().nonnegative(),
   acceptedAt: z.date().nullable(),
   invoicedAt: z.date().nullable(),
