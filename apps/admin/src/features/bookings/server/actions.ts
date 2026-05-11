@@ -845,16 +845,12 @@ export const sendOffer = withPermission(
     const now = new Date();
     let snapshotTotal = 0;
 
+    // Guard the UPDATE on status + the snapshotted offerVersion so a
+    // double-click can't both snapshot twice and produce duplicate
+    // booking_service_item rows for the same offerVersion.
+    let raced = false;
     await db.transaction(async (tx) => {
-      const result = await snapshotSelectionsToItems(
-        tx,
-        bookingId,
-        nextVersion,
-        booking.durationHours,
-      );
-      snapshotTotal = result.total;
-
-      await tx
+      const updated = await tx
         .update(bookings)
         .set({
           status: "offered",
@@ -862,8 +858,33 @@ export const sendOffer = withPermission(
           lastOfferSentAt: now,
           updatedAt: now,
         })
-        .where(eq(bookings.id, bookingId));
+        .where(
+          and(
+            eq(bookings.id, bookingId),
+            eq(bookings.status, "created"),
+            eq(bookings.offerVersion, booking.offerVersion),
+          ),
+        )
+        .returning({ id: bookings.id });
+      if (updated.length === 0) {
+        raced = true;
+        return;
+      }
+
+      const result = await snapshotSelectionsToItems(
+        tx,
+        bookingId,
+        nextVersion,
+        booking.durationHours,
+      );
+      snapshotTotal = result.total;
     });
+    if (raced) {
+      return {
+        error: true,
+        message: "Booking changed during send. Please refresh and try again.",
+      };
+    }
 
     await recordAudit({
       actorUserId: actorId,

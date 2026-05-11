@@ -420,7 +420,7 @@ describe("offer flow — smoke", () => {
     const { services, bookings, bookingServiceItem } = await import(
       "@wardrobe-assistants/db/schema"
     );
-    const { and, eq } = await import("drizzle-orm");
+    const { eq } = await import("drizzle-orm");
     const { ulid } = await import("ulid");
 
     const svc3Id = ulid();

@@ -1,14 +1,10 @@
 "use server";
 
-import {
-  auditLog,
-  bookingServiceItem,
-  bookings,
-} from "@wardrobe-assistants/db/schema";
+import { bookingServiceItem, bookings } from "@wardrobe-assistants/db/schema";
 import { format } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { ulid } from "ulid";
+import { recordAudit } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { notifyAdmins } from "@/lib/notify";
@@ -31,7 +27,9 @@ export async function acceptOffer(
 
   const requestHeaders = await headers();
   const ip = clientIpFromHeaders(requestHeaders);
-  const rl = consume(`offerAccept:${ip}`, RATE_LIMITS.offerAccept);
+  // Include the token in the rate-limit key so a missing/unknown IP doesn't
+  // collapse every accept attempt into one global bucket.
+  const rl = consume(`offerAccept:${ip}:${token}`, RATE_LIMITS.offerAccept);
   if (!rl.allowed) {
     return {
       error: true,
@@ -48,6 +46,11 @@ export async function acceptOffer(
   if (!booking) {
     return { error: true, message: "Offer not found." };
   }
+  // Idempotent: a refresh after a slow accept lands here on the second
+  // request — treat as success rather than surfacing a scary error.
+  if (booking.status === "accepted") {
+    return { error: false };
+  }
   if (booking.status !== "offered") {
     return {
       error: true,
@@ -56,24 +59,43 @@ export async function acceptOffer(
   }
 
   const now = new Date();
-  await db.transaction(async (tx) => {
-    await tx
-      .update(bookings)
-      .set({ status: "accepted", acceptedAt: now, updatedAt: now })
-      .where(eq(bookings.id, booking.id));
+  // Guard the UPDATE on status + offerVersion so two concurrent accepts can't
+  // both succeed. The audit row is written after the transaction commits via
+  // `recordAudit` (which swallows failures) so a transient audit-log issue
+  // can't roll back the customer's acceptance.
+  const updated = await db
+    .update(bookings)
+    .set({ status: "accepted", acceptedAt: now, updatedAt: now })
+    .where(
+      and(
+        eq(bookings.id, booking.id),
+        eq(bookings.status, "offered"),
+        eq(bookings.offerVersion, booking.offerVersion),
+      ),
+    )
+    .returning({ id: bookings.id });
+  if (updated.length === 0) {
+    // Lost the race: another concurrent request flipped the row. Re-read to
+    // decide whether to treat that as success (now accepted) or surface an
+    // error.
+    const after = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    if (after[0]?.status === "accepted") return { error: false };
+    return {
+      error: true,
+      message: "This offer is not in an acceptable state.",
+    };
+  }
 
-    await tx.insert(auditLog).values({
-      id: ulid(),
-      actorUserId: "customer",
-      action: "booking.offer.accepted",
-      targetType: "booking",
-      targetId: booking.id,
-      metadata: JSON.stringify({
-        offerVersion: booking.offerVersion,
-        via: "customer",
-      }),
-      createdAt: now,
-    });
+  await recordAudit({
+    actorUserId: "customer",
+    action: "booking.offer.accepted",
+    targetType: "booking",
+    targetId: booking.id,
+    metadata: { offerVersion: booking.offerVersion, via: "customer" },
   });
 
   // Best-effort admin notification.
@@ -86,7 +108,7 @@ export async function acceptOffer(
         eq(bookingServiceItem.offerVersion, booking.offerVersion),
       ),
     );
-  const grandTotal = itemRows.reduce((sum, r) => sum + r.total, 0);
+  const grandTotal = itemRows.reduce((sum, r) => sum + (r.total ?? 0), 0);
 
   notifyAdmins("offerAccepted", {
     bookingId: booking.id,

@@ -27,7 +27,7 @@ export function pushPayload(p: OfferAcceptedParams): PushPayload {
   return {
     title: "Offer accepted",
     body: `${p.customerName} accepted the offer — ${p.date}`,
-    url: `/bookings/${p.bookingId}`,
+    url: p.bookingUrl,
   };
 }
 

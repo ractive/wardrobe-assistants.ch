@@ -15,9 +15,9 @@ export type OfferSentParams = {
   customerName: string;
   /** Pre-formatted date string, e.g. "Saturday, 1 March 2026". */
   date: string;
-  startTime: string;
+  startTime?: string;
   venueName: string;
-  venueCity: string;
+  venueCity?: string;
   offerVersion: number;
   /** Public offer page URL. */
   offerUrl: string;

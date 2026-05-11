@@ -16,7 +16,9 @@ export default async function OfferPage({
 
   const requestHeaders = await headers();
   const ip = clientIpFromHeaders(requestHeaders);
-  const rl = consume(`offerView:${ip}`, RATE_LIMITS.offerView);
+  // Include the token in the key so a missing/unknown IP doesn't share one
+  // global bucket across all visitors.
+  const rl = consume(`offerView:${ip}:${token}`, RATE_LIMITS.offerView);
   if (!rl.allowed) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -49,8 +51,14 @@ export default async function OfferPage({
           .orderBy(asc(bookingServiceItem.position))
       : [];
 
-  const grandTotal = lineItems.reduce((sum, r) => sum + r.total, 0);
+  const grandTotal = lineItems.reduce((sum, r) => sum + (r.total ?? 0), 0);
   const dateStr = format(booking.date, "EEEE, d MMMM yyyy");
+  const chf = new Intl.NumberFormat("en-CH", {
+    style: "currency",
+    currency: "CHF",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -145,18 +153,20 @@ export default async function OfferPage({
                       {item.priceType === "hourly" &&
                         item.hoursInMinutes !== null && (
                           <div className="text-[var(--muted-foreground)] text-xs mt-0.5">
-                            {Math.round(item.hoursInMinutes / 60)}h @ CHF{" "}
-                            {item.unitPrice}/h
+                            {(item.hoursInMinutes / 60)
+                              .toFixed(2)
+                              .replace(/\.?0+$/, "")}
+                            h @ {chf.format(item.unitPrice)}/h
                           </div>
                         )}
                     </td>
                     <td className="px-4 py-3 text-right">{item.quantity}</td>
                     <td className="px-4 py-3 text-right hidden sm:table-cell text-[var(--muted-foreground)]">
-                      CHF {item.unitPrice}
+                      {chf.format(item.unitPrice)}
                       {item.priceType === "hourly" ? "/h" : ""}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
-                      CHF {item.total}
+                      {chf.format(item.total)}
                     </td>
                   </tr>
                 ))}
@@ -170,7 +180,7 @@ export default async function OfferPage({
                     Grand total
                   </td>
                   <td className="px-4 py-3 text-right font-semibold">
-                    CHF {grandTotal}
+                    {chf.format(grandTotal)}
                   </td>
                 </tr>
               </tfoot>
