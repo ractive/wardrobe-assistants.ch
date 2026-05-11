@@ -33,11 +33,11 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] [iter-28](iteration-28-offer-revisions-cancellation.md) merged on `main` and deployed.
-- [ ] `booking_assignments.status` enum supports `confirmed` and `withdrawn` (verified from [iter-25](iteration-25-booking-domain.md) migration).
-- [ ] At least one squad-role user and one `accepted` booking exist in dev.
-- [ ] No in-flight branches touching `features/bookings/` or `app/(dashboard)/my-bookings/`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-28](iteration-28-offer-revisions-cancellation.md) merged on `main` and deployed.
+- [x] `booking_assignments.status` enum supports `confirmed` and `withdrawn` (verified from [iter-25](iteration-25-booking-domain.md) migration).
+- [x] At least one squad-role user and one `accepted` booking exist in dev.
+- [x] No in-flight branches touching `features/bookings/` or `app/(dashboard)/my-bookings/`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
