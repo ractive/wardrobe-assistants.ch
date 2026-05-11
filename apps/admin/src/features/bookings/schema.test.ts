@@ -19,7 +19,6 @@ describe("createBookingInput", () => {
     name: "Spring kickoff",
     date: new Date("2026-06-01T18:00:00.000Z"),
     venue: "Studio A",
-    status: "draft" as const,
   };
 
   it("accepts a minimal valid booking", () => {
@@ -32,12 +31,6 @@ describe("createBookingInput", () => {
     );
     expect(
       createBookingInput.safeParse({ ...valid, venue: "  " }).success,
-    ).toBe(false);
-  });
-
-  it("constrains status to the enum", () => {
-    expect(
-      createBookingInput.safeParse({ ...valid, status: "tentative" }).success,
     ).toBe(false);
   });
 
@@ -56,11 +49,14 @@ describe("createBookingInput", () => {
     if (r.success) expect(r.data.notes).toBeUndefined();
   });
 
-  it("defaults status to draft when omitted", () => {
-    const { status: _drop, ...withoutStatus } = valid;
-    const r = createBookingInput.safeParse(withoutStatus);
+  it("accepts optional customer contact fields", () => {
+    const r = createBookingInput.safeParse({
+      ...valid,
+      customerName: "Alice",
+      customerEmail: "alice@example.com",
+      customerPhone: "+41 79 123 45 67",
+    });
     expect(r.success).toBe(true);
-    if (r.success) expect(r.data.status).toBe("draft");
   });
 });
 
@@ -70,7 +66,6 @@ describe("updateBookingInput", () => {
     name: "Updated",
     date: new Date(),
     venue: "Studio B",
-    status: "published" as const,
   };
 
   it("requires bookingId", () => {
@@ -149,6 +144,7 @@ describe("bookingListItem", () => {
         venue: "v",
         status: "tentative",
         assigneesCount: 0,
+        isPublicRequest: false,
         createdAt: new Date(),
       }).success,
     ).toBe(false);
@@ -196,7 +192,7 @@ describe("myBookingListItem", () => {
     name: "Booking",
     date: new Date(),
     venue: "Venue",
-    status: "published" as const,
+    status: "accepted" as const,
     assignmentStatus: "assigned" as const,
     createdAt: new Date(),
   };

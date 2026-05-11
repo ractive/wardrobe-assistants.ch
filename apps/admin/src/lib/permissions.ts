@@ -15,6 +15,11 @@ export const PERMISSIONS = [
   "BOOKING_ASSIGN",
   "BOOKING_INVOICE",
   "BOOKING_MESSAGE_ASSIGNED",
+  // Booking lifecycle (iter-25; iter-27/28 surface the offer-send button).
+  "BOOKING_OFFER_SEND",
+  "BOOKING_ACCEPT_MANUAL",
+  "BOOKING_REJECT",
+  "BOOKING_CANCEL",
   // Services
   "SERVICE_CREATE",
   "SERVICE_DELETE",

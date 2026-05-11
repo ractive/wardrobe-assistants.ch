@@ -7,7 +7,7 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 export const services = sqliteTable("services", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  description: text("description").notNull(),
+  description: text("description"),
   priceType: text("price_type", { enum: ["fixed", "hourly"] }).notNull(),
   price: integer("price").notNull(),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),

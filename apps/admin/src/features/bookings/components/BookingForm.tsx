@@ -20,37 +20,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useFormAction } from "@/hooks/use-form-action";
 import { cn } from "@/lib/utils";
-import {
-  BOOKING_STATUSES,
-  type CreateBookingInput,
-  createBookingInput,
-} from "../schema";
+import { type CreateBookingInput, createBookingInput } from "../schema";
 import { createBooking, updateBooking } from "../server/actions";
 
-const STATUS_LABEL: Record<(typeof BOOKING_STATUSES)[number], string> = {
-  draft: "Draft",
-  published: "Published",
-  cancelled: "Cancelled",
-  done: "Done",
-};
-
-interface EditDefaults {
+export interface EditDefaults {
   bookingId: string;
   name: string;
   date: Date;
   venue: string;
   notes: string | null;
-  status: (typeof BOOKING_STATUSES)[number];
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  startTime?: string | null;
+  durationHours?: number | null;
+  venueName?: string | null;
+  venueCity?: string | null;
+  comment?: string | null;
 }
 
 type Props =
@@ -65,7 +54,14 @@ type FormValues = {
   date: Date | undefined;
   venue: string;
   notes?: string;
-  status: (typeof BOOKING_STATUSES)[number];
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  startTime?: string;
+  durationHours?: number;
+  venueName?: string;
+  venueCity?: string;
+  comment?: string;
 };
 
 // Both modes drive the same set of input fields. We use the create input
@@ -75,7 +71,7 @@ export function BookingForm(props: Props) {
   const isEdit = props.mode === "edit";
   const defaults = isEdit ? props.defaults : undefined;
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     // Resolver enforces the parsed `CreateBookingInput` shape (date required)
     // even though the form-state type permits `date: undefined` mid-edit.
     resolver: zodResolver(createBookingInput) as never,
@@ -84,7 +80,14 @@ export function BookingForm(props: Props) {
       date: defaults?.date,
       venue: defaults?.venue ?? "",
       notes: defaults?.notes ?? "",
-      status: defaults?.status ?? "draft",
+      customerName: defaults?.customerName ?? "",
+      customerEmail: defaults?.customerEmail ?? "",
+      customerPhone: defaults?.customerPhone ?? "",
+      startTime: defaults?.startTime ?? "",
+      durationHours: defaults?.durationHours ?? undefined,
+      venueName: defaults?.venueName ?? "",
+      venueCity: defaults?.venueCity ?? "",
+      comment: defaults?.comment ?? "",
     },
   });
 
@@ -188,36 +191,154 @@ export function BookingForm(props: Props) {
             <FormItem>
               <FormLabel>Notes (optional)</FormLabel>
               <FormControl>
-                <Textarea rows={4} {...field} />
+                <Textarea rows={3} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <fieldset className="space-y-3 rounded-md border border-[var(--border)] p-4">
+          <legend className="px-1 text-sm font-medium">
+            Customer contact (optional)
+          </legend>
+          <FormField
+            control={form.control}
+            name="customerName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Customer name</FormLabel>
+                <FormControl>
+                  <Input autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="customerEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="customerPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input type="tel" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </fieldset>
+
+        <fieldset className="space-y-3 rounded-md border border-[var(--border)] p-4">
+          <legend className="px-1 text-sm font-medium">
+            Schedule &amp; venue (optional)
+          </legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start time (HH:MM)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. 19:30"
+                      autoComplete="off"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="durationHours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration (hours)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={24}
+                      placeholder="e.g. 4"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : Number(e.target.value),
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="venueName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Venue name</FormLabel>
+                  <FormControl>
+                    <Input autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="venueCity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </fieldset>
+
         <FormField
           control={form.control}
-          name="status"
+          name="comment"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {BOOKING_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {STATUS_LABEL[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>Customer comment (optional)</FormLabel>
+              <FormControl>
+                <Textarea rows={3} {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <Button
           type="submit"
           className="w-full"

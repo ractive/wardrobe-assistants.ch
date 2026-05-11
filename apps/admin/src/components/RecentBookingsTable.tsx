@@ -21,7 +21,7 @@ export interface RecentBookingItem {
   id: string;
   title: string;
   startAt: Date;
-  status: "draft" | "published" | "cancelled" | "done";
+  status: "created" | "offered" | "accepted" | "rejected" | "cancelled";
   assigneeCount: number;
 }
 

@@ -1,7 +1,9 @@
 import "server-only";
 import {
   bookingAssignments,
+  bookingServiceSelection,
   bookings,
+  services,
   user,
   userProfile,
 } from "@wardrobe-assistants/db/schema";
@@ -40,6 +42,7 @@ export async function listBookings() {
       date: bookings.date,
       venue: bookings.venue,
       status: bookings.status,
+      createdBy: bookings.createdBy,
       createdAt: bookings.createdAt,
       assigneesCount: sql<number>`(
         SELECT COUNT(*) FROM ${bookingAssignments}
@@ -58,6 +61,7 @@ export async function listBookings() {
       venue: r.venue,
       status: r.status,
       assigneesCount: Number(r.assigneesCount ?? 0),
+      isPublicRequest: r.createdBy === null,
       createdAt: r.createdAt,
     }),
   );
@@ -91,8 +95,26 @@ export async function getBookingById(
     .where(eq(bookingAssignments.bookingId, id))
     .orderBy(asc(bookingAssignments.assignedAt));
 
-  const activeAssignees = assigneeRows.filter((a) => a.status === "assigned");
+  const activeAssignees = assigneeRows.filter(
+    (a) => a.status === "assigned" || a.status === "confirmed",
+  );
   const requestRows = assigneeRows.filter((a) => a.status === "requested");
+
+  const selectionRows = await db
+    .select({
+      id: bookingServiceSelection.id,
+      serviceId: bookingServiceSelection.serviceId,
+      serviceName: services.name,
+      serviceArchived: services.archived,
+      priceType: services.priceType,
+      unitPrice: services.price,
+      quantity: bookingServiceSelection.quantity,
+      position: bookingServiceSelection.position,
+    })
+    .from(bookingServiceSelection)
+    .innerJoin(services, eq(services.id, bookingServiceSelection.serviceId))
+    .where(eq(bookingServiceSelection.bookingId, id))
+    .orderBy(asc(bookingServiceSelection.position));
 
   return bookingDetail.parse({
     id: row.id,
@@ -101,6 +123,18 @@ export async function getBookingById(
     venue: row.venue,
     notes: row.notes,
     status: row.status,
+    createdBy: row.createdBy,
+    offerVersion: row.offerVersion,
+    acceptedAt: row.acceptedAt,
+    invoicedAt: row.invoicedAt,
+    customerName: row.customerName,
+    customerEmail: row.customerEmail,
+    customerPhone: row.customerPhone,
+    startTime: row.startTime,
+    durationHours: row.durationHours,
+    venueName: row.venueName,
+    venueCity: row.venueCity,
+    comment: row.comment,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     assignees: activeAssignees.map((a) => ({
@@ -123,6 +157,16 @@ export async function getBookingById(
         nickname: a.nickname,
       }),
       requestedAt: a.assignedAt,
+    })),
+    selections: selectionRows.map((s) => ({
+      id: s.id,
+      serviceId: s.serviceId,
+      serviceName: s.serviceName,
+      serviceArchived: s.serviceArchived,
+      priceType: s.priceType,
+      unitPrice: s.unitPrice,
+      quantity: s.quantity,
+      position: s.position,
     })),
   });
 }
@@ -177,10 +221,11 @@ export async function listMyAssignedBookings(
     .where(eq(bookingAssignments.userId, userId))
     .orderBy(desc(bookings.date));
 
-  // Only return rows with status="assigned" (the caller of listMyRequests
-  // handles requested/rejected). Filter after the join to keep one query.
   return rows
-    .filter((r) => r.assignmentStatus === "assigned")
+    .filter(
+      (r) =>
+        r.assignmentStatus === "assigned" || r.assignmentStatus === "confirmed",
+    )
     .map((r) =>
       myBookingListItem.parse({
         id: r.id,
@@ -237,9 +282,9 @@ export async function listUpcomingBookingsForRequest(
   await assertPermission("SQUAD_REQUEST_PARTICIPATION");
   const now = new Date();
 
-  // Bookings that are published, in the future, and the user has NO existing
-  // assignment row (regardless of its status — we don't want to show bookings
-  // already assigned or already requested).
+  // iter-25: squad members can request participation on bookings that have
+  // been accepted (the new equivalent of the old `published` state). Future
+  // dates only; only when the user has no existing assignment row.
   const rows = await db
     .select({
       id: bookings.id,
@@ -251,7 +296,7 @@ export async function listUpcomingBookingsForRequest(
     .from(bookings)
     .where(
       and(
-        eq(bookings.status, "published"),
+        eq(bookings.status, "accepted"),
         gte(bookings.date, now),
         notExists(
           db

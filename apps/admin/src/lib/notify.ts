@@ -5,6 +5,7 @@ import { sendTemplated } from "./email";
 import type { ParamsFor } from "./email-templates";
 import { pushPayload as bookingAssignedPushPayload } from "./email-templates/booking-assigned";
 import { pushPayload as bookingBroadcastPushPayload } from "./email-templates/booking-broadcast";
+import { pushPayload as bookingCancelledPushPayload } from "./email-templates/booking-cancelled";
 import { pushPayload as participationRequestedPushPayload } from "./email-templates/participation-requested";
 import { pushPayload as userDirectMessagePushPayload } from "./email-templates/user-direct-message";
 import { sendPush } from "./push";
@@ -15,6 +16,7 @@ import { sendPush } from "./push";
 export type NotifiableTemplateKey =
   | "bookingAssigned"
   | "bookingBroadcast"
+  | "bookingCancelled"
   | "participationRequested"
   | "userDirectMessage";
 
@@ -30,6 +32,10 @@ function pushPayloadFor<K extends NotifiableTemplateKey>(
     case "bookingBroadcast":
       return bookingBroadcastPushPayload(
         params as ParamsFor<"bookingBroadcast">,
+      );
+    case "bookingCancelled":
+      return bookingCancelledPushPayload(
+        params as ParamsFor<"bookingCancelled">,
       );
     case "participationRequested":
       return participationRequestedPushPayload(

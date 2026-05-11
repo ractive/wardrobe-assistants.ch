@@ -2,7 +2,7 @@
 title: Iteration 25 — Booking domain expansion
 type: iteration
 order: 26
-status: planned
+status: implemented
 ---
 
 # Iteration 25 — Booking domain expansion
@@ -19,7 +19,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 - **No `customer` table.** Contact fields embed on `booking` (`customerName`, `customerEmail`, `customerPhone`). Trade-off accepted: no customer history aggregation in v1.
 - **Status enum**: `created | offered | accepted | rejected | cancelled`. Backfill: `draft → created`, `published → accepted`, `done → accepted` (also set `invoicedAt = bookings.date` as a best-effort heuristic — [iter-22](iteration-22-invoice-flow.md) refines), `cancelled → cancelled`.
 - **`invoicedAt` is a parallel timestamp**, not a status. Populated by [iter-22](iteration-22-invoice-flow.md) work.
-- **Snapshot table `booking_service_item`** follows the [iter-17](iteration-17-services-feature.md) + [iter-22](iteration-22-invoice-flow.md) contract: nullable `serviceId` FK (ON DELETE SET NULL), snapshot of `name/description/priceType/unitPriceCents`, `quantity`, `hoursInMinutes`, computed-and-stored `totalCents`. Snapshot is created/replaced at every "send offer" action ([iter-27](iteration-27-offer-flow.md), [iter-28](iteration-28-offer-revisions-cancellation.md)).
+- **Snapshot table `booking_service_item`** follows the [iter-17](iteration-17-services-feature.md) + [iter-22](iteration-22-invoice-flow.md) contract: nullable `serviceId` FK (ON DELETE SET NULL), snapshot of `name/description/priceType/unitPrice`, `quantity`, `hoursInMinutes`, computed-and-stored `total`. Prices are whole-CHF integers (matches `services.price`; no centimes). Snapshot is created/replaced at every "send offer" action ([iter-27](iteration-27-offer-flow.md), [iter-28](iteration-28-offer-revisions-cancellation.md)).
 - **Pre-offer selections live in `booking_service_selection`** — a separate, mutable table. Keeps `booking_service_item` strictly immutable.
 - **`services.description` becomes nullable** (per Notes line 4).
 - **`booking_assignments.status` enum widens** to `assigned | requested | confirmed | rejected | withdrawn`. `requested` reserved for later; `confirmed` and `withdrawn` exposed in [iter-29](iteration-29-squad-assignment-confirmation.md).
@@ -29,10 +29,10 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] [iter-24](iteration-24-rename-event-to-booking.md) merged on `main` and deployed; no `EVENT_*` / `features/events` strings remain.
-- [ ] DB backup taken — the status backfill is destructive of the old enum semantics.
-- [ ] No in-flight branches touching `packages/db/src/schema/bookings.ts` or `features/bookings/`.
-- [ ] `npm run verify` green on `main`.
+- [x] [iter-24](iteration-24-rename-event-to-booking.md) merged on `main` and deployed; no `EVENT_*` / `features/events` strings remain.
+- [x] DB backup taken — the status backfill is destructive of the old enum semantics.
+- [x] No in-flight branches touching `packages/db/src/schema/bookings.ts` or `features/bookings/`.
+- [x] `npm run verify` green on `main`.
 
 ## Scope
 
@@ -89,10 +89,10 @@ export const bookingServiceItem = sqliteTable("booking_service_item", {
   name: text("name").notNull(),
   description: text("description"),
   priceType: text("price_type", { enum: ["fixed", "hourly"] }).notNull(),
-  unitPriceCents: integer("unit_price_cents").notNull(),
+  unitPrice: integer("unit_price").notNull(),                                    // whole CHF (matches services.price)
   quantity: integer("quantity").notNull(),
   hoursInMinutes: integer("hours_in_minutes"),                                   // populated for hourly = durationHours * 60
-  totalCents: integer("total_cents").notNull(),                                  // computed at insert
+  total: integer("total").notNull(),                                             // computed at insert, whole CHF
   position: integer("position").notNull(),
 });
 ```
@@ -197,14 +197,20 @@ Each template colocates its `pushPayloadFor` export per the [iter-23](iteration-
 
 ## Done when
 
-- [ ] Migration runs cleanly on a fresh DB and a copy of the prod schema. All backfilled rows have `offerToken` and the new `status` value.
-- [ ] `bookings`, `booking_service_item`, `booking_service_selection` schemas present in `packages/db/src/schema/`; exported from `index.ts`.
-- [ ] `services.description` is nullable; existing services unchanged.
-- [ ] `booking_assignments.status` enum accepts `confirmed` and `withdrawn` (validated by inserting test rows in a smoke test).
-- [ ] Admin booking detail page renders all new fields; pre-offer selection editor works for `created` bookings; disabled for non-`created`.
-- [ ] `adminAcceptOffer`, `rejectBooking`, `cancelBooking`, `replaceBookingSelections` implemented and gated by the new permissions.
-- [ ] `bookingRejected`, `bookingCancelled`, `offerAcceptedAdmin` email templates added; `bookingCancelled` push payload colocated.
-- [ ] No UI surface exposes "Send offer" or "Send revised offer" buttons.
-- [ ] Smoke tests cover every new server action (success + permission denial + state-precondition failure).
-- [ ] `npm run format` clean; `npm run verify` green.
-- [ ] System deployable; manual smoke on a preview deploy confirms admin can create a booking, add line-item selections, manually accept, and cancel.
+- [x] Migration runs cleanly on a fresh DB and a copy of the prod schema. All backfilled rows have `offerToken` and the new `status` value.
+- [x] `bookings`, `booking_service_item`, `booking_service_selection` schemas present in `packages/db/src/schema/`; exported from `index.ts`.
+- [x] `services.description` is nullable; existing services unchanged.
+- [x] `booking_assignments.status` enum accepts `confirmed` and `withdrawn` (validated by inserting test rows in a smoke test).
+- [x] Admin booking detail page renders all new fields; pre-offer selection editor works for `created` bookings; disabled for non-`created`.
+- [x] `adminAcceptOffer`, `rejectBooking`, `cancelBooking`, `replaceBookingSelections` implemented and gated by the new permissions.
+- [x] `bookingRejected`, `bookingCancelled`, `offerAcceptedAdmin` email templates added; `bookingCancelled` push payload colocated.
+- [x] No UI surface exposes "Send offer" or "Send revised offer" buttons.
+- [x] Smoke tests cover every new server action (success + permission denial + state-precondition failure).
+- [x] `npm run format` clean; `npm run verify` green.
+- [ ] System deployable; manual smoke on a preview deploy confirms admin can create a booking, add line-item selections, manually accept, and cancel. _(requires human verification on preview deploy)_
+
+## Post-merge follow-ups (from PR review)
+
+- Renamed `booking_service_item.unit_price_cents` / `total_cents` to `unit_price` / `total` to match the whole-CHF integer convention used by `services.price`. The original `_cents` naming would have undercharged every snapshot by 100×.
+- Wrapped `snapshotSelectionsToItems` + accept-status update and `replaceBookingSelections` delete+insert in `db.transaction(...)` for atomicity.
+- Booking-detail lifecycle buttons now show when the user has any of accept/reject/cancel (not only accept).

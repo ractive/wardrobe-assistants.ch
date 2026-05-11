@@ -30,6 +30,20 @@ vi.mock("@/lib/push", () => ({
   sendPush: vi.fn(async () => ({ sent: 0 })),
 }));
 
+// Minimal required fields for createBooking — all new optional fields default
+// to undefined. Keeps test fixtures terse without TypeScript complaints.
+const optionalBookingFields = {
+  notes: undefined,
+  customerName: undefined,
+  customerEmail: undefined,
+  customerPhone: undefined,
+  startTime: undefined,
+  durationHours: undefined,
+  venueName: undefined,
+  venueCity: undefined,
+  comment: undefined,
+} as const;
+
 describe("bookings feature — smoke", () => {
   beforeAll(async () => {
     harness = await setupHarness();
@@ -53,8 +67,7 @@ describe("bookings feature — smoke", () => {
         name: "Spring kickoff",
         date: new Date("2026-06-01T18:00:00.000Z"),
         venue: "Studio A",
-        notes: undefined,
-        status: "draft",
+        ...optionalBookingFields,
       }),
     );
     expect(result.error, JSON.stringify(result)).toBe(false);
@@ -76,8 +89,7 @@ describe("bookings feature — smoke", () => {
           name: "Forbidden",
           date: new Date(),
           venue: "x",
-          notes: undefined,
-          status: "draft",
+          ...optionalBookingFields,
         }),
       ),
     ).rejects.toMatchObject({ name: "PermissionError" });
@@ -105,8 +117,7 @@ describe("bookings feature — smoke", () => {
         name: "Idempotent test",
         date: new Date("2026-07-01T18:00:00.000Z"),
         venue: "Studio B",
-        notes: undefined,
-        status: "draft",
+        ...optionalBookingFields,
       }),
     );
     const bookingRow = (
@@ -162,8 +173,7 @@ describe("bookings feature — smoke", () => {
         name: "Fanout test",
         date: new Date("2026-08-01T18:00:00.000Z"),
         venue: "Studio C",
-        notes: undefined,
-        status: "published",
+        ...optionalBookingFields,
       }),
     );
     const booking = (
@@ -219,8 +229,7 @@ describe("bookings feature — smoke", () => {
         name: "CRLF guard",
         date: new Date("2026-10-01T18:00:00.000Z"),
         venue: "Studio E",
-        notes: undefined,
-        status: "published",
+        ...optionalBookingFields,
       }),
     );
     const booking = (
@@ -273,8 +282,12 @@ describe("bookings feature — smoke", () => {
     const sendMock = email.sendTemplated as unknown as ReturnType<typeof vi.fn>;
     sendMock.mockClear();
 
-    const { createBooking, requestParticipation, approveRequest } =
-      await import("./actions");
+    const {
+      adminAcceptOffer,
+      createBooking,
+      requestParticipation,
+      approveRequest,
+    } = await import("./actions");
     const {
       listBookings,
       listMyAssignedBookings,
@@ -282,14 +295,13 @@ describe("bookings feature — smoke", () => {
       getBookingById,
     } = await import("./queries");
 
-    // Admin creates a published future booking
+    // Admin creates and accepts a future booking (iter-25: participation requires status=accepted)
     await harness.runAs(admin.cookies, () =>
       createBooking({
         name: "Request flow test",
         date: new Date("2027-01-15T18:00:00.000Z"),
         venue: "Studio Req",
-        notes: undefined,
-        status: "published",
+        ...optionalBookingFields,
       }),
     );
     const bookingList = await harness.runAs(admin.cookies, () =>
@@ -298,6 +310,10 @@ describe("bookings feature — smoke", () => {
     const booking = bookingList.find((e) => e.name === "Request flow test");
     expect(booking).toBeDefined();
     if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
 
     // Squad member requests participation
     const reqResult = await harness.runAs(member.cookies, () =>
@@ -367,8 +383,7 @@ describe("bookings feature — smoke", () => {
         name: "Draft booking",
         date: new Date("2027-02-01T18:00:00.000Z"),
         venue: "Studio Draft",
-        notes: undefined,
-        status: "draft",
+        ...optionalBookingFields,
       }),
     );
     const bookingList = await harness.runAs(admin.cookies, () =>
@@ -382,7 +397,7 @@ describe("bookings feature — smoke", () => {
       requestParticipation({ bookingId: booking.id }),
     );
     expect(result.error).toBe(true);
-    expect(result.message).toMatch(/published/i);
+    expect(result.message).toMatch(/accepted/i);
   });
 
   it("squad member cannot approveRequest — PermissionError", async () => {
@@ -414,9 +429,12 @@ describe("bookings feature — smoke", () => {
       typeof vi.fn
     >;
 
-    const { createBooking, assignUser, requestParticipation } = await import(
-      "./actions"
-    );
+    const {
+      adminAcceptOffer,
+      createBooking,
+      assignUser,
+      requestParticipation,
+    } = await import("./actions");
     const { listBookings, listUpcomingBookingsForRequest } = await import(
       "./queries"
     );
@@ -426,8 +444,7 @@ describe("bookings feature — smoke", () => {
         name: "Already assigned booking",
         date: new Date("2027-03-01T18:00:00.000Z"),
         venue: "Studio Noop",
-        notes: undefined,
-        status: "published",
+        ...optionalBookingFields,
       }),
     );
     const bookingList = await harness.runAs(admin.cookies, () =>
@@ -438,6 +455,11 @@ describe("bookings feature — smoke", () => {
     );
     expect(booking).toBeDefined();
     if (!booking) return;
+
+    // iter-25: accept the booking so it appears for participation requests
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
 
     // Admin directly assigns the member
     await harness.runAs(admin.cookies, () =>
@@ -481,8 +503,7 @@ describe("bookings feature — smoke", () => {
         name: "To be deleted",
         date: new Date("2026-09-01T18:00:00.000Z"),
         venue: "Studio D",
-        notes: undefined,
-        status: "draft",
+        ...optionalBookingFields,
       }),
     );
     const booking = (
@@ -508,5 +529,379 @@ describe("bookings feature — smoke", () => {
         .map((e) => e.id)
         .includes(booking.id),
     ).toBe(false);
+  });
+
+  // iter-25: lifecycle actions ------------------------------------------------
+
+  it("replaceBookingSelections persists rows visible in getBookingById", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin1@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, replaceBookingSelections } = await import(
+      "./actions"
+    );
+    const { listBookings, getBookingById } = await import("./queries");
+    const { services } = await import("@wardrobe-assistants/db/schema");
+    const { ulid } = await import("ulid");
+
+    // Seed a service directly via the harness DB to avoid a cross-feature
+    // import (biome forbids features/bookings importing features/services).
+    const sewingId = ulid();
+    await harness.db.insert(services).values({
+      id: sewingId,
+      name: "Sewing kit",
+      description: "Take one along.",
+      priceType: "fixed",
+      price: 25,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Selections booking",
+        date: new Date("2026-08-01T18:00:00.000Z"),
+        venue: "Studio C",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Selections booking");
+    expect(booking).toBeDefined();
+
+    const r = await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking!.id,
+        selections: [{ serviceId: sewingId, quantity: 2 }],
+      }),
+    );
+    expect(r.error, JSON.stringify(r)).toBe(false);
+
+    const detail = await harness.runAs(admin.cookies, () =>
+      getBookingById(booking!.id),
+    );
+    expect(detail?.selections).toHaveLength(1);
+    expect(detail?.selections[0]?.quantity).toBe(2);
+    expect(detail?.selections[0]?.serviceName).toBe("Sewing kit");
+  });
+
+  it("replaceBookingSelections refuses non-'created' bookings", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin2@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, replaceBookingSelections, adminAcceptOffer } =
+      await import("./actions");
+    const { listBookings } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Locked-edit booking",
+        date: new Date("2026-08-02T18:00:00.000Z"),
+        venue: "Studio D",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Locked-edit booking")!;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+
+    const r = await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [],
+      }),
+    );
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/created/i);
+  });
+
+  it("squad member is denied replaceBookingSelections", async () => {
+    const sm = await harness.seedSquadMember({
+      email: "lifecycle-sm1@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { replaceBookingSelections } = await import("./actions");
+    await expect(
+      harness.runAs(sm.cookies, () =>
+        replaceBookingSelections({
+          bookingId: "anything",
+          selections: [],
+        }),
+      ),
+    ).rejects.toMatchObject({ name: "PermissionError" });
+  });
+
+  it("adminAcceptOffer transitions created -> accepted and writes a snapshot", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin3@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, adminAcceptOffer, replaceBookingSelections } =
+      await import("./actions");
+    const { listBookings, getBookingById } = await import("./queries");
+    const { services } = await import("@wardrobe-assistants/db/schema");
+    const { ulid } = await import("ulid");
+
+    const steamingId = ulid();
+    await harness.db.insert(services).values({
+      id: steamingId,
+      name: "Steaming",
+      description: "Costume steaming.",
+      priceType: "hourly",
+      price: 80,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Accept-path booking",
+        date: new Date("2026-09-01T18:00:00.000Z"),
+        venue: "Studio E",
+        ...optionalBookingFields,
+        durationHours: 3,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Accept-path booking")!;
+
+    await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [{ serviceId: steamingId, quantity: 1 }],
+      }),
+    );
+
+    const r = await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+    expect(r.error, JSON.stringify(r)).toBe(false);
+
+    const detail = await harness.runAs(admin.cookies, () =>
+      getBookingById(booking.id),
+    );
+    expect(detail?.status).toBe("accepted");
+    expect(detail?.acceptedAt).not.toBeNull();
+    expect(detail?.offerVersion).toBe(1);
+  });
+
+  it("adminAcceptOffer refuses non-'created'/'offered' states", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin4@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, adminAcceptOffer, rejectBooking } = await import(
+      "./actions"
+    );
+    const { listBookings } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Reject-then-accept",
+        date: new Date("2026-09-02T18:00:00.000Z"),
+        venue: "Studio F",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Reject-then-accept")!;
+
+    await harness.runAs(admin.cookies, () =>
+      rejectBooking({ bookingId: booking.id, reason: undefined }),
+    );
+    const r = await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/cannot accept/i);
+  });
+
+  it("squad member is denied adminAcceptOffer / rejectBooking / cancelBooking", async () => {
+    const sm = await harness.seedSquadMember({
+      email: "lifecycle-sm2@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { adminAcceptOffer, rejectBooking, cancelBooking } = await import(
+      "./actions"
+    );
+    await expect(
+      harness.runAs(sm.cookies, () =>
+        adminAcceptOffer({ bookingId: "anything" }),
+      ),
+    ).rejects.toMatchObject({ name: "PermissionError" });
+    await expect(
+      harness.runAs(sm.cookies, () =>
+        rejectBooking({ bookingId: "anything", reason: undefined }),
+      ),
+    ).rejects.toMatchObject({ name: "PermissionError" });
+    await expect(
+      harness.runAs(sm.cookies, () =>
+        cancelBooking({ bookingId: "anything", reason: undefined }),
+      ),
+    ).rejects.toMatchObject({ name: "PermissionError" });
+  });
+
+  it("rejectBooking transitions created -> rejected; emails customer if email on file", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin5@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, rejectBooking } = await import("./actions");
+    const { listBookings, getBookingById } = await import("./queries");
+    const { sendTemplated } = await import("@/lib/email");
+    (sendTemplated as unknown as ReturnType<typeof vi.fn>).mockClear();
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Reject-path booking",
+        date: new Date("2026-09-03T18:00:00.000Z"),
+        venue: "Studio G",
+        ...optionalBookingFields,
+        customerName: "Sam",
+        customerEmail: "sam@example.com",
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Reject-path booking")!;
+
+    const r = await harness.runAs(admin.cookies, () =>
+      rejectBooking({ bookingId: booking.id, reason: "Date conflict." }),
+    );
+    expect(r.error, JSON.stringify(r)).toBe(false);
+
+    const detail = await harness.runAs(admin.cookies, () =>
+      getBookingById(booking.id),
+    );
+    expect(detail?.status).toBe("rejected");
+    expect(sendTemplated).toHaveBeenCalledWith(
+      "bookingRejected",
+      "sam@example.com",
+      expect.objectContaining({ reason: "Date conflict." }),
+    );
+  });
+
+  it("rejectBooking refuses non-'created' bookings", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin6@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, rejectBooking, adminAcceptOffer } = await import(
+      "./actions"
+    );
+    const { listBookings } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Reject-after-accept",
+        date: new Date("2026-09-04T18:00:00.000Z"),
+        venue: "Studio H",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Reject-after-accept")!;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+    const r = await harness.runAs(admin.cookies, () =>
+      rejectBooking({ bookingId: booking.id, reason: undefined }),
+    );
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/cannot reject/i);
+  });
+
+  it("cancelBooking transitions accepted -> cancelled and emails customer + assignees", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin7@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const member = await harness.seedSquadMember({
+      email: "lifecycle-sm-assigned@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, adminAcceptOffer, cancelBooking, assignUser } =
+      await import("./actions");
+    const { listBookings, getBookingById } = await import("./queries");
+    const { sendTemplated } = await import("@/lib/email");
+    (sendTemplated as unknown as ReturnType<typeof vi.fn>).mockClear();
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Cancel-path booking",
+        date: new Date("2026-09-05T18:00:00.000Z"),
+        venue: "Studio I",
+        ...optionalBookingFields,
+        customerName: "Lee",
+        customerEmail: "lee@example.com",
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Cancel-path booking")!;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ bookingId: booking.id, userId: member.userId }),
+    );
+
+    const r = await harness.runAs(admin.cookies, () =>
+      cancelBooking({ bookingId: booking.id, reason: "Venue unavailable." }),
+    );
+    expect(r.error, JSON.stringify(r)).toBe(false);
+
+    const detail = await harness.runAs(admin.cookies, () =>
+      getBookingById(booking.id),
+    );
+    expect(detail?.status).toBe("cancelled");
+    expect(sendTemplated).toHaveBeenCalledWith(
+      "bookingCancelled",
+      "lee@example.com",
+      expect.objectContaining({ recipient: "customer" }),
+    );
+  });
+
+  it("cancelBooking refuses non-'accepted' bookings", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin8@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, cancelBooking } = await import("./actions");
+    const { listBookings } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Cancel-from-created",
+        date: new Date("2026-09-06T18:00:00.000Z"),
+        venue: "Studio J",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Cancel-from-created")!;
+
+    const r = await harness.runAs(admin.cookies, () =>
+      cancelBooking({ bookingId: booking.id, reason: undefined }),
+    );
+    expect(r.error).toBe(true);
+    expect(r.message).toMatch(/cannot cancel/i);
   });
 });

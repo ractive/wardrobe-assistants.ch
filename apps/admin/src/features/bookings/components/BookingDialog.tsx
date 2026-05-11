@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { BookingStatus } from "../schema";
+import type { EditDefaults } from "./BookingForm";
 import { BookingForm } from "./BookingForm";
 
 export function CreateBookingDialog() {
@@ -39,14 +39,7 @@ export function EditBookingDialog({
   open,
   onOpenChange,
 }: {
-  defaults: {
-    bookingId: string;
-    name: string;
-    date: Date;
-    venue: string;
-    notes: string | null;
-    status: BookingStatus;
-  };
+  defaults: EditDefaults;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -56,7 +49,7 @@ export function EditBookingDialog({
         <DialogHeader>
           <DialogTitle>Edit booking</DialogTitle>
           <DialogDescription>
-            Update booking details, status, or notes.
+            Update booking details or notes.
           </DialogDescription>
         </DialogHeader>
         <BookingForm
