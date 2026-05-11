@@ -51,7 +51,8 @@ export const bookings = sqliteTable("bookings", {
 // `adminAcceptOffer` when accepting a `created` booking with no prior offer.
 // `serviceId` is ON DELETE SET NULL so deleting a service never destroys a
 // historical offer; the snapshotted `name`/`description`/`priceType`/
-// `unitPriceCents` carry the truth.
+// `unitPrice` carry the truth. Prices are whole-CHF integers (no centimes),
+// matching the convention in `services.price` and the rest of the codebase.
 export const bookingServiceItem = sqliteTable(
   "booking_service_item",
   {
@@ -66,10 +67,10 @@ export const bookingServiceItem = sqliteTable(
     name: text("name").notNull(),
     description: text("description"),
     priceType: text("price_type", { enum: ["fixed", "hourly"] }).notNull(),
-    unitPriceCents: integer("unit_price_cents").notNull(),
+    unitPrice: integer("unit_price").notNull(),
     quantity: integer("quantity").notNull(),
     hoursInMinutes: integer("hours_in_minutes"),
-    totalCents: integer("total_cents").notNull(),
+    total: integer("total").notNull(),
     position: integer("position").notNull(),
   },
   (t) => ({

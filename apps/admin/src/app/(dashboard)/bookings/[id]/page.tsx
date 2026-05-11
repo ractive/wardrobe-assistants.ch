@@ -83,8 +83,11 @@ export default async function BookingDetailPage({
         price: r.price,
         priceFormatted: r.priceFormatted,
       }));
-    } catch {
-      // SERVICE_CREATE permission not held by this role — silently skip
+    } catch (err) {
+      // Expected: SERVICE_VIEW permission not held by this role. Log other
+      // errors (DB outage etc.) so they surface instead of silently hiding
+      // the line-items editor.
+      console.warn("Failed to load services for line items editor:", err);
     }
   }
 
@@ -121,8 +124,10 @@ export default async function BookingDetailPage({
         />
       </header>
 
-      {/* Lifecycle action buttons */}
-      <HasPermission perm="BOOKING_ACCEPT_MANUAL">
+      {/* Lifecycle action buttons — visible if any of accept/reject/cancel is
+          held. `BookingLifecycleButtons` further hides individual buttons
+          based on the per-action `can*` flags. */}
+      {(canAccept || canReject || canCancel) && (
         <BookingLifecycleButtons
           bookingId={booking.id}
           status={booking.status}
@@ -130,7 +135,7 @@ export default async function BookingDetailPage({
           canReject={canReject}
           canCancel={canCancel}
         />
-      </HasPermission>
+      )}
 
       {/* Customer contact */}
       {(booking.customerName ||

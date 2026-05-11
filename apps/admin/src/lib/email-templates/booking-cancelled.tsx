@@ -32,7 +32,7 @@ export function pushPayload(p: BookingCancelledParams): PushPayload {
   return {
     title: `Cancelled: ${p.bookingName}`,
     body: `${p.bookingDate} — ${p.bookingVenue}`,
-    url: p.bookingUrl ?? "/",
+    url: p.bookingUrl ?? "/bookings",
   };
 }
 

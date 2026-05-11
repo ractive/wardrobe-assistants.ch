@@ -763,6 +763,7 @@ describe("bookings feature — smoke", () => {
     const { createBooking, rejectBooking } = await import("./actions");
     const { listBookings, getBookingById } = await import("./queries");
     const { sendTemplated } = await import("@/lib/email");
+    (sendTemplated as unknown as ReturnType<typeof vi.fn>).mockClear();
 
     await harness.runAs(admin.cookies, () =>
       createBooking({
@@ -839,6 +840,7 @@ describe("bookings feature — smoke", () => {
       await import("./actions");
     const { listBookings, getBookingById } = await import("./queries");
     const { sendTemplated } = await import("@/lib/email");
+    (sendTemplated as unknown as ReturnType<typeof vi.fn>).mockClear();
 
     await harness.runAs(admin.cookies, () =>
       createBooking({

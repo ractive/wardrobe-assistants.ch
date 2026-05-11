@@ -53,26 +53,24 @@ function newOfferToken(): string {
 }
 
 // Format the snapshot subtotal for the admin-accept confirmation email.
-function formatChfTotal(cents: number): string {
-  const chf = Math.round(cents / 100);
-  return `CHF ${chf.toLocaleString("en-CH")}.-`;
+// Totals are whole CHF integers (matching `services.price`); no centimes.
+function formatChfTotal(total: number): string {
+  return `CHF ${total.toLocaleString("en-CH")}.-`;
 }
 
-// Compute totalCents for a snapshot row given service price + quantity +
-// duration. Mirrors the iter-22 contract: hourly services multiply by
-// minutes/60 (here approximated as durationHours * 60 / 60 = durationHours,
-// but kept explicit for forward compatibility with sub-hour durations).
-function computeLineTotalCents(
+// Compute a snapshot line's total given service price + quantity + duration.
+// Hourly services multiply by minutes/60. Prices are whole CHF integers.
+function computeLineTotal(
   priceType: "fixed" | "hourly",
-  unitPriceCents: number,
+  unitPrice: number,
   quantity: number,
   hoursInMinutes: number | null,
 ): number {
   if (priceType === "hourly") {
     const minutes = hoursInMinutes ?? 0;
-    return Math.round((unitPriceCents * quantity * minutes) / 60);
+    return Math.round((unitPrice * quantity * minutes) / 60);
   }
-  return unitPriceCents * quantity;
+  return unitPrice * quantity;
 }
 
 export const createBooking = withPermission(
@@ -715,21 +713,25 @@ export const replaceBookingSelections = withPermission(
       }
     }
 
-    await db
-      .delete(bookingServiceSelection)
-      .where(eq(bookingServiceSelection.bookingId, bookingId));
+    // Atomic delete+reinsert: if the insert fails, the existing selections
+    // must remain — otherwise a transient error wipes the user's work.
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(bookingServiceSelection)
+        .where(eq(bookingServiceSelection.bookingId, bookingId));
 
-    if (selections.length > 0) {
-      await db.insert(bookingServiceSelection).values(
-        selections.map((s, idx) => ({
-          id: ulid(),
-          bookingId,
-          serviceId: s.serviceId,
-          quantity: s.quantity,
-          position: idx,
-        })),
-      );
-    }
+      if (selections.length > 0) {
+        await tx.insert(bookingServiceSelection).values(
+          selections.map((s, idx) => ({
+            id: ulid(),
+            bookingId,
+            serviceId: s.serviceId,
+            quantity: s.quantity,
+            position: idx,
+          })),
+        );
+      }
+    });
 
     await recordAudit({
       actorUserId: actorId,
@@ -748,12 +750,15 @@ export const replaceBookingSelections = withPermission(
 // bookingServiceItem rows at the given offerVersion. Called by
 // adminAcceptOffer when transitioning `created → accepted` so the
 // "an accepted booking has a snapshot" invariant holds (iter-22 invoicing).
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 async function snapshotSelectionsToItems(
+  tx: Tx,
   bookingId: string,
   offerVersion: number,
   durationHours: number | null,
-): Promise<{ totalCents: number }> {
-  const selectionRows = await db
+): Promise<{ total: number }> {
+  const selectionRows = await tx
     .select({
       serviceId: bookingServiceSelection.serviceId,
       quantity: bookingServiceSelection.quantity,
@@ -761,21 +766,21 @@ async function snapshotSelectionsToItems(
       name: services.name,
       description: services.description,
       priceType: services.priceType,
-      unitPriceCents: services.price,
+      unitPrice: services.price,
     })
     .from(bookingServiceSelection)
     .innerJoin(services, eq(services.id, bookingServiceSelection.serviceId))
     .where(eq(bookingServiceSelection.bookingId, bookingId))
     .orderBy(asc(bookingServiceSelection.position));
 
-  if (selectionRows.length === 0) return { totalCents: 0 };
+  if (selectionRows.length === 0) return { total: 0 };
 
   const hoursInMinutes = durationHours !== null ? durationHours * 60 : null;
 
   const itemRows = selectionRows.map((s) => {
-    const totalCents = computeLineTotalCents(
+    const total = computeLineTotal(
       s.priceType,
-      s.unitPriceCents,
+      s.unitPrice,
       s.quantity,
       s.priceType === "hourly" ? hoursInMinutes : null,
     );
@@ -787,17 +792,17 @@ async function snapshotSelectionsToItems(
       name: s.name,
       description: s.description ?? null,
       priceType: s.priceType,
-      unitPriceCents: s.unitPriceCents,
+      unitPrice: s.unitPrice,
       quantity: s.quantity,
       hoursInMinutes: s.priceType === "hourly" ? hoursInMinutes : null,
-      totalCents,
+      total,
       position: s.position,
     };
   });
 
-  await db.insert(bookingServiceItem).values(itemRows);
-  const totalCents = itemRows.reduce((sum, r) => sum + r.totalCents, 0);
-  return { totalCents };
+  await tx.insert(bookingServiceItem).values(itemRows);
+  const total = itemRows.reduce((sum, r) => sum + r.total, 0);
+  return { total };
 }
 
 export const adminAcceptOffer = withPermission(
@@ -830,27 +835,31 @@ export const adminAcceptOffer = withPermission(
     // For `created → accepted` we snapshot now (no prior offer existed). For
     // `offered → accepted` the snapshot was already written when the offer
     // was sent (iter-27); just bump status + acceptedAt.
-    let snapshotTotalCents: number | null = null;
-    let newOfferVersion = booking.offerVersion;
-    if (fromStatus === "created") {
-      newOfferVersion = 1;
-      const result = await snapshotSelectionsToItems(
-        bookingId,
-        newOfferVersion,
-        booking.durationHours,
-      );
-      snapshotTotalCents = result.totalCents;
-    }
+    // Snapshot writes and the status update must commit atomically — otherwise
+    // a partial failure leaves orphaned booking_service_item rows.
+    let snapshotTotal: number | null = null;
+    const newOfferVersion = fromStatus === "created" ? 1 : booking.offerVersion;
+    await db.transaction(async (tx) => {
+      if (fromStatus === "created") {
+        const result = await snapshotSelectionsToItems(
+          tx,
+          bookingId,
+          newOfferVersion,
+          booking.durationHours,
+        );
+        snapshotTotal = result.total;
+      }
 
-    await db
-      .update(bookings)
-      .set({
-        status: "accepted",
-        acceptedAt: now,
-        offerVersion: newOfferVersion,
-        updatedAt: now,
-      })
-      .where(eq(bookings.id, bookingId));
+      await tx
+        .update(bookings)
+        .set({
+          status: "accepted",
+          acceptedAt: now,
+          offerVersion: newOfferVersion,
+          updatedAt: now,
+        })
+        .where(eq(bookings.id, bookingId));
+    });
 
     await recordAudit({
       actorUserId: actorId,
@@ -871,10 +880,10 @@ export const adminAcceptOffer = withPermission(
       try {
         // Total comes from the snapshot we just wrote (created→accepted) or
         // we re-read the latest snapshot (offered→accepted).
-        let totalCents = snapshotTotalCents;
-        if (totalCents === null) {
+        let total: number | null = snapshotTotal;
+        if (total === null) {
           const itemRows = await db
-            .select({ totalCents: bookingServiceItem.totalCents })
+            .select({ total: bookingServiceItem.total })
             .from(bookingServiceItem)
             .where(
               and(
@@ -882,14 +891,14 @@ export const adminAcceptOffer = withPermission(
                 eq(bookingServiceItem.offerVersion, newOfferVersion),
               ),
             );
-          totalCents = itemRows.reduce((sum, r) => sum + r.totalCents, 0);
+          total = itemRows.reduce((sum, r) => sum + r.total, 0);
         }
         await sendTemplated("offerAcceptedAdmin", booking.customerEmail, {
           recipientName: booking.customerName ?? "there",
           bookingName: booking.name,
           bookingDate: format(booking.date, "EEEE, d MMMM yyyy"),
           bookingVenue: booking.venue,
-          totalFormatted: formatChfTotal(totalCents),
+          totalFormatted: formatChfTotal(total),
         });
       } catch (err) {
         console.error("adminAcceptOffer: customer email failed", err);

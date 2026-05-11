@@ -6,10 +6,10 @@ CREATE TABLE `booking_service_item` (
 	`name` text NOT NULL,
 	`description` text,
 	`price_type` text NOT NULL,
-	`unit_price_cents` integer NOT NULL,
+	`unit_price` integer NOT NULL,
 	`quantity` integer NOT NULL,
 	`hours_in_minutes` integer,
-	`total_cents` integer NOT NULL,
+	`total` integer NOT NULL,
 	`position` integer NOT NULL,
 	FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON UPDATE no action ON DELETE set null

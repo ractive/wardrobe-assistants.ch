@@ -229,7 +229,7 @@ export const bookingSelectionItem = z.object({
   serviceName: z.string(),
   serviceArchived: z.boolean(),
   priceType: z.enum(["fixed", "hourly"]),
-  unitPriceCents: z.number().int().nonnegative(),
+  unitPrice: z.number().int().nonnegative(),
   quantity: z.number().int().positive(),
   position: z.number().int().nonnegative(),
 });

@@ -35,19 +35,18 @@ function formatSubtotal(
   services: ServiceOption[],
   durationHours: number | null,
 ): string {
-  let totalCents = 0;
+  // Prices are whole-CHF integers (matches `services.price` convention).
+  let total = 0;
   for (const row of rows) {
     const svc = services.find((s) => s.id === row.serviceId);
     if (!svc) continue;
     if (svc.priceType === "hourly") {
-      totalCents += svc.price * row.quantity * (durationHours ?? 0) * 100;
+      total += svc.price * row.quantity * (durationHours ?? 0);
     } else {
-      totalCents += svc.price * row.quantity * 100;
+      total += svc.price * row.quantity;
     }
   }
-  // price is already in CHF (not cents), so divide back out
-  const chf = totalCents / 100;
-  return `CHF ${chf}.-`;
+  return `CHF ${total}.-`;
 }
 
 export function LineItemsEditor({
@@ -159,9 +158,10 @@ export function LineItemsEditor({
                   className="w-20"
                   aria-label={`Quantity for ${svc?.name ?? "service"}`}
                   value={row.quantity}
-                  onChange={(e) =>
-                    updateQuantity(i, Math.max(1, Number(e.target.value)))
-                  }
+                  onChange={(e) => {
+                    const n = Number(e.target.value);
+                    updateQuantity(i, Number.isFinite(n) ? Math.max(1, n) : 1);
+                  }}
                   disabled={isPending}
                 />
                 <Button

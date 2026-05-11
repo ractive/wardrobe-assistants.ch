@@ -107,7 +107,7 @@ export async function getBookingById(
       serviceName: services.name,
       serviceArchived: services.archived,
       priceType: services.priceType,
-      unitPriceCents: services.price,
+      unitPrice: services.price,
       quantity: bookingServiceSelection.quantity,
       position: bookingServiceSelection.position,
     })
@@ -164,7 +164,7 @@ export async function getBookingById(
       serviceName: s.serviceName,
       serviceArchived: s.serviceArchived,
       priceType: s.priceType,
-      unitPriceCents: s.unitPriceCents,
+      unitPrice: s.unitPrice,
       quantity: s.quantity,
       position: s.position,
     })),

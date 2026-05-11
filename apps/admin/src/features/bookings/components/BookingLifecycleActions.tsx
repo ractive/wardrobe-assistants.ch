@@ -145,6 +145,10 @@ export function RejectBookingDialog({
       open={open}
       onOpenChange={(next) => {
         if (isPending && !next) return;
+        if (!next) {
+          setServerError(null);
+          setReason("");
+        }
         onOpenChange(next);
       }}
     >
@@ -247,6 +251,10 @@ export function CancelBookingDialog({
       open={open}
       onOpenChange={(next) => {
         if (isPending && !next) return;
+        if (!next) {
+          setServerError(null);
+          setReason("");
+        }
         onOpenChange(next);
       }}
     >

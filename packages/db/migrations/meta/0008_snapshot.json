@@ -553,8 +553,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "unit_price_cents": {
-          "name": "unit_price_cents",
+        "unit_price": {
+          "name": "unit_price",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -574,8 +574,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "total_cents": {
-          "name": "total_cents",
+        "total": {
+          "name": "total",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
