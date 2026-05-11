@@ -330,8 +330,9 @@ export default function ServicesPage() {
           and the moments where it actually matters.
         </p>
         <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
-          <LinkButton href={`mailto:${contactEmail}`}>
-            Request a quote
+          <LinkButton href="/booking-request/">Request a booking</LinkButton>
+          <LinkButton variant="outline" href={`mailto:${contactEmail}`}>
+            Email us instead
           </LinkButton>
           <LinkButton variant="outline" href="/#services">
             Back to overview
@@ -464,8 +465,9 @@ export default function ServicesPage() {
             the run.
           </p>
           <div className="flex flex-col gap-3 pt-3 sm:flex-row sm:items-center">
-            <LinkButton href={`mailto:${contactEmail}`}>
-              Request a quote
+            <LinkButton href="/booking-request/">Request a booking</LinkButton>
+            <LinkButton variant="outline" href={`mailto:${contactEmail}`}>
+              Email us instead
             </LinkButton>
             <LinkButton variant="outline" href="/#contact">
               Back to homepage

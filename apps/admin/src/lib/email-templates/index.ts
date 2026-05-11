@@ -7,6 +7,10 @@ import type { BookingCancelledParams } from "./booking-cancelled";
 import BookingCancelled from "./booking-cancelled";
 import type { BookingRejectedParams } from "./booking-rejected";
 import BookingRejected from "./booking-rejected";
+import type { BookingRequestReceivedParams } from "./booking-request-received";
+import BookingRequestReceived from "./booking-request-received";
+import type { BookingRequestedParams } from "./booking-requested";
+import BookingRequested from "./booking-requested";
 import type { OfferAcceptedAdminParams } from "./offer-accepted-admin";
 import OfferAcceptedAdmin from "./offer-accepted-admin";
 import type { ParticipationRequestedParams } from "./participation-requested";
@@ -45,6 +49,17 @@ export const templates = {
     subject: (p: BookingRejectedParams) =>
       `About your booking request: ${p.bookingName}`,
   } satisfies TemplateEntry<BookingRejectedParams>,
+
+  bookingRequested: {
+    component: BookingRequested,
+    subject: (p: BookingRequestedParams) =>
+      `New booking request: ${p.customerName} — ${p.date}`,
+  } satisfies TemplateEntry<BookingRequestedParams>,
+
+  bookingRequestReceived: {
+    component: BookingRequestReceived,
+    subject: () => "We received your booking request",
+  } satisfies TemplateEntry<BookingRequestReceivedParams>,
 
   offerAcceptedAdmin: {
     component: OfferAcceptedAdmin,
@@ -87,6 +102,8 @@ export type {
   BookingBroadcastParams,
   BookingCancelledParams,
   BookingRejectedParams,
+  BookingRequestedParams,
+  BookingRequestReceivedParams,
   OfferAcceptedAdminParams,
   ParticipationRequestedParams,
   PasswordResetParams,

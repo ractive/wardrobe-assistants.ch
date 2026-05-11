@@ -99,6 +99,32 @@ export const RATE_LIMITS = {
   // Invite action: 10 per hour per admin. Server-action call site, so
   // keying on actor user-id rather than IP.
   invite: { limit: 10, windowMs: 60 * 60 * 1000 } satisfies Bucket,
+  // iter-26: public booking-request route. Three buckets keyed independently:
+  //   - 3 / hour  per IP
+  //   - 10 / day  per IP
+  //   - 3 / day   per customerEmail (normalized lowercase + trim)
+  // The route consumes all three on every accepted POST; rejection on any one
+  // returns 429 with `Retry-After`. Numbers are deliberately low — a real
+  // customer never submits more than a handful per day; bots hit the ceiling
+  // before they hit the DB.
+  bookingRequestPerIpHour: {
+    limit: 3,
+    windowMs: 60 * 60 * 1000,
+  } satisfies Bucket,
+  bookingRequestPerIpDay: {
+    limit: 10,
+    windowMs: 24 * 60 * 60 * 1000,
+  } satisfies Bucket,
+  bookingRequestPerEmailDay: {
+    limit: 3,
+    windowMs: 24 * 60 * 60 * 1000,
+  } satisfies Bucket,
+  // iter-26: public services catalog. 60/min/IP — high enough that homepage
+  // build-time fetches never hit it, low enough to deter scrapers.
+  publicServicesPerIpMinute: {
+    limit: 60,
+    windowMs: 60 * 1000,
+  } satisfies Bucket,
 } as const;
 
 // Standard `Retry-After` header value (seconds, ceiled to 1 minimum when

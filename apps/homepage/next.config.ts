@@ -34,7 +34,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
       "script-src 'self'",
       "font-src 'self' https://fonts.bunny.net",
-      "connect-src 'self'",
+      "connect-src 'self' https://admin.wardrobe-assistants.ch",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
