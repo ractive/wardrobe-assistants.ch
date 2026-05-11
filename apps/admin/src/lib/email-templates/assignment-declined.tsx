@@ -4,11 +4,11 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { CtaButton } from "./_cta";
 
 export type AssignmentDeclinedParams = {
   recipientName: string;
@@ -67,17 +67,7 @@ export default function AssignmentDeclined(p: AssignmentDeclinedParams) {
             <br />
             <strong>Where:</strong> {p.bookingVenue}
           </Text>
-          <Link
-            href={p.bookingUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
-            Reassign in admin
-          </Link>
+          <CtaButton href={p.bookingUrl}>Reassign in admin</CtaButton>
         </Container>
       </Body>
     </Html>

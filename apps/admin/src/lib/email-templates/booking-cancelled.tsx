@@ -4,11 +4,11 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { CtaButton } from "./_cta";
 
 // One template with a `recipient` discriminant — keeps the email visually
 // consistent across all three audiences while letting the copy vary.
@@ -92,17 +92,9 @@ export default function BookingCancelled(p: BookingCancelledParams) {
             </Text>
           ) : null}
           {p.bookingUrl && p.recipient !== "customer" ? (
-            <Link
-              href={p.bookingUrl}
-              style={{
-                display: "inline-block",
-                marginTop: "16px",
-                color: brand,
-                fontSize: "14px",
-              }}
-            >
+            <CtaButton href={p.bookingUrl}>
               Open booking in Wardrobe Assistants
-            </Link>
+            </CtaButton>
           ) : null}
         </Container>
       </Body>

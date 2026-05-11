@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -9,6 +8,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { CtaButton } from "./_cta";
 
 export type AssignmentInviteParams = {
   recipientName: string;
@@ -63,35 +63,14 @@ export default function AssignmentInvite(p: AssignmentInviteParams) {
             </Text>
           ) : null}
           <Text style={{ margin: "24px 0 8px" }}>
-            <Button
-              href={p.confirmUrl}
-              style={{
-                backgroundColor: brand,
-                color: "#ffffff",
-                padding: "10px 18px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                textDecoration: "none",
-              }}
-            >
+            <CtaButton href={p.confirmUrl} variant="primary">
               Confirm
-            </Button>
+            </CtaButton>
           </Text>
           <Text style={{ margin: "0 0 24px" }}>
-            <Button
-              href={p.declineUrl}
-              style={{
-                backgroundColor: "#ffffff",
-                color: brand,
-                border: `1px solid ${brand}`,
-                padding: "10px 18px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                textDecoration: "none",
-              }}
-            >
+            <CtaButton href={p.declineUrl} variant="secondary">
               Decline
-            </Button>
+            </CtaButton>
           </Text>
           <Text style={{ color: "#777777", fontSize: "13px" }}>
             You'll be asked to sign in. Both buttons take you to your booking
