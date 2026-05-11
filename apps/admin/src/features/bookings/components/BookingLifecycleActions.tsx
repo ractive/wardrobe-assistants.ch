@@ -18,6 +18,7 @@ import {
   cancelBooking,
   rejectBooking,
   sendOffer,
+  sendRevisedOffer,
 } from "../server/actions";
 
 // ---------------------------------------------------------------------------
@@ -113,6 +114,120 @@ export function SendOfferDialog({
           </Button>
           <Button type="button" onClick={onConfirm} disabled={isPending}>
             {isPending ? "Sending…" : "Send offer"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Send revised offer dialog
+// ---------------------------------------------------------------------------
+
+export function SendRevisedOfferDialog({
+  bookingId,
+  status,
+  customerEmail,
+  totalFormatted,
+  open,
+  onOpenChange,
+}: {
+  bookingId: string;
+  status: string;
+  customerEmail: string | null;
+  totalFormatted: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const isAccepted = status === "accepted";
+
+  function onConfirm() {
+    setServerError(null);
+    startTransition(async () => {
+      try {
+        const result = await sendRevisedOffer({ bookingId });
+        if (result.error) {
+          setServerError(result.message);
+          toast.error(result.message);
+          return;
+        }
+        toast.success(result.message);
+        onOpenChange(false);
+        router.refresh();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Could not send revised offer.";
+        setServerError(message);
+        toast.error(message);
+      }
+    });
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (isPending && !next) return;
+        if (!next) setServerError(null);
+        onOpenChange(next);
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Send revised offer?</DialogTitle>
+          <DialogDescription>
+            This will snapshot the current line items as a new offer version and
+            email the customer.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1 text-sm">
+          {isAccepted && (
+            <p className="text-[var(--destructive)] font-medium text-sm">
+              Warning: This will clear the customer's acceptance and require
+              them to re-confirm.
+            </p>
+          )}
+          {customerEmail ? (
+            <p>
+              <span className="text-[var(--muted-foreground)]">To: </span>
+              {customerEmail}
+            </p>
+          ) : (
+            <p className="text-[var(--destructive)]">
+              No customer email on file — the revised offer will be sent without
+              notifying the customer.
+            </p>
+          )}
+          <p>
+            <span className="text-[var(--muted-foreground)]">Total: </span>
+            {totalFormatted}
+          </p>
+        </div>
+        {serverError ? (
+          <p className="text-[var(--destructive)] text-sm" role="alert">
+            {serverError}
+          </p>
+        ) : null}
+        <DialogFooter className="gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant={isAccepted ? "destructive" : "default"}
+            onClick={onConfirm}
+            disabled={isPending}
+          >
+            {isPending ? "Sending…" : "Send revised offer"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -310,10 +425,13 @@ export function RejectBookingDialog({
 
 export function CancelBookingDialog({
   bookingId,
+  squadMemberNames,
   open,
   onOpenChange,
 }: {
   bookingId: string;
+  /** Names of squad members who will be notified (assigned + confirmed). */
+  squadMemberNames: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -366,6 +484,16 @@ export function CancelBookingDialog({
             Cancel this accepted booking. You may optionally provide a reason.
           </DialogDescription>
         </DialogHeader>
+        {squadMemberNames.length > 0 && (
+          <div className="text-sm">
+            <p className="font-medium">Squad members who will be notified:</p>
+            <ul className="mt-1 list-disc list-inside text-[var(--muted-foreground)]">
+              {squadMemberNames.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="space-y-2">
           <label
             htmlFor="cancel-reason"
@@ -424,6 +552,7 @@ export function BookingLifecycleButtons({
   customerEmail,
   selectionCount,
   lineItemsTotal,
+  squadMemberNames,
 }: {
   bookingId: string;
   status: string;
@@ -434,19 +563,36 @@ export function BookingLifecycleButtons({
   customerEmail: string | null;
   selectionCount: number;
   lineItemsTotal: number;
+  /** Names of active squad members (for cancel confirmation modal). */
+  squadMemberNames: string[];
 }) {
   const [sendOfferOpen, setSendOfferOpen] = useState(false);
+  const [sendRevisedOpen, setSendRevisedOpen] = useState(false);
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
 
   const showSendOffer = canSendOffer && status === "created";
+  // iter-28: "Send revised offer" visible for offered/accepted with ≥1 line item.
+  const showSendRevised =
+    canSendOffer &&
+    (status === "offered" || status === "accepted") &&
+    selectionCount > 0;
   const showAccept =
     canAccept && (status === "created" || status === "offered");
-  const showReject = canReject && status === "created";
+  // iter-28: reject also works from offered state.
+  const showReject =
+    canReject && (status === "created" || status === "offered");
   const showCancel = canCancel && status === "accepted";
 
-  if (!showSendOffer && !showAccept && !showReject && !showCancel) return null;
+  if (
+    !showSendOffer &&
+    !showSendRevised &&
+    !showAccept &&
+    !showReject &&
+    !showCancel
+  )
+    return null;
 
   const totalFormatted = `CHF ${lineItemsTotal.toLocaleString("en-CH")}.-`;
 
@@ -466,6 +612,15 @@ export function BookingLifecycleButtons({
             }
           >
             Send offer
+          </Button>
+        )}
+        {showSendRevised && (
+          <Button
+            type="button"
+            variant={status === "accepted" ? "destructive" : "default"}
+            onClick={() => setSendRevisedOpen(true)}
+          >
+            Send revised offer
           </Button>
         )}
         {showAccept && (
@@ -505,6 +660,14 @@ export function BookingLifecycleButtons({
         open={sendOfferOpen}
         onOpenChange={setSendOfferOpen}
       />
+      <SendRevisedOfferDialog
+        bookingId={bookingId}
+        status={status}
+        customerEmail={customerEmail}
+        totalFormatted={totalFormatted}
+        open={sendRevisedOpen}
+        onOpenChange={setSendRevisedOpen}
+      />
       <AcceptBookingDialog
         bookingId={bookingId}
         open={acceptOpen}
@@ -517,6 +680,7 @@ export function BookingLifecycleButtons({
       />
       <CancelBookingDialog
         bookingId={bookingId}
+        squadMemberNames={squadMemberNames}
         open={cancelOpen}
         onOpenChange={setCancelOpen}
       />

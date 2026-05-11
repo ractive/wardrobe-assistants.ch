@@ -654,6 +654,7 @@ export const rejectRequest = withPermission(
 
 // iter-25: pre-offer selection editor. Wholesale replacement keeps the data
 // model simple — the (small) edit set never warrants a diff.
+// iter-28: editable in created, offered, accepted (not terminal states).
 export const replaceBookingSelections = withPermission(
   "BOOKING_CREATE",
   async (
@@ -678,11 +679,11 @@ export const replaceBookingSelections = withPermission(
     if (!booking) {
       return { error: true, message: "Booking not found." };
     }
-    if (booking.status !== "created") {
+    if (booking.status === "rejected" || booking.status === "cancelled") {
       return {
         error: true,
         message:
-          "Line items can only be edited while the booking is in 'created' state.",
+          "Line items cannot be edited once a booking is rejected or cancelled.",
       };
     }
 
@@ -922,6 +923,150 @@ export const sendOffer = withPermission(
   },
 );
 
+// iter-28: send a revised offer from `offered` or `accepted` state.
+// Archives the previous snapshot to audit_log, inserts a new snapshot at
+// offerVersion+1, and emails the customer.
+export const sendRevisedOffer = withPermission(
+  "BOOKING_OFFER_SEND",
+  async (actorId, raw: { bookingId: string }): Promise<ActionResult> => {
+    const bookingId = String(raw?.bookingId ?? "");
+    if (!bookingId) {
+      return { error: true, message: "Invalid input" };
+    }
+
+    const bookingRows = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) {
+      return { error: true, message: "Booking not found." };
+    }
+    if (booking.status !== "offered" && booking.status !== "accepted") {
+      return {
+        error: true,
+        message: `Cannot send a revised offer for a booking in '${booking.status}' state.`,
+      };
+    }
+
+    const selectionCount = await db
+      .select({ id: bookingServiceSelection.id })
+      .from(bookingServiceSelection)
+      .where(eq(bookingServiceSelection.bookingId, bookingId))
+      .limit(1);
+    if (selectionCount.length === 0) {
+      return {
+        error: true,
+        message: "Cannot send revised offer with no line items selected.",
+      };
+    }
+
+    // Fetch the prior snapshot for archiving to audit.
+    const prevItems = await db
+      .select()
+      .from(bookingServiceItem)
+      .where(
+        and(
+          eq(bookingServiceItem.bookingId, bookingId),
+          eq(bookingServiceItem.offerVersion, booking.offerVersion),
+        ),
+      );
+
+    const wasAccepted = booking.status === "accepted";
+    const nextVersion = booking.offerVersion + 1;
+    const now = new Date();
+    let snapshotTotal = 0;
+    let raced = false;
+
+    await db.transaction(async (tx) => {
+      // Conditional UPDATE guards against double-clicks and race conditions.
+      const updated = await tx
+        .update(bookings)
+        .set({
+          status: "offered",
+          offerVersion: nextVersion,
+          lastOfferSentAt: now,
+          acceptedAt: null, // clear acceptance when revising
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(bookings.id, bookingId),
+            inArray(bookings.status, ["offered", "accepted"]),
+            eq(bookings.offerVersion, booking.offerVersion),
+          ),
+        )
+        .returning({ id: bookings.id });
+      if (updated.length === 0) {
+        raced = true;
+        return;
+      }
+
+      const result = await snapshotSelectionsToItems(
+        tx,
+        bookingId,
+        nextVersion,
+        booking.durationHours,
+      );
+      snapshotTotal = result.total;
+    });
+
+    if (raced) {
+      return {
+        error: true,
+        message:
+          "Booking changed during revision. Please refresh and try again.",
+      };
+    }
+
+    // Archive prior snapshot and record revision — both after tx commits so a
+    // transient audit failure never rolls back the status change.
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.offer.snapshot.archived",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: {
+        fromVersion: booking.offerVersion,
+        toVersion: nextVersion,
+        items: prevItems,
+      },
+    });
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.offer.revised",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { offerVersion: nextVersion, wasAccepted },
+    });
+
+    if (booking.customerEmail) {
+      try {
+        await sendTemplated("offerRevised", booking.customerEmail, {
+          customerName: booking.customerName ?? "there",
+          offerVersion: nextVersion,
+          offerUrl: `${env.betterAuthUrl}/offer/${booking.offerToken}`,
+          totalFormatted: formatChfTotal(snapshotTotal),
+          wasAccepted,
+        });
+      } catch (err) {
+        console.error("sendRevisedOffer: customer email failed", err);
+        revalidatePath(`/bookings/${bookingId}`);
+        return {
+          error: false,
+          message: "Revised offer sent, but customer email failed to deliver.",
+        };
+      }
+    }
+
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Revised offer sent." };
+  },
+);
+
 export const adminAcceptOffer = withPermission(
   "BOOKING_ACCEPT_MANUAL",
   async (actorId, raw: { bookingId: string }): Promise<ActionResult> => {
@@ -1057,13 +1202,15 @@ export const rejectBooking = withPermission(
     if (!booking) {
       return { error: true, message: "Booking not found." };
     }
-    if (booking.status !== "created") {
+    // iter-28: also accept offered → rejected (not just created → rejected).
+    if (booking.status !== "created" && booking.status !== "offered") {
       return {
         error: true,
         message: `Cannot reject a booking in '${booking.status}' state.`,
       };
     }
 
+    const fromStatus = booking.status;
     const now = new Date();
     await db
       .update(bookings)
@@ -1076,7 +1223,7 @@ export const rejectBooking = withPermission(
       targetType: "booking",
       targetId: bookingId,
       metadata: {
-        from: "created",
+        from: fromStatus,
         to: "rejected",
         byUserId: actorId,
         reason: reason ?? null,

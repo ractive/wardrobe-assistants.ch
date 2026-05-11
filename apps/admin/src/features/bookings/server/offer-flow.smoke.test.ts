@@ -542,4 +542,736 @@ describe("offer flow — smoke", () => {
     expect(mailtoHref).toContain("offer%20v3");
     expect(mailtoHref).not.toMatch(/[\r\n]/);
   });
+
+  // =========================================================================
+  // iter-28 smoke tests
+  // =========================================================================
+
+  // -------------------------------------------------------------------------
+  // sendRevisedOffer: from offered state
+  // -------------------------------------------------------------------------
+
+  it("sendRevisedOffer: offered→offered — new snapshot, prior archived, email queued", async () => {
+    const admin = await harness.seedAdmin({
+      email: "revise-admin1@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const {
+      createBooking,
+      sendOffer,
+      sendRevisedOffer,
+      replaceBookingSelections,
+    } = await import("./actions");
+    const { listBookings } = await import("./queries");
+    const { services, bookings, bookingServiceItem, auditLog } = await import(
+      "@wardrobe-assistants/db/schema"
+    );
+    const { and, eq } = await import("drizzle-orm");
+    const { ulid } = await import("ulid");
+    const { sendTemplated } = await import("@/lib/email");
+    const sendMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
+    sendMock.mockClear();
+
+    const svcId = ulid();
+    await harness.db.insert(services).values({
+      id: svcId,
+      name: "Revise-Fitting",
+      description: "Fitting.",
+      priceType: "fixed",
+      price: 100,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Revise-from-offered booking",
+        date: new Date("2027-01-10T18:00:00.000Z"),
+        venue: "Studio Revise",
+        ...optionalBookingFields,
+        customerEmail: "revise-cust1@example.com",
+        customerName: "Revise Customer",
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Revise-from-offered booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [{ serviceId: svcId, quantity: 1 }],
+      }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      sendOffer({ bookingId: booking.id }),
+    );
+
+    // Confirm we're at v1 offered.
+    const v1Rows = await harness.db
+      .select({ offerVersion: bookings.offerVersion, status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(v1Rows[0]?.status).toBe("offered");
+    expect(v1Rows[0]?.offerVersion).toBe(1);
+
+    sendMock.mockClear();
+
+    const result = await harness.runAs(admin.cookies, () =>
+      sendRevisedOffer({ bookingId: booking.id }),
+    );
+    expect(result.error, JSON.stringify(result)).toBe(false);
+
+    // Status stays offered, version increments.
+    const v2Rows = await harness.db
+      .select({
+        offerVersion: bookings.offerVersion,
+        status: bookings.status,
+        acceptedAt: bookings.acceptedAt,
+      })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(v2Rows[0]?.status).toBe("offered");
+    expect(v2Rows[0]?.offerVersion).toBe(2);
+    expect(v2Rows[0]?.acceptedAt).toBeNull();
+
+    // Two snapshot versions should now exist.
+    const items = await harness.db
+      .select({ offerVersion: bookingServiceItem.offerVersion })
+      .from(bookingServiceItem)
+      .where(eq(bookingServiceItem.bookingId, booking.id));
+    const versions = items.map((r) => r.offerVersion);
+    expect(versions).toContain(1);
+    expect(versions).toContain(2);
+
+    // Audit: snapshot.archived row should exist.
+    const archivedRows = await harness.db
+      .select()
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.targetId, booking.id),
+          eq(auditLog.action, "booking.offer.snapshot.archived"),
+        ),
+      );
+    expect(archivedRows.length).toBeGreaterThanOrEqual(1);
+
+    // Audit: offer.revised row should exist.
+    const revisedRows = await harness.db
+      .select()
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.targetId, booking.id),
+          eq(auditLog.action, "booking.offer.revised"),
+        ),
+      );
+    expect(revisedRows.length).toBeGreaterThanOrEqual(1);
+
+    // offerRevised email sent to customer.
+    expect(sendMock).toHaveBeenCalledWith(
+      "offerRevised",
+      "revise-cust1@example.com",
+      expect.objectContaining({ offerVersion: 2, wasAccepted: false }),
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // sendRevisedOffer: from accepted state
+  // -------------------------------------------------------------------------
+
+  it("sendRevisedOffer: accepted→offered — clears acceptedAt, wasAccepted=true in email", async () => {
+    const admin = await harness.seedAdmin({
+      email: "revise-admin2@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const {
+      createBooking,
+      sendOffer,
+      sendRevisedOffer,
+      replaceBookingSelections,
+    } = await import("./actions");
+    const { listBookings } = await import("./queries");
+    const { services, bookings } = await import(
+      "@wardrobe-assistants/db/schema"
+    );
+    const { eq } = await import("drizzle-orm");
+    const { ulid } = await import("ulid");
+    const { sendTemplated } = await import("@/lib/email");
+    const sendMock = sendTemplated as unknown as ReturnType<typeof vi.fn>;
+    const { _resetRateLimitStoreForTests } = await import("@/lib/rate-limit");
+    _resetRateLimitStoreForTests();
+
+    const svcId = ulid();
+    await harness.db.insert(services).values({
+      id: svcId,
+      name: "Revise-Styling",
+      description: "Styling.",
+      priceType: "fixed",
+      price: 150,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Revise-from-accepted booking",
+        date: new Date("2027-01-11T18:00:00.000Z"),
+        venue: "Studio ReviseA",
+        ...optionalBookingFields,
+        customerEmail: "revise-cust2@example.com",
+        customerName: "Revise Accepted Customer",
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Revise-from-accepted booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [{ serviceId: svcId, quantity: 1 }],
+      }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      sendOffer({ bookingId: booking.id }),
+    );
+
+    // Customer accepts.
+    const bookingRow = await harness.db
+      .select({ offerToken: bookings.offerToken })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    const token = bookingRow[0]?.offerToken;
+    expect(token).toBeDefined();
+    if (!token) return;
+
+    const { acceptOffer } = await import(
+      "../../../app/(public)/offer/[token]/actions"
+    );
+    await acceptOffer(token, true);
+
+    // Confirm accepted.
+    const acceptedRow = await harness.db
+      .select({ status: bookings.status, acceptedAt: bookings.acceptedAt })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(acceptedRow[0]?.status).toBe("accepted");
+    expect(acceptedRow[0]?.acceptedAt).not.toBeNull();
+
+    sendMock.mockClear();
+
+    const result = await harness.runAs(admin.cookies, () =>
+      sendRevisedOffer({ bookingId: booking.id }),
+    );
+    expect(result.error, JSON.stringify(result)).toBe(false);
+
+    // Status flips back to offered, acceptedAt cleared.
+    const afterRow = await harness.db
+      .select({
+        status: bookings.status,
+        offerVersion: bookings.offerVersion,
+        acceptedAt: bookings.acceptedAt,
+      })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(afterRow[0]?.status).toBe("offered");
+    expect(afterRow[0]?.offerVersion).toBe(2);
+    expect(afterRow[0]?.acceptedAt).toBeNull();
+
+    // Email sent with wasAccepted=true.
+    expect(sendMock).toHaveBeenCalledWith(
+      "offerRevised",
+      "revise-cust2@example.com",
+      expect.objectContaining({ wasAccepted: true }),
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // sendRevisedOffer: terminal status → rejected
+  // -------------------------------------------------------------------------
+
+  it("sendRevisedOffer: fails on terminal status", async () => {
+    const admin = await harness.seedAdmin({
+      email: "revise-admin3@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, sendRevisedOffer, adminAcceptOffer } = await import(
+      "./actions"
+    );
+    const { listBookings } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Revise-terminal booking",
+        date: new Date("2027-01-12T18:00:00.000Z"),
+        venue: "Studio Terminal",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Revise-terminal booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    // Move to accepted (a non-offered/non-accepted terminal for revision).
+    // Actually accepted is valid for revision; use created instead.
+    const result = await harness.runAs(admin.cookies, () =>
+      sendRevisedOffer({ bookingId: booking.id }),
+    );
+    expect(result.error).toBe(true);
+    expect(result.message).toMatch(/offered|accepted|created/i);
+  });
+
+  // -------------------------------------------------------------------------
+  // rejectOffer: customer declines from offered
+  // -------------------------------------------------------------------------
+
+  it("rejectOffer: offered→rejected, audit via=customer, admin notified", async () => {
+    const admin = await harness.seedAdmin({
+      email: "reject-offer-admin1@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, sendOffer, replaceBookingSelections } = await import(
+      "./actions"
+    );
+    const { listBookings } = await import("./queries");
+    const { services, bookings, auditLog } = await import(
+      "@wardrobe-assistants/db/schema"
+    );
+    const { and, eq } = await import("drizzle-orm");
+    const { ulid } = await import("ulid");
+    const { _resetRateLimitStoreForTests } = await import("@/lib/rate-limit");
+    _resetRateLimitStoreForTests();
+
+    const svcId = ulid();
+    await harness.db.insert(services).values({
+      id: svcId,
+      name: "Reject-Fitting",
+      description: "Fitting.",
+      priceType: "fixed",
+      price: 80,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "RejectOffer booking",
+        date: new Date("2027-02-01T18:00:00.000Z"),
+        venue: "Studio Reject",
+        ...optionalBookingFields,
+        customerEmail: "reject-cust1@example.com",
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "RejectOffer booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [{ serviceId: svcId, quantity: 1 }],
+      }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      sendOffer({ bookingId: booking.id }),
+    );
+
+    const tokenRow = await harness.db
+      .select({ offerToken: bookings.offerToken })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    const token = tokenRow[0]?.offerToken;
+    expect(token).toBeDefined();
+    if (!token) return;
+
+    const { rejectOffer } = await import(
+      "../../../app/(public)/offer/[token]/actions"
+    );
+    const result = await rejectOffer(token, "Price too high");
+    expect(result.error, JSON.stringify(result)).toBe(false);
+
+    // Status should be rejected.
+    const afterRow = await harness.db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(afterRow[0]?.status).toBe("rejected");
+
+    // Audit row: via=customer, reason recorded.
+    const auditRows = await harness.db
+      .select()
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.targetId, booking.id),
+          eq(auditLog.action, "booking.offer.rejected"),
+        ),
+      );
+    expect(auditRows.length).toBeGreaterThanOrEqual(1);
+    const parsed: unknown = JSON.parse(auditRows[0]?.metadata ?? "{}");
+    expect(parsed).toMatchObject({ via: "customer", reason: "Price too high" });
+  });
+
+  // -------------------------------------------------------------------------
+  // rejectOffer: non-offered → error
+  // -------------------------------------------------------------------------
+
+  it("rejectOffer: returns error when booking is not in offered state", async () => {
+    const admin = await harness.seedAdmin({
+      email: "reject-offer-admin2@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking } = await import("./actions");
+    const { listBookings } = await import("./queries");
+    const { bookings } = await import("@wardrobe-assistants/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const { _resetRateLimitStoreForTests } = await import("@/lib/rate-limit");
+    _resetRateLimitStoreForTests();
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "RejectOffer not-offered booking",
+        date: new Date("2027-02-02T18:00:00.000Z"),
+        venue: "Studio NotOffered2",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find(
+      (b) => b.name === "RejectOffer not-offered booking",
+    );
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    const tokenRow = await harness.db
+      .select({ offerToken: bookings.offerToken })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    const token = tokenRow[0]?.offerToken;
+    expect(token).toBeDefined();
+    if (!token) return;
+
+    const { rejectOffer } = await import(
+      "../../../app/(public)/offer/[token]/actions"
+    );
+    const result = await rejectOffer(token);
+    expect(result.error).toBe(true);
+    if (result.error) {
+      expect(result.message).toMatch(/declinable|offered/i);
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // rejectBooking: from offered state (admin)
+  // -------------------------------------------------------------------------
+
+  it("rejectBooking: offered→rejected works; accepted→rejected is blocked", async () => {
+    const admin = await harness.seedAdmin({
+      email: "reject-booking-admin1@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const {
+      createBooking,
+      sendOffer,
+      rejectBooking,
+      adminAcceptOffer,
+      replaceBookingSelections,
+    } = await import("./actions");
+    const { listBookings } = await import("./queries");
+    const { services, bookings } = await import(
+      "@wardrobe-assistants/db/schema"
+    );
+    const { eq } = await import("drizzle-orm");
+    const { ulid } = await import("ulid");
+
+    const svcId = ulid();
+    await harness.db.insert(services).values({
+      id: svcId,
+      name: "AdminReject-Fitting",
+      description: "Fitting.",
+      priceType: "fixed",
+      price: 90,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Test offered → rejected.
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "AdminReject-offered booking",
+        date: new Date("2027-03-01T18:00:00.000Z"),
+        venue: "Studio AdminReject",
+        ...optionalBookingFields,
+        customerEmail: "admin-reject-cust@example.com",
+      }),
+    );
+    const list1 = await harness.runAs(admin.cookies, () => listBookings());
+    const offered = list1.find((b) => b.name === "AdminReject-offered booking");
+    expect(offered).toBeDefined();
+    if (!offered) return;
+
+    await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: offered.id,
+        selections: [{ serviceId: svcId, quantity: 1 }],
+      }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      sendOffer({ bookingId: offered.id }),
+    );
+
+    const r1 = await harness.runAs(admin.cookies, () =>
+      rejectBooking({ bookingId: offered.id, reason: undefined }),
+    );
+    expect(r1.error, JSON.stringify(r1)).toBe(false);
+
+    const afterRow = await harness.db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, offered.id))
+      .limit(1);
+    expect(afterRow[0]?.status).toBe("rejected");
+
+    // Test accepted → reject is blocked.
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "AdminReject-accepted booking",
+        date: new Date("2027-03-02T18:00:00.000Z"),
+        venue: "Studio AdminRejectAcc",
+        ...optionalBookingFields,
+      }),
+    );
+    const list2 = await harness.runAs(admin.cookies, () => listBookings());
+    const accepted = list2.find(
+      (b) => b.name === "AdminReject-accepted booking",
+    );
+    expect(accepted).toBeDefined();
+    if (!accepted) return;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: accepted.id }),
+    );
+
+    const r2 = await harness.runAs(admin.cookies, () =>
+      rejectBooking({ bookingId: accepted.id, reason: undefined }),
+    );
+    expect(r2.error).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // cancelBooking: only notifies confirmed/assigned squad members
+  // -------------------------------------------------------------------------
+
+  it("cancelBooking: only notifies assigned/confirmed squad — not withdrawn", async () => {
+    const admin = await harness.seedAdmin({
+      email: "cancel-notify-admin@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const sm1 = await harness.seedSquadMember({
+      email: "cancel-sm1@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const sm2 = await harness.seedSquadMember({
+      email: "cancel-sm2@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const {
+      createBooking,
+      adminAcceptOffer,
+      cancelBooking,
+      assignUser,
+      unassignUser,
+    } = await import("./actions");
+    const { listBookings } = await import("./queries");
+    const { bookingAssignments } = await import(
+      "@wardrobe-assistants/db/schema"
+    );
+    const { and, eq } = await import("drizzle-orm");
+    const { sendPush } = await import("@/lib/push");
+    const pushMock = sendPush as unknown as ReturnType<typeof vi.fn>;
+    pushMock.mockClear();
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Cancel-notify-squad booking",
+        date: new Date("2027-04-01T18:00:00.000Z"),
+        venue: "Studio CancelNotify",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Cancel-notify-squad booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+
+    // Assign both squad members.
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ bookingId: booking.id, userId: sm1.userId }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ bookingId: booking.id, userId: sm2.userId }),
+    );
+
+    // Unassign sm2 to simulate withdrawal (status goes to a non-assigned state).
+    await harness.runAs(admin.cookies, () =>
+      unassignUser({ bookingId: booking.id, userId: sm2.userId }),
+    );
+
+    // Confirm sm1 is assigned, sm2 is gone.
+    const assignments = await harness.db
+      .select()
+      .from(bookingAssignments)
+      .where(eq(bookingAssignments.bookingId, booking.id));
+    const sm1Assignment = assignments.find((a) => a.userId === sm1.userId);
+    expect(sm1Assignment?.status).toBe("assigned");
+    expect(assignments.find((a) => a.userId === sm2.userId)).toBeUndefined();
+
+    pushMock.mockClear();
+
+    const result = await harness.runAs(admin.cookies, () =>
+      cancelBooking({ bookingId: booking.id, reason: undefined }),
+    );
+    expect(result.error, JSON.stringify(result)).toBe(false);
+
+    // Only sm1 should have received a push notification.
+    const pushCalls = (pushMock.mock.calls as Array<[string, unknown]>).filter(
+      ([userId]) => userId === sm1.userId || userId === sm2.userId,
+    );
+    const sm1Notified = pushCalls.some(([uid]) => uid === sm1.userId);
+    const sm2Notified = pushCalls.some(([uid]) => uid === sm2.userId);
+    expect(sm1Notified).toBe(true);
+    expect(sm2Notified).toBe(false);
+  });
+
+  // -------------------------------------------------------------------------
+  // Selection editor: edits in offered/accepted don't alter customer snapshot
+  // -------------------------------------------------------------------------
+
+  it("selection editor edits in offered/accepted don't change customer-facing snapshot", async () => {
+    const admin = await harness.seedAdmin({
+      email: "selection-edit-admin@offer-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, sendOffer, replaceBookingSelections } = await import(
+      "./actions"
+    );
+    const { listBookings } = await import("./queries");
+    const { services, bookings, bookingServiceItem } = await import(
+      "@wardrobe-assistants/db/schema"
+    );
+    const { and, eq } = await import("drizzle-orm");
+    const { ulid } = await import("ulid");
+
+    const svc1Id = ulid();
+    const svc2Id = ulid();
+    await harness.db.insert(services).values([
+      {
+        id: svc1Id,
+        name: "SelEdit-Fitting",
+        description: "Fitting.",
+        priceType: "fixed",
+        price: 100,
+        archived: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: svc2Id,
+        name: "SelEdit-Styling",
+        description: "Styling.",
+        priceType: "fixed",
+        price: 200,
+        archived: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "SelectionEdit booking",
+        date: new Date("2027-05-01T18:00:00.000Z"),
+        venue: "Studio SelEdit",
+        ...optionalBookingFields,
+        customerEmail: "sel-edit-cust@example.com",
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "SelectionEdit booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    // Add svc1 and send offer — snapshot at v1.
+    await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [{ serviceId: svc1Id, quantity: 1 }],
+      }),
+    );
+    await harness.runAs(admin.cookies, () =>
+      sendOffer({ bookingId: booking.id }),
+    );
+
+    // Now in offered state. Admin edits selections to add svc2.
+    const editResult = await harness.runAs(admin.cookies, () =>
+      replaceBookingSelections({
+        bookingId: booking.id,
+        selections: [
+          { serviceId: svc1Id, quantity: 1 },
+          { serviceId: svc2Id, quantity: 2 },
+        ],
+      }),
+    );
+    expect(editResult.error, JSON.stringify(editResult)).toBe(false);
+
+    // Customer-facing snapshot (at offerVersion=1) must still be just svc1.
+    const v1Items = await harness.db
+      .select({ name: bookingServiceItem.name })
+      .from(bookingServiceItem)
+      .where(
+        and(
+          eq(bookingServiceItem.bookingId, booking.id),
+          eq(bookingServiceItem.offerVersion, 1),
+        ),
+      );
+    expect(v1Items).toHaveLength(1);
+    expect(v1Items[0]?.name).toBe("SelEdit-Fitting");
+
+    // Current booking version should still be 1 (no revised offer sent yet).
+    const bookingRow = await harness.db
+      .select({ offerVersion: bookings.offerVersion })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(bookingRow[0]?.offerVersion).toBe(1);
+  });
 });

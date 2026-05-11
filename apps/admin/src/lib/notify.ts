@@ -8,6 +8,7 @@ import { pushPayload as bookingBroadcastPushPayload } from "./email-templates/bo
 import { pushPayload as bookingCancelledPushPayload } from "./email-templates/booking-cancelled";
 import { pushPayload as bookingRequestedPushPayload } from "./email-templates/booking-requested";
 import { pushPayload as offerAcceptedPushPayload } from "./email-templates/offer-accepted";
+import { pushPayload as offerRejectedPushPayload } from "./email-templates/offer-rejected";
 import { pushPayload as participationRequestedPushPayload } from "./email-templates/participation-requested";
 import { pushPayload as userDirectMessagePushPayload } from "./email-templates/user-direct-message";
 import { sendPush } from "./push";
@@ -16,7 +17,7 @@ import { sendPush } from "./push";
 //   - userInvited: recipient has no account / subscription yet
 //   - passwordReset, verifyEmail: transactional — email only
 //   - bookingRequestReceived: customer-side autoreply, no user account
-//   - offerSent: customer has no user account / push subscription
+//   - offerSent, offerRevised: customer has no user account / push subscription
 //   - offerAcceptedAdmin: customer email-only (no user account)
 export type NotifiableTemplateKey =
   | "bookingAssigned"
@@ -24,6 +25,7 @@ export type NotifiableTemplateKey =
   | "bookingCancelled"
   | "bookingRequested"
   | "offerAccepted"
+  | "offerRejected"
   | "participationRequested"
   | "userDirectMessage";
 
@@ -50,6 +52,8 @@ function pushPayloadFor<K extends NotifiableTemplateKey>(
       );
     case "offerAccepted":
       return offerAcceptedPushPayload(params as ParamsFor<"offerAccepted">);
+    case "offerRejected":
+      return offerRejectedPushPayload(params as ParamsFor<"offerRejected">);
     case "participationRequested":
       return participationRequestedPushPayload(
         params as ParamsFor<"participationRequested">,

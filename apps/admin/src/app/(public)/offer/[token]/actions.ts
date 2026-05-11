@@ -10,6 +10,8 @@ import { env } from "@/lib/env";
 import { notifyAdmins } from "@/lib/notify";
 import { clientIpFromHeaders, consume, RATE_LIMITS } from "@/lib/rate-limit";
 
+export type ActionResult = { error: true; message: string } | { error: false };
+
 function formatChfTotal(total: number): string {
   return `CHF ${total.toLocaleString("en-CH")}.-`;
 }
@@ -118,6 +120,93 @@ export async function acceptOffer(
     totalFormatted: formatChfTotal(grandTotal),
   }).catch((err) => {
     console.error("[acceptOffer] notifyAdmins failed", err);
+  });
+
+  return { error: false };
+}
+
+// iter-28: customer declines the offer on the public offer page.
+// Rate-limited with the same offerAccept bucket (per-IP + per-token).
+export async function rejectOffer(
+  token: string,
+  reason?: string,
+): Promise<ActionResult> {
+  const requestHeaders = await headers();
+  const ip = clientIpFromHeaders(requestHeaders);
+  // Keyed by IP + token so a missing/unknown IP doesn't collapse every caller
+  // into one bucket — consistent with acceptOffer.
+  const rl = consume(`offerAccept:${ip}:${token}`, RATE_LIMITS.offerAccept);
+  if (!rl.allowed) {
+    return {
+      error: true,
+      message: "Too many requests. Please try again later.",
+    };
+  }
+
+  const bookingRows = await db
+    .select()
+    .from(bookings)
+    .where(eq(bookings.offerToken, token))
+    .limit(1);
+  const booking = bookingRows[0];
+  if (!booking) {
+    return { error: true, message: "Offer not found." };
+  }
+  if (booking.status !== "offered") {
+    return {
+      error: true,
+      message: "This offer is not in a declinable state.",
+    };
+  }
+
+  const now = new Date();
+  // Guard the UPDATE on status + offerVersion to detect lost races.
+  const updated = await db
+    .update(bookings)
+    .set({ status: "rejected", updatedAt: now })
+    .where(
+      and(
+        eq(bookings.id, booking.id),
+        eq(bookings.status, "offered"),
+        eq(bookings.offerVersion, booking.offerVersion),
+      ),
+    )
+    .returning({ id: bookings.id });
+
+  if (updated.length === 0) {
+    // Lost the race — re-read to determine the right response.
+    const after = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    if (after[0]?.status === "rejected") return { error: false };
+    return {
+      error: true,
+      message: "This offer is not in a declinable state.",
+    };
+  }
+
+  await recordAudit({
+    actorUserId: "customer",
+    action: "booking.offer.rejected",
+    targetType: "booking",
+    targetId: booking.id,
+    metadata: {
+      offerVersion: booking.offerVersion,
+      via: "customer",
+      reason: reason ?? null,
+    },
+  });
+
+  // Best-effort admin notification.
+  notifyAdmins("offerRejected", {
+    bookingId: booking.id,
+    customerName: booking.customerName ?? "Customer",
+    bookingUrl: `${env.betterAuthUrl}/bookings/${booking.id}`,
+    reason: reason ?? undefined,
+  }).catch((err) => {
+    console.error("[rejectOffer] notifyAdmins failed", err);
   });
 
   return { error: false };

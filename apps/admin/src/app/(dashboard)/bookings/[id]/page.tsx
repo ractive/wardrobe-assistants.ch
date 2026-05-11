@@ -69,12 +69,17 @@ export default async function BookingDetailPage({
 
   const candidates = canAssign ? await listAssignableUsers() : [];
 
-  // Services for line items editor — only loaded when admin has BOOKING_CREATE
-  // and status='created'. Composed here (server component) to avoid the
-  // cross-feature import restriction that blocks features/bookings from
-  // importing features/services directly.
+  // Services for line items editor — loaded when admin has BOOKING_CREATE and
+  // the booking is in an editable state (created, offered, accepted).
+  // Composed here (server component) to avoid the cross-feature import
+  // restriction that blocks features/bookings from importing features/services.
+  const isLineItemsEditable =
+    canCreate &&
+    (booking.status === "created" ||
+      booking.status === "offered" ||
+      booking.status === "accepted");
   let services: ServiceOption[] = [];
-  if (canCreate && booking.status === "created") {
+  if (isLineItemsEditable) {
     try {
       const rows = await listServices({ includeArchived: false });
       services = rows.map((r) => ({
@@ -91,6 +96,9 @@ export default async function BookingDetailPage({
       console.warn("Failed to load services for line items editor:", err);
     }
   }
+
+  // Squad members who will be notified on cancellation (assigned + confirmed).
+  const squadMemberNames = booking.assignees.map((a) => a.displayName);
 
   const isPublicRequest = booking.createdBy === null;
 
@@ -146,6 +154,7 @@ export default async function BookingDetailPage({
             }
             return sum + s.unitPrice * s.quantity;
           }, 0)}
+          squadMemberNames={squadMemberNames}
         />
       )}
 
@@ -248,12 +257,19 @@ export default async function BookingDetailPage({
       ) : null}
 
       {/* Line items */}
-      {(canCreate && booking.status === "created") ||
-      booking.selections.length > 0 ? (
+      {isLineItemsEditable || booking.selections.length > 0 ? (
         <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
           <h2 className="font-medium text-sm">Line items</h2>
+          {isLineItemsEditable &&
+            (booking.status === "offered" || booking.status === "accepted") && (
+              <p className="mt-1 text-[var(--muted-foreground)] text-xs">
+                Editing line items here doesn't affect the customer-facing offer
+                until you click{" "}
+                <span className="font-medium">Send revised offer</span>.
+              </p>
+            )}
           <div className="mt-3">
-            {canCreate && booking.status === "created" ? (
+            {isLineItemsEditable ? (
               <LineItemsEditor
                 bookingId={booking.id}
                 initialSelections={booking.selections}
