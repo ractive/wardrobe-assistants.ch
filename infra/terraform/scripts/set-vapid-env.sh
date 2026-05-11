@@ -37,7 +37,11 @@ PRIV=$(jq -r .privateKey "$KEYS_FILE")
 [[ "$PUB"  =~ ^[A-Za-z0-9_-]{80,90}$ ]] || { echo "ERR: public key wrong shape"; exit 1; }
 [[ "$PRIV" =~ ^[A-Za-z0-9_-]{40,46}$ ]] || { echo "ERR: private key wrong shape"; exit 1; }
 
-echo "Pushing to admin app env (redacted)…"
+echo "Pushing runtime env to admin app (redacted)…"
+# NEXT_PUBLIC_VAPID_PUBLIC_KEY is also written here as a courtesy/audit
+# trail, but it has NO effect at runtime — Next.js inlined the value at
+# `next build` time. The authoritative copy of the public key is the
+# GitHub Actions variable VAPID_PUBLIC_KEY, set below.
 hoppy --quiet -y container template env \
   --app-id "$APP_ID" \
   --container-id "$CONTAINER_ID" \
@@ -45,9 +49,17 @@ hoppy --quiet -y container template env \
   --add "VAPID_PRIVATE_KEY=$PRIV" \
   --add "VAPID_SUBJECT=$VAPID_SUBJECT"
 
-echo "Redeploying…"
+echo "Setting build-time public key as GitHub Actions variable…"
+gh variable set VAPID_PUBLIC_KEY \
+  -R ractive/wardrobe-assistants.ch -b "$PUB"
+
+echo "Redeploying current container image (private key + subject pick up immediately)…"
 hoppy container app deploy --id "$APP_ID"
 
 echo ""
 echo "Done. Keypair backed up at: $KEYS_FILE"
 echo "Move it to your password manager and delete the local copy."
+echo ""
+echo "NOTE: For NEXT_PUBLIC_VAPID_PUBLIC_KEY to reach the browser bundle,"
+echo "the admin Docker image must be rebuilt. Push any commit to main"
+echo "(or re-run the deploy workflow manually) to trigger a rebuild."

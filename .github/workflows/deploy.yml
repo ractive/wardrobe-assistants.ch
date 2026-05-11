@@ -136,6 +136,11 @@ jobs:
           context: .
           file: apps/admin/Dockerfile
           push: true
+          # NEXT_PUBLIC_VAPID_PUBLIC_KEY must be present at `next build` time
+          # because Next inlines NEXT_PUBLIC_* into the client bundle.
+          # Public half of the VAPID keypair — safe to bake into the image.
+          build-args: |
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.VAPID_PUBLIC_KEY }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:latest
