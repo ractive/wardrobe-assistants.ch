@@ -4,11 +4,11 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { CtaButton } from "./_cta";
 
 // iter-26: notification to admins when a new public booking request lands.
 // Push body deliberately compact: "<customer> · <date> · <city>".
@@ -88,17 +88,9 @@ export default function BookingRequested(p: BookingRequestedParams) {
               <strong>Comment:</strong> {p.comment}
             </Text>
           ) : null}
-          <Link
-            href={p.bookingUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
+          <CtaButton href={p.bookingUrl}>
             Open booking in Wardrobe Assistants
-          </Link>
+          </CtaButton>
         </Container>
       </Body>
     </Html>

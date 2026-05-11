@@ -4,11 +4,11 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { CtaButton } from "./_cta";
 
 export type AssignmentConfirmedParams = {
   recipientName: string;
@@ -57,17 +57,7 @@ export default function AssignmentConfirmed(p: AssignmentConfirmedParams) {
             <br />
             <strong>Where:</strong> {p.bookingVenue}
           </Text>
-          <Link
-            href={p.bookingUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
-            Open booking
-          </Link>
+          <CtaButton href={p.bookingUrl}>Open booking</CtaButton>
         </Container>
       </Body>
     </Html>

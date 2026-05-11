@@ -4,10 +4,10 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
+import { CtaButton } from "./_cta";
 
 export type VerifyEmailParams = {
   verifyUrl: string;
@@ -33,17 +33,7 @@ export default function VerifyEmail(p: VerifyEmailParams) {
             Click the link below to verify your Wardrobe Assistants admin email
             address.
           </Text>
-          <Link
-            href={p.verifyUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
-            Verify email address
-          </Link>
+          <CtaButton href={p.verifyUrl}>Verify email address</CtaButton>
           <Text
             style={{ color: "#999999", fontSize: "12px", marginTop: "24px" }}
           >

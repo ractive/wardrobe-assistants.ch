@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -8,6 +7,7 @@ import {
   Preview,
   Text,
 } from "@react-email/components";
+import { CtaButton } from "./_cta";
 
 // iter-27: sent to the customer when an admin sends them an offer.
 // Email-only — customer has no user account and no push subscription.
@@ -63,23 +63,9 @@ export default function OfferSent(p: OfferSentParams) {
               </>
             ) : null}
           </Text>
-          <Button
-            href={p.offerUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "24px",
-              marginBottom: "24px",
-              padding: "12px 24px",
-              backgroundColor: brand,
-              color: "#ffffff",
-              borderRadius: "6px",
-              fontSize: "15px",
-              fontWeight: "600",
-              textDecoration: "none",
-            }}
-          >
+          <CtaButton href={p.offerUrl} variant="primary">
             Review your offer
-          </Button>
+          </CtaButton>
           <Text style={{ color: "#333333", fontSize: "15px" }}>
             If you have any questions before accepting, you can reply to this
             email or use the "I have questions" link on the offer page.

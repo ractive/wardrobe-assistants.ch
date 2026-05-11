@@ -4,11 +4,11 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
+import { CtaButton } from "./_cta";
 
 export type AssignmentWithdrawnParams = {
   recipientName: string;
@@ -62,17 +62,7 @@ export default function AssignmentWithdrawn(p: AssignmentWithdrawnParams) {
           <Text style={{ color: "#555555", fontSize: "14px" }}>
             <strong>Reason:</strong> {p.reason ?? "(no reason given)"}
           </Text>
-          <Link
-            href={p.bookingUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
-            Reassign in admin
-          </Link>
+          <CtaButton href={p.bookingUrl}>Reassign in admin</CtaButton>
         </Container>
       </Body>
     </Html>

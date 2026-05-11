@@ -4,10 +4,10 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
+import { CtaButton } from "./_cta";
 
 export type ParticipationRequestedParams = {
   actorName: string;
@@ -54,17 +54,7 @@ export default function ParticipationRequested(
           <Text style={{ color: "#555555", fontSize: "14px" }}>
             Review and approve or reject the request in the admin panel.
           </Text>
-          <Link
-            href={p.reviewUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
-            Review request
-          </Link>
+          <CtaButton href={p.reviewUrl}>Review request</CtaButton>
         </Container>
       </Body>
     </Html>

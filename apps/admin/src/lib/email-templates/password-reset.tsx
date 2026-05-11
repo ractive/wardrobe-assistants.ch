@@ -4,10 +4,10 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from "@react-email/components";
+import { CtaButton } from "./_cta";
 
 export type PasswordResetParams = {
   resetUrl: string;
@@ -33,17 +33,7 @@ export default function PasswordReset(p: PasswordResetParams) {
             Click the link below to reset your Wardrobe Assistants admin
             password. The link expires after a short period.
           </Text>
-          <Link
-            href={p.resetUrl}
-            style={{
-              display: "inline-block",
-              marginTop: "16px",
-              color: brand,
-              fontSize: "14px",
-            }}
-          >
-            Reset password
-          </Link>
+          <CtaButton href={p.resetUrl}>Reset password</CtaButton>
           <Text
             style={{ color: "#999999", fontSize: "12px", marginTop: "24px" }}
           >
