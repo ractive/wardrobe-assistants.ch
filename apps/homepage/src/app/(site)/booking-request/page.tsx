@@ -35,8 +35,14 @@ const ADMIN_ORIGIN =
   "https://admin.wardrobe-assistants.ch";
 
 async function fetchServices(): Promise<ServiceEntry[]> {
+  // 8s ceiling so an unresponsive admin never stalls the static build.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch(`${ADMIN_ORIGIN}/api/public/services`);
+    const res = await fetch(`${ADMIN_ORIGIN}/api/public/services`, {
+      signal: controller.signal,
+      cache: "no-store",
+    });
     if (!res.ok) {
       console.error(
         "[booking-request] services fetch failed",
@@ -46,13 +52,15 @@ async function fetchServices(): Promise<ServiceEntry[]> {
       return [];
     }
     const body = (await res.json()) as { services?: ServiceEntry[] };
-    return body.services ?? [];
+    return Array.isArray(body.services) ? body.services : [];
   } catch (err) {
-    // Build-time fetch failures (e.g. admin not yet deployed) should not
-    // break the static build. The form renders with an empty catalog +
-    // email fallback message.
+    // Build-time fetch failures (e.g. admin not yet deployed, or timeout)
+    // should not break the static build. The form renders with an empty
+    // catalog + email fallback message.
     console.error("[booking-request] services fetch threw", err);
     return [];
+  } finally {
+    clearTimeout(timer);
   }
 }
 

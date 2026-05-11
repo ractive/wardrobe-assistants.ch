@@ -55,20 +55,28 @@ export async function GET(req: Request): Promise<Response> {
     });
   }
 
-  const rows = await db
-    .select({
-      id: services.id,
-      name: services.name,
-      description: services.description,
-      priceType: services.priceType,
-      price: services.price,
-    })
-    .from(services)
-    .where(eq(services.archived, false))
-    .orderBy(asc(services.name));
+  try {
+    const rows = await db
+      .select({
+        id: services.id,
+        name: services.name,
+        description: services.description,
+        priceType: services.priceType,
+        price: services.price,
+      })
+      .from(services)
+      .where(eq(services.archived, false))
+      .orderBy(asc(services.name));
 
-  return new Response(JSON.stringify({ services: rows }), {
-    status: 200,
-    headers: baseHeaders,
-  });
+    return new Response(JSON.stringify({ services: rows }), {
+      status: 200,
+      headers: baseHeaders,
+    });
+  } catch (err) {
+    console.error("[public/services] db query failed", err);
+    return new Response(JSON.stringify({ error: "internal_error" }), {
+      status: 500,
+      headers: baseHeaders,
+    });
+  }
 }

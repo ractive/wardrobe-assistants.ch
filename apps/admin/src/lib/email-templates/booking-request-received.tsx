@@ -12,7 +12,6 @@ import {
 // Email only — customers don't have user accounts, so no push payload.
 export type BookingRequestReceivedParams = {
   customerName: string;
-  bookingId: string;
   /** Short, pre-formatted human-readable summary lines. */
   summary: string[];
 };

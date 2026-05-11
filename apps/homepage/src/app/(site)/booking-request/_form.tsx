@@ -292,7 +292,11 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
             required
             onChange={(e) => {
               const n = Number(e.target.value);
-              setDurationHours(Number.isFinite(n) ? n : 5);
+              if (!Number.isFinite(n)) {
+                setDurationHours(5);
+                return;
+              }
+              setDurationHours(Math.max(5, Math.min(24, Math.floor(n))));
             }}
             className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-secondary text-[15px]"
           />

@@ -194,10 +194,13 @@ export default function DatenschutzPage() {
             records: 10 years under Art. 958f CO).
           </li>
           <li>
-            Booking-request submissions (customer name, email, phone, venue and
-            timing details) are retained indefinitely for the same Swiss 10-year
-            invoice-retention obligation; deletion before that window elapses
-            can be requested at any time by emailing{" "}
+            Booking-request submissions (customer name, email, phone, services
+            requested, venue and timing details) are kept only as long as needed
+            to handle the request. If a booking follows, the related records are
+            retained for the duration of the engagement plus the Swiss 10-year
+            commercial-records retention period (Art. 958f CO). Submissions that
+            do not lead to an engagement are deleted within 12 months. You can
+            ask for earlier deletion at any time by emailing{" "}
             <a href={`mailto:${operator.email}`} className={linkClass}>
               {operator.email}
             </a>

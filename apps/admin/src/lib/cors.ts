@@ -13,7 +13,7 @@ export function isAllowedOrigin(origin: string | null): boolean {
   if (PROD_ORIGINS.includes(origin)) return true;
   if (
     process.env.NODE_ENV !== "production" &&
-    /^http:\/\/localhost(:\d+)?$/.test(origin)
+    /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)
   ) {
     return true;
   }

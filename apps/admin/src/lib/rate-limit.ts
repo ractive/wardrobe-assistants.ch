@@ -134,14 +134,20 @@ export function retryAfterSeconds(result: RateLimitResult): number {
 }
 
 // Best-effort client-IP extraction from request headers. The bunny.net
-// edge sets `x-forwarded-for`; we trust the leftmost entry. Falls back
-// to a fixed sentinel so a missing header does not collapse all callers
-// into one bucket.
+// edge appends to `x-forwarded-for` rather than replacing it, so the IP we
+// can actually trust is the *rightmost* entry (the one bunny saw). The
+// leftmost is whatever the client claimed and is trivially spoofable.
+// Falls back to `x-real-ip`, then to a fixed sentinel so a missing header
+// does not collapse all callers into one bucket.
 export function clientIpFromHeaders(headers: Headers): string {
   const xff = headers.get("x-forwarded-for");
   if (xff) {
-    const first = xff.split(",")[0]?.trim();
-    if (first) return first;
+    const parts = xff
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return last;
   }
   const real = headers.get("x-real-ip");
   if (real) return real.trim();

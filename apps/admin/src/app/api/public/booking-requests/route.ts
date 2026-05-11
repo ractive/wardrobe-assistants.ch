@@ -81,18 +81,17 @@ export async function OPTIONS(req: Request): Promise<Response> {
 export async function POST(req: Request): Promise<Response> {
   const origin = req.headers.get("origin");
   const responseHeaders = new Headers({ "Content-Type": "application/json" });
-  // For browser-originated POSTs we require Origin in the allowlist. Server-
-  // to-server tests can omit the header.
-  if (origin !== null) {
-    if (!isAllowedOrigin(origin)) {
-      return new Response(JSON.stringify({ error: "forbidden" }), {
-        status: 403,
-        headers: responseHeaders,
-      });
-    }
-    for (const [k, v] of corsHeaders(origin)) {
-      responseHeaders.set(k, v);
-    }
+  // POST is browser-only — modern browsers attach Origin on cross-origin
+  // POSTs. Reject anything without an allowlisted Origin so cURL/script
+  // callers can't bypass CORS by simply omitting the header.
+  if (!isAllowedOrigin(origin)) {
+    return new Response(JSON.stringify({ error: "forbidden" }), {
+      status: 403,
+      headers: responseHeaders,
+    });
+  }
+  for (const [k, v] of corsHeaders(origin)) {
+    responseHeaders.set(k, v);
   }
 
   // 1. Parse + validate body.
@@ -247,7 +246,6 @@ export async function POST(req: Request): Promise<Response> {
 
   sendTemplated("bookingRequestReceived", normalizedEmail, {
     customerName: payload.customerName,
-    bookingId,
     summary,
   }).catch((err) => {
     console.error("[public/booking-requests] autoreply failed", err);
