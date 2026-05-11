@@ -133,6 +133,8 @@ The `/booking-request` page is currently reachable only via direct URL or from `
 - [x] `npm run format` clean; `npm run verify` green.
 - [ ] Manual smoke on a preview deploy: visit homepage → click hero CTA → land on `/booking-request` → catalog renders → fill form with invalid email → submit → email field shows error → fix → submit → success state with confirmation copy → admin push + email arrive → admin opens new booking from `/bookings?status=new-requests`.
 
+> Note (post-merge): the three unchecked items above are post-deployment verifications (curl against prod admin, post-build catalog inspection, manual smoke on preview). The code change that unblocks them — `PUBLIC_PATH_RE` extension in `apps/admin/src/proxy.ts` plus unit + smoke coverage — has landed and is asserted by `proxy.test.ts`. The boxes will tick once iter-31 deploys.
+
 ## Heads-up for follow-ups
 
 1. **Build-time fetch is still fragile.** `fetchServices` in `page.tsx` falls back to an empty array on any failure (network, timeout, 5xx). With §1 the auth issue goes away, but the homepage build still depends on the admin app being reachable at build time. If the admin is mid-deploy when the homepage rebuilds, the catalog snapshot could land empty. A future iteration could: (a) cache the last-known-good snapshot in the homepage repo, (b) fail the homepage build instead of silently falling back, or (c) refetch on the client after hydration. For v1, the current fallback + the bottom-of-services paragraph mentioning email is acceptable.
