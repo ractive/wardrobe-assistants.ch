@@ -3,6 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { BookingDetail } from "../schema";
 import { EditBookingDialog } from "./BookingDialog";
 import { DeleteBookingConfirm } from "./DeleteBookingConfirm";
@@ -22,11 +28,46 @@ export function BookingDetailActions({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
 
+  // Terminal statuses are guarded server-side in updateBooking — disable
+  // the trigger here so admins don't open a dialog that can't submit.
+  // Every field present in the form is also rendered on the detail page,
+  // so disabling Edit doesn't hide any information.
+  const isClosed =
+    booking.status === "rejected" || booking.status === "cancelled";
+
+  const editButton = (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => setEditOpen(true)}
+      disabled={isClosed}
+      aria-disabled={isClosed}
+    >
+      Edit
+    </Button>
+  );
+
   return (
     <div className="flex flex-wrap gap-2">
-      <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
-        Edit
-      </Button>
+      {isClosed ? (
+        <TooltipProvider>
+          <Tooltip>
+            {/* Wrap in a span so the tooltip has a hoverable target even
+                when the underlying <button> is disabled (browsers swallow
+                pointer events on disabled buttons). */}
+            <TooltipTrigger asChild>
+              <span>{editButton}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {booking.status === "cancelled"
+                ? "Cancelled bookings can't be edited."
+                : "Rejected bookings can't be edited."}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        editButton
+      )}
       {canMessage ? (
         <Button
           type="button"
