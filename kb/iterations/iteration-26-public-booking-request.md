@@ -50,7 +50,7 @@ Fields (all required unless noted):
 
 UI:
 
-- Service catalog rendered from a build-time fetch of `services` (call-out path: admin app exposes a public `GET /api/public/services` returning `id, name, description, priceType, unitPriceCents` for non-archived rows; the homepage fetches at request time via the static export's data-fetching path — concretely a server-component fetch with `revalidate` per Next.js static-export semantics). Verify the Next.js 16 static-export contract in `node_modules/next/dist/docs/` before implementing.
+- Service catalog rendered from a build-time fetch of `services` (call-out path: admin app exposes a public `GET /api/public/services` returning `id, name, description, priceType, price` for non-archived rows (`price` is a whole-CHF integer matching `services.price`; no centimes); the homepage fetches at request time via the static export's data-fetching path — concretely a server-component fetch with `revalidate` per Next.js static-export semantics). Verify the Next.js 16 static-export contract in `node_modules/next/dist/docs/` before implementing.
 - For each service row in the catalog: quantity input (label varies by `priceType` — "Number of items / people" for both; hours are derived server-side from `durationHours` at snapshot time).
 - Static notice block above submit: "Breaks and dinner breaks are coordinated based on the duration of duty. Minimum time of duty is 5 hours."
 - Dynamic notice: when `venueCity` is non-empty and does not match Zurich (normalize: lowercase + strip diacritics), show the call-out-fee notice.
@@ -82,7 +82,7 @@ Narrow targeted edit; do not rewrite the page.
 
 ### 4. Admin — `GET /api/public/services`
 
-Public, unauthenticated, CORS-allowed for the homepage origins. Returns `{ id, name, description, priceType, unitPriceCents }` for non-archived services. Rate limit: 60/min/IP via `lib/rate-limit.ts`. Smoke-tested.
+Public, unauthenticated, CORS-allowed for the homepage origins. Returns `{ id, name, description, priceType, price }` for non-archived services (`price` is a whole-CHF integer matching `services.price`; no centimes). Rate limit: 60/min/IP via `lib/rate-limit.ts`. Smoke-tested.
 
 ### 5. Admin — `POST /api/public/booking-requests`
 
