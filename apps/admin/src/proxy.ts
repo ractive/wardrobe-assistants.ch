@@ -29,8 +29,12 @@ const SESSION_COOKIE_NAMES = [
 // Paths that don't need an auth cookie. Negative-lookahead boundary
 // `(?:$|[/?])` prevents prefix-bypass via paths like `/login-evil` or
 // `/set-password-anything` slipping through unauthenticated.
+// iter-31: added `api/public` so the customer-facing booking-request endpoints
+// (`/api/public/services`, `/api/public/booking-requests`) are not redirected
+// to /login. The boundary anchor `(?:$|[/?])` ensures `/api/publicly-evil`
+// cannot slip through.
 const PUBLIC_PATH_RE =
-  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth)/;
+  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth|api\/public(?:$|[/?]))/;
 
 export type CspOptions = {
   nonce: string;

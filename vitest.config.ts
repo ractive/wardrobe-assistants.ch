@@ -5,6 +5,9 @@ import { defineConfig } from "vitest/config";
 // Vitest workspace config. iter-7a added apps/homepage; iter-7b adds
 // apps/admin (UI + middleware + scripts) and packages/db (schema/migrations).
 const adminSrc = fileURLToPath(new URL("./apps/admin/src", import.meta.url));
+const homepageSrc = fileURLToPath(
+  new URL("./apps/homepage/src", import.meta.url),
+);
 
 export default defineConfig({
   plugins: [react()],
@@ -13,6 +16,7 @@ export default defineConfig({
     projects: [
       {
         extends: true,
+        resolve: { alias: { "@": homepageSrc } },
         test: {
           name: "homepage",
           environment: "happy-dom",

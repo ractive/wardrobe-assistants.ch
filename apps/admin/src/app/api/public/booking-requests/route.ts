@@ -18,6 +18,7 @@ import {
   bookings,
   services,
 } from "@wardrobe-assistants/db/schema";
+import { bookingRequestInputSchema } from "@wardrobe-assistants/shared/booking-request-schema";
 import { format } from "date-fns";
 import { inArray } from "drizzle-orm";
 import { ulid } from "ulid";
@@ -37,29 +38,15 @@ import {
 const TOKEN = "wa-booking-v1";
 const MIN_FORM_AGE_MS = 2000;
 
-const payloadSchema = z.object({
-  customerName: z.string().trim().min(1).max(200),
-  customerEmail: z.string().trim().email().max(200),
-  customerPhone: z.string().trim().min(1).max(50),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  durationHours: z.number().int().min(5).max(24),
-  venueName: z.string().trim().min(1).max(200),
-  venueCity: z.string().trim().min(1).max(200),
-  serviceSelections: z
-    .array(
-      z.object({
-        serviceId: z.string().min(1).max(64),
-        quantity: z.number().int().positive().max(10_000),
-      }),
-    )
-    .min(1)
-    .max(50),
-  comment: z.string().max(10_000).optional(),
-  formLoadedAt: z.number().int().positive(),
-  honeypot: z.string(),
-  token: z.string(),
-});
+// Extend the shared customer-input schema with server-only spam-defense fields.
+// These are never sent to the client and must not appear in the shared schema.
+const payloadSchema = bookingRequestInputSchema.and(
+  z.object({
+    formLoadedAt: z.number().int().positive(),
+    honeypot: z.string(),
+    token: z.string(),
+  }),
+);
 
 type Payload = z.infer<typeof payloadSchema>;
 

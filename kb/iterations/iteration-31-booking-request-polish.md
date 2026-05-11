@@ -2,7 +2,7 @@
 title: Iteration 31 — Booking-request page polish + proxy fix
 type: iteration
 order: 32
-status: planned
+status: implemented
 ---
 
 # Iteration 31 — Booking-request page polish + proxy fix
@@ -119,18 +119,18 @@ The `/booking-request` page is currently reachable only via direct URL or from `
 
 - [ ] `curl -sS -o /dev/null -w "%{http_code}\n" https://admin.wardrobe-assistants.ch/api/public/services` returns `200` (not `307`). Same for `POST /api/public/booking-requests` with a valid payload.
 - [ ] The next homepage build pulls a non-empty service catalog (verified by `grep -c '"id"' apps/homepage/.next/.../<built-page>` in CI, or by visual inspection on preview).
-- [ ] `apps/homepage/src/app/(site)/booking-request/_form.tsx` uses `react-hook-form` + `zodResolver(sharedBookingRequestSchema)`.
-- [ ] Per-field validation errors render on submit; first invalid field is focused.
-- [ ] Duration input accepts empty intermediate state; clear-and-retype works.
-- [ ] Customer can submit without any service selection when the "Anything else?" field is non-empty.
-- [ ] Customer cannot submit with neither service selections nor a comment — schema refine fires with the correct message.
-- [ ] Form fits within `max-w-[680px]`; email/phone, date/time, and venue/city pair side-by-side at `sm:` breakpoint; everything stacks on mobile.
-- [ ] Phone field accepts `+41 79 123 45 67`, `079 123 45 67`, `+41-44-555-1234`, `044/555 12 34`; rejects `abc`, `555-SHOE`, `1`.
-- [ ] Email field rejects malformed strings with a per-field error.
-- [ ] 5h minimum is enforced at the schema level and surfaced as a helper hint under the duration label.
-- [ ] Nav has a "Request booking" link; Hero CTA links to `/booking-request/`.
-- [ ] Vitest-axe smoke covers the form in its empty, error, and success states.
-- [ ] `npm run format` clean; `npm run verify` green.
+- [x] `apps/homepage/src/app/(site)/booking-request/_form.tsx` uses `react-hook-form` + `zodResolver(sharedBookingRequestSchema)`.
+- [x] Per-field validation errors render on submit; first invalid field is focused.
+- [x] Duration input accepts empty intermediate state; clear-and-retype works.
+- [x] Customer can submit without any service selection when the "Anything else?" field is non-empty.
+- [x] Customer cannot submit with neither service selections nor a comment — schema refine fires with the correct message.
+- [x] Form fits within `max-w-[680px]`; email/phone, date/time, and venue/city pair side-by-side at `sm:` breakpoint; everything stacks on mobile.
+- [x] Phone field accepts `+41 79 123 45 67`, `079 123 45 67`, `+41-44-555-1234`, `044/555 12 34`; rejects `abc`, `555-SHOE`, `1`.
+- [x] Email field rejects malformed strings with a per-field error.
+- [x] 5h minimum is enforced at the schema level and surfaced as a helper hint under the duration label.
+- [x] Nav has a "Request booking" link; Hero CTA links to `/booking-request/`.
+- [x] Vitest-axe smoke covers the form in its empty, error, and success states.
+- [x] `npm run format` clean; `npm run verify` green.
 - [ ] Manual smoke on a preview deploy: visit homepage → click hero CTA → land on `/booking-request` → catalog renders → fill form with invalid email → submit → email field shows error → fix → submit → success state with confirmation copy → admin push + email arrive → admin opens new booking from `/bookings?status=new-requests`.
 
 ## Heads-up for follow-ups

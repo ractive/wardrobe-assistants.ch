@@ -6,8 +6,18 @@
 //   - time-check: server rejects submissions made within 2s of mount
 //   - JS-injected token: hidden input populated client-side on mount
 // Submission posts JSON cross-origin to the admin app.
+//
+// iter-31: converted to react-hook-form + zodResolver against the shared
+// bookingRequestInputSchema. Per-field validation errors, layout polish,
+// duration-input bug fix, empty-catalog-allow via schema refine.
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  type BookingRequestInput,
+  bookingRequestInputSchema,
+} from "@wardrobe-assistants/shared/booking-request-schema";
+import { useEffect, useId, useState } from "react";
+import { useForm } from "react-hook-form";
 import { contactEmail } from "@/app/site-config";
 
 export type ServiceEntry = {
@@ -43,24 +53,27 @@ function formatPrice(svc: ServiceEntry): string {
 }
 
 export function BookingRequestForm({ services, submitUrl }: Props) {
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [durationHours, setDurationHours] = useState<number>(5);
-  const [venueName, setVenueName] = useState("");
-  const [venueCity, setVenueCity] = useState("");
-  const [comment, setComment] = useState("");
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-
-  // Spam-defense state captured on mount.
+  // Spam-defense state captured on mount — not user-visible fields, stay as
+  // plain useState so they're outside the RHF lifecycle.
   const [formLoadedAt, setFormLoadedAt] = useState<number>(0);
   const [token, setToken] = useState<string>("");
   const [honeypot, setHoneypot] = useState<string>("");
 
+  // Service quantities: Record<serviceId, quantity> managed as a single field.
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
   const [status, setStatus] = useState<Status>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [serverErrorMessage, setServerErrorMessage] = useState<string | null>(
+    null,
+  );
+
+  // Capture the submission email for the success state copy.
+  const [submittedEmail, setSubmittedEmail] = useState<string>("");
+  const [submittedDate, setSubmittedDate] = useState<string>("");
+  const [submittedTime, setSubmittedTime] = useState<string>("");
+  const [submittedDuration, setSubmittedDuration] = useState<number>(5);
+  const [submittedVenueName, setSubmittedVenueName] = useState<string>("");
+  const [submittedVenueCity, setSubmittedVenueCity] = useState<string>("");
 
   const formId = useId();
 
@@ -69,45 +82,82 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
     setToken(TOKEN_VALUE);
   }, []);
 
-  const selectedSelections = useMemo(
-    () =>
-      services
-        .map((s) => ({ serviceId: s.id, quantity: quantities[s.id] ?? 0 }))
-        .filter((s) => s.quantity > 0),
-    [services, quantities],
-  );
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setError,
+    setFocus,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<BookingRequestInput>({
+    resolver: zodResolver(bookingRequestInputSchema),
+    defaultValues: {
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      date: "",
+      startTime: "",
+      durationHours: 5,
+      venueName: "",
+      venueCity: "",
+      serviceSelections: [],
+      comment: "",
+    },
+  });
 
+  const venueCity = watch("venueCity");
   const showCallOutNotice =
     venueCity.trim() !== "" && normalize(venueCity) !== "zurich";
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (status === "submitting") return;
-    if (selectedSelections.length === 0) {
-      setErrorMessage(
-        "Please choose at least one service (set a quantity above zero).",
-      );
-      setStatus("error");
+  async function onValidSubmit(data: BookingRequestInput) {
+    setStatus("submitting");
+    setServerErrorMessage(null);
+
+    const selectedSelections = services
+      .map((s) => ({ serviceId: s.id, quantity: quantities[s.id] ?? 0 }))
+      .filter((s) => s.quantity > 0);
+
+    // Inject the computed serviceSelections into the validated data. RHF
+    // doesn't track the quantity inputs directly — the schema refine validates
+    // them via the serviceSelections field that we populate here.
+    const payload: BookingRequestInput = {
+      ...data,
+      serviceSelections: selectedSelections,
+    };
+
+    // Re-run the refine check so if quantities are zero and comment is empty
+    // the error shows inline rather than going to the server.
+    const refineResult = bookingRequestInputSchema.safeParse(payload);
+    if (!refineResult.success) {
+      const fieldErrors = refineResult.error.flatten().fieldErrors;
+      const formErrors = refineResult.error.flatten().formErrors;
+      if (fieldErrors.serviceSelections?.[0]) {
+        setError("serviceSelections", {
+          message: fieldErrors.serviceSelections[0],
+        });
+      } else if (formErrors[0]) {
+        setError("serviceSelections", { message: formErrors[0] });
+      }
+      setStatus("idle");
+      setFocus("comment");
       return;
     }
-    setStatus("submitting");
-    setErrorMessage(null);
+
+    // Snapshot display values for the success state before resetting the form.
+    setSubmittedEmail(data.customerEmail);
+    setSubmittedDate(data.date);
+    setSubmittedTime(data.startTime);
+    setSubmittedDuration(data.durationHours);
+    setSubmittedVenueName(data.venueName);
+    setSubmittedVenueCity(data.venueCity);
 
     try {
       const res = await fetch(submitUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerName,
-          customerEmail,
-          customerPhone,
-          date,
-          startTime,
-          durationHours,
-          venueName,
-          venueCity,
-          comment: comment || undefined,
-          serviceSelections: selectedSelections,
+          ...payload,
           formLoadedAt,
           honeypot,
           token,
@@ -122,12 +172,12 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
         return;
       }
       setStatus("error");
-      setErrorMessage(
+      setServerErrorMessage(
         "We couldn't submit your request right now. Please try again or email us.",
       );
     } catch {
       setStatus("error");
-      setErrorMessage(
+      setServerErrorMessage(
         "We couldn't reach the server. Please try again or email us.",
       );
     }
@@ -136,7 +186,7 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
   if (status === "success") {
     return (
       <div
-        className="rounded-[16px] border border-[var(--border)] bg-[var(--accent)]/60 p-8"
+        className="max-w-[680px] rounded-[16px] border border-[var(--border)] bg-[var(--accent)]/60 p-8"
         role="status"
         aria-live="polite"
       >
@@ -145,33 +195,27 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
         </h2>
         <p className="mt-3 font-secondary text-[15px] leading-[1.65] text-[var(--muted-foreground)]">
           We've sent a confirmation email to{" "}
-          <strong className="text-[var(--foreground)]">{customerEmail}</strong>.
-          Someone from the team will be in touch with a tailored offer shortly.
+          <strong className="text-[var(--foreground)]">{submittedEmail}</strong>
+          . Someone from the team will be in touch with a tailored offer
+          shortly.
         </p>
         <dl className="mt-5 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 font-secondary text-[14px]">
           <dt className="text-[var(--muted-foreground)]">When</dt>
           <dd>
-            {date} at {startTime} ({durationHours}h)
+            {submittedDate} at {submittedTime} ({submittedDuration}h)
           </dd>
           <dt className="text-[var(--muted-foreground)]">Where</dt>
           <dd>
-            {venueName}, {venueCity}
+            {submittedVenueName}, {submittedVenueCity}
           </dd>
         </dl>
         <button
           type="button"
           onClick={() => {
-            setCustomerName("");
-            setCustomerEmail("");
-            setCustomerPhone("");
-            setDate("");
-            setStartTime("");
-            setDurationHours(5);
-            setVenueName("");
-            setVenueCity("");
-            setComment("");
+            reset();
             setQuantities({});
             setStatus("idle");
+            setServerErrorMessage(null);
           }}
           className="mt-6 inline-flex items-center justify-center rounded-[10px] border border-[var(--border)] px-4 py-2 font-primary text-[14px] text-[var(--foreground)] hover:bg-[var(--muted)]"
         >
@@ -183,9 +227,9 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onValidSubmit)}
       noValidate
-      className="flex flex-col gap-6"
+      className="flex max-w-[680px] flex-col gap-6"
       aria-describedby={`${formId}-help`}
     >
       <p
@@ -229,28 +273,29 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
         <Field
           label="Your name"
           id={`${formId}-customer-name`}
-          value={customerName}
-          onChange={setCustomerName}
-          required
           autoComplete="name"
+          error={errors.customerName?.message}
+          {...register("customerName")}
         />
-        <Field
-          label="Email"
-          id={`${formId}-customer-email`}
-          value={customerEmail}
-          onChange={setCustomerEmail}
-          required
-          type="email"
-          autoComplete="email"
-        />
-        <Field
-          label="Phone"
-          id={`${formId}-customer-phone`}
-          value={customerPhone}
-          onChange={setCustomerPhone}
-          required
-          autoComplete="tel"
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label="Email"
+            id={`${formId}-customer-email`}
+            type="email"
+            autoComplete="email"
+            error={errors.customerEmail?.message}
+            {...register("customerEmail")}
+          />
+          <Field
+            label="Phone"
+            id={`${formId}-customer-phone`}
+            type="tel"
+            autoComplete="tel"
+            placeholder="+41 79 123 45 67"
+            error={errors.customerPhone?.message}
+            {...register("customerPhone")}
+          />
+        </div>
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
@@ -261,18 +306,16 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
           <Field
             label="Date"
             id={`${formId}-date`}
-            value={date}
-            onChange={setDate}
-            required
             type="date"
+            error={errors.date?.message}
+            {...register("date")}
           />
           <Field
             label="Start time"
             id={`${formId}-start-time`}
-            value={startTime}
-            onChange={setStartTime}
-            required
             type="time"
+            error={errors.startTime?.message}
+            {...register("startTime")}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -282,39 +325,49 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
           >
             Duration (hours)
           </label>
+          <p className="font-secondary text-[13px] text-[var(--muted-foreground)]">
+            Minimum 5 hours.
+          </p>
           <input
             id={`${formId}-duration`}
             type="number"
             min={5}
             max={24}
             step={1}
-            value={durationHours}
-            required
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (!Number.isFinite(n)) {
-                setDurationHours(5);
-                return;
-              }
-              setDurationHours(Math.max(5, Math.min(24, Math.floor(n))));
-            }}
-            className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-secondary text-[15px]"
+            className="w-[12ch] rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-secondary text-[15px]"
+            aria-describedby={
+              errors.durationHours ? `${formId}-duration-error` : undefined
+            }
+            {...register("durationHours", {
+              valueAsNumber: true,
+              setValueAs: (v) =>
+                v === "" || v == null ? undefined : Number(v),
+            })}
+          />
+          {errors.durationHours && (
+            <p
+              id={`${formId}-duration-error`}
+              role="alert"
+              className="font-secondary text-[13px] text-[color:var(--destructive,red)]"
+            >
+              {errors.durationHours.message}
+            </p>
+          )}
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label="Venue name"
+            id={`${formId}-venue-name`}
+            error={errors.venueName?.message}
+            {...register("venueName")}
+          />
+          <Field
+            label="City"
+            id={`${formId}-venue-city`}
+            error={errors.venueCity?.message}
+            {...register("venueCity")}
           />
         </div>
-        <Field
-          label="Venue name"
-          id={`${formId}-venue-name`}
-          value={venueName}
-          onChange={setVenueName}
-          required
-        />
-        <Field
-          label="City"
-          id={`${formId}-venue-city`}
-          value={venueCity}
-          onChange={setVenueCity}
-          required
-        />
         {showCallOutNotice && (
           <p className="rounded-[10px] border border-[var(--border)] bg-[var(--accent)]/40 p-3 font-secondary text-[13px] leading-[1.55] text-[var(--muted-foreground)]">
             Locations outside Zurich incur a call-out fee, which will be
@@ -388,6 +441,14 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
             })}
           </ul>
         )}
+        {errors.serviceSelections && (
+          <p
+            role="alert"
+            className="font-secondary text-[13px] text-[color:var(--destructive,red)]"
+          >
+            {errors.serviceSelections.message}
+          </p>
+        )}
         <p className="rounded-[10px] border border-[var(--border)] bg-[var(--accent)]/40 p-3 font-secondary text-[13px] leading-[1.55] text-[var(--muted-foreground)]">
           Breaks and dinner breaks are coordinated based on the duration of
           duty. Minimum time of duty is 5 hours. Prices shown are guides — the
@@ -403,21 +464,36 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
           Anything else?{" "}
           <span className="text-[var(--muted-foreground)]">(optional)</span>
         </label>
+        <p className="font-secondary text-[13px] text-[var(--muted-foreground)]">
+          Tell us anything that doesn't fit above — call times, dress code,
+          parking, special requests.
+        </p>
         <textarea
           id={`${formId}-comment`}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
           rows={4}
           className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-secondary text-[15px]"
+          aria-describedby={
+            errors.comment ? `${formId}-comment-error` : undefined
+          }
+          {...register("comment")}
         />
+        {errors.comment && (
+          <p
+            id={`${formId}-comment-error`}
+            role="alert"
+            className="font-secondary text-[13px] text-[color:var(--destructive,red)]"
+          >
+            {errors.comment.message}
+          </p>
+        )}
       </fieldset>
 
-      {status === "error" && errorMessage && (
+      {status === "error" && serverErrorMessage && (
         <p
           role="alert"
           className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-3 font-secondary text-[14px] text-[var(--foreground)]"
         >
-          {errorMessage}
+          {serverErrorMessage}
         </p>
       )}
       {status === "rate_limited" && (
@@ -439,10 +515,10 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
       <div className="flex flex-col gap-3">
         <button
           type="submit"
-          disabled={status === "submitting"}
-          className="inline-flex items-center justify-center rounded-[10px] bg-[var(--foreground)] px-5 py-3 font-primary text-[15px] font-medium text-[var(--background)] disabled:opacity-60"
+          disabled={isSubmitting}
+          className="w-full inline-flex items-center justify-center rounded-[10px] bg-[var(--foreground)] px-5 py-3 font-primary text-[15px] font-medium text-[var(--background)] disabled:opacity-60 sm:w-auto"
         >
-          {status === "submitting" ? "Sending…" : "Request a booking"}
+          {isSubmitting ? "Sending…" : "Request a booking"}
         </button>
         <p className="font-secondary text-[13px] text-[var(--muted-foreground)]">
           Trouble submitting? Email{" "}
@@ -459,32 +535,36 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
   );
 }
 
-function Field(props: {
+type FieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   id: string;
-  value: string;
-  onChange: (v: string) => void;
-  required?: boolean;
-  type?: string;
-  autoComplete?: string;
-}) {
+  error?: string;
+};
+
+const Field = ({ label, id, error, ...inputProps }: FieldProps) => {
   return (
     <div className="flex flex-col gap-2">
       <label
-        htmlFor={props.id}
+        htmlFor={id}
         className="font-primary text-[14px] font-medium text-[var(--foreground)]"
       >
-        {props.label}
+        {label}
       </label>
       <input
-        id={props.id}
-        type={props.type ?? "text"}
-        value={props.value}
-        required={props.required}
-        autoComplete={props.autoComplete}
-        onChange={(e) => props.onChange(e.target.value)}
+        id={id}
+        aria-describedby={error ? `${id}-error` : undefined}
         className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-secondary text-[15px]"
+        {...inputProps}
       />
+      {error && (
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="font-secondary text-[13px] text-[color:var(--destructive,red)]"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
-}
+};
