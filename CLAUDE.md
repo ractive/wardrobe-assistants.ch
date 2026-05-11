@@ -25,7 +25,7 @@ Permissions live in `apps/admin/src/lib/permissions.ts` (catalog + `userHasPermi
 If you manage bunny.net services, use the "hoppy" CLI tool (hoppy --help) to discover and debug things.
 
 # Browser debugging
-Use ff-rdp (ff-rdp --help) to debug browser issues (instead of the chrome mcp server). Collect feedback (issues, quirks, improvement ideas) about ff-rdp in kb/tool-reports.
+Use ff-rdp (`ff-rdp --help`) for browser debugging *and* visual inspection (instead of the chrome MCP server). After any session that exercises ff-rdp non-trivially, append a dogfooding report at `../ff-rdp/kb/dogfooding/dogfooding-session-<NN>.md` (next sequential number — `ls ../ff-rdp/kb/dogfooding/` to find it). Record what worked, what didn't, bugs, quirks, and improvement ideas. Other tool feedback (hoppy, hyalo, bunnyway-actions) still goes in this repo's `kb/tool-reports/`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know

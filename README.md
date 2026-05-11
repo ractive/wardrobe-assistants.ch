@@ -178,6 +178,22 @@ TF_VAR_bunny_api_key="$BUNNY_API_KEY" tofu apply -lock=false
 
 If the state file is lost, every resource has documented import commands in [`kb/iac-runbook.md`](kb/iac-runbook.md) under "Re-importing resources." Database snapshots are bunny-built-in: `hoppy db versions` lists them, `hoppy db restore` rolls back.
 
+## Admin theme
+
+The admin app uses a shadcn-style design-token system anchored on a bordeaux primary (chosen in iter-32 via [TweakCN](https://tweakcn.com)). The full palette lives in `apps/admin/src/app/globals.css` as two blocks of OKLCH CSS variables: `:root` (light mode) and `.dark` (dark mode). Tokens follow the shadcn theming contract — see [`https://ui.shadcn.com/docs/theming`](https://ui.shadcn.com/docs/theming) for the catalog. The brand identity is pinned in [`kb/admin-architecture/design-system.md`](kb/admin-architecture/design-system.md).
+
+To change the theme:
+
+1. Open [TweakCN](https://tweakcn.com) and either start from the pinned bordeaux variant ([cmnjexv1n000304jse9nq2jra](https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra)) or pick a new starting preset.
+2. Dial in primary / radius / dark mode visually. Keep `--radius` at `0.625rem` so existing components stay consistent.
+3. Export both the `:root { … }` and `.dark { … }` blocks.
+4. Replace the two blocks in `apps/admin/src/app/globals.css`. Don't touch `@import "tailwindcss"`, `@custom-variant dark (&:is(.dark *));`, `@theme inline { … }`, or `@layer base { … }` — only the token values.
+5. **Update the email-template hex bridge**: `apps/admin/src/lib/email-templates/_tokens.ts` exports the same brand as sRGB hex (CSS variables don't work in email; OKLCH isn't safe either). Convert the new OKLCH primary, primary-foreground, muted-foreground, border, and background to hex and update `_tokens.ts`. This is a maintenance convention — no compile-time guarantee — so eyeball-match both sides.
+6. Run `npm run verify` and visually smoke-check every page in both light and dark mode (focus rings, destructive buttons, status badges, sidebar).
+7. Optionally update the PWA manifest's `theme_color` and `background_color` in `apps/admin/src/app/manifest.ts` to match the new brand.
+
+The list of CSS tokens (`--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--card`, `--popover`, `--sidebar*`, `--chart-1..5`) is the shadcn standard — don't add bespoke ones; if you need a new color slot, propose extending the design system in `design-system.md` first.
+
 ## Performance auditing
 
 Two-browser flow: Lighthouse for the Chromium numbers, `ff-rdp` for Firefox parity.

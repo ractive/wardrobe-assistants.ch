@@ -22,6 +22,7 @@ This file is a **living scope** for the iteration. The "Scope" section below is 
 - **Offer-token surfaces are admin-only.** "Copy offer link" + "View as customer" buttons appear on the booking detail page once an offer has been sent (i.e. `offerToken` is non-null). Gated on `BOOKING_OFFER_SEND` — same gate as "Send offer".
 - **Push-subscribe button fails loudly.** Silent `console.error` paths in `PushSubscribeToggle.tsx` are converted to toasts; the component renders `null` when `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is absent (no inert CTA).
 - **No customer-side copy changes beyond fixing the one stale "Event details" string** on `/offer/[token]` (carry-over from the [iter-24](iteration-24-rename-event-to-booking.md) rename).
+- **Manual smoke uses ff-rdp.** Browser inspection of the new dashboard cards, `/bookings` tabs, offer-URL controls, and push-toast paths goes through `ff-rdp` per the rule in `CLAUDE.md`. Append a dogfooding session report at `../ff-rdp/kb/dogfooding/dogfooding-session-<next>.md` recording what worked, what didn't, bugs, quirks, improvement ideas.
 
 ## Pre-flight
 
@@ -95,7 +96,42 @@ If §6 doesn't fit cleanly within the iteration's PR-review tolerance, slot it a
 
 Smaller polish items discovered after iter-29; tackle these inside iter-30 if they fit cleanly, otherwise spin off iter-30b. The user may add more here before launch.
 
-- [ ] **Lifecycle action buttons hide rather than disable** when the action isn't valid for the current status (e.g. "Send offer" on a `cancelled` booking). The iter-28 implementation already gates by permission; gating by status too keeps the action bar from looking broken on terminal-state bookings.
+- [ ] **Lifecycle action buttons hide rather than disable** when the action isn't valid for the current status (e.g. "Send offer" on a `cancelled` booking). The iter-28 implementation already gates by permission; gating by status too keeps the action bar from looking broken on terminal-state bookings. Apply uniformly to **every** action on `cancelled`/`rejected` bookings — Send offer, Accept, Reject, Cancel, Assign squad, Message assignees, Edit (already done) — so the action surface collapses cleanly. Delete stays available so admins can still purge bad rows.
+
+- [ ] **Future-only dates on Create**, but Edit allows past dates. In `BookingForm.tsx`'s date Calendar, pass `disabled={(d) => d < startOfToday()}` only when `mode === "create"`. Edit must remain unrestricted so admins can fix typos on past bookings.
+
+- [ ] **`assignmentInvite` email: Confirm + Decline side-by-side, not stacked.** Currently each button is wrapped in its own `<Text>`, forcing block layout. Use a 2-column `<Row>/<Column>` table (React Email's recommended cross-client pattern — flex/inline-block is unreliable in email clients). Decline stays `variant="secondary"`.
+
+- [ ] **"Add service" Popover on booking detail (paired with autosave below).** Replace the current "add row that preselects a service" pattern with an explicit **+ Add service** button that opens a Popover containing service `<Select>` + quantity + Add. Nothing mutates until the user clicks Add inside the popover. Discoverable; reversible.
+
+- [ ] **Autosave line-item edits; drop the "Save line items" button.** Once Add is a deliberate popover (above), per-row quantity and delete can autosave on blur with ~500ms debounce. Removes the "made changes but didn't save" failure mode. Server-side audit log captures every change. Ship these two items as a single PR — they're one design unit.
+
+- [ ] **Consolidate booking venue fields: keep `venue` + `city`, drop `venueName`.** iter-26 left both `venue` (free text) and `venueName`+`venueCity` (customer-form schema) on the same row. Migration: `UPDATE bookings SET venue = COALESCE(venue, venueName); ALTER TABLE bookings DROP COLUMN venueName`. Rename `venueCity` → `city`. Update all UI / detail page / forms / templates accordingly. Schema rename also touches `LineItemsEditor` callers and email-template params — sweep the codebase.
+
+- [ ] **Hard 5h minimum duration.** `durationHours: z.number().int().min(5)` in the booking input schema; `<Input type="number" min={5}>` in the form. Error copy explains the business rule.
+
+- [ ] **Make time, duration, and city required (new submissions only).** Apply going-forward via app-layer validation in the zod schema. For the DB-level NOT NULL constraint: prefer adding it, but the migration must first reconcile any existing rows that violate it — either backfill with a sentinel (`time='TBD'`, etc., and flag on the detail page until cleaned up) or skip NOT NULL and accept that legacy rows remain non-conforming. The implementer picks the path that keeps the system working at the iteration boundary; document the choice in the iteration's done-when section.
+
+- [ ] **Regroup booking-form fieldsets.** Two new groupings: **When** (date, time, duration) and **Where** (venue, city). Existing "Customer contact" and "Notes" / "Customer comment" stay as-is. Drop the standalone "Schedule & venue (optional)" fieldset since its fields are now required and split across When/Where.
+
+- [ ] **Explanations on lifecycle action buttons — popover + contextual helper, both.** Two layers: (a) a one-sentence helper directly under the action row that swaps with the booking's current status (e.g. for `status=created`: "This booking is new. Send offer to email the customer the quote."); (b) a small `(i)` button next to each action button that opens a Popover (not a tooltip) with deeper detail — same gesture on mouse and touch, accessible to keyboard. Avoid hover-only tooltips because they're invisible on touch and keyboard.
+
+- [ ] **Whole-row click on `/bookings` opens the booking.** Wrap each `<tr>` content in Next.js `<Link href={\`/bookings/${id}\`}>` (RSC-friendly). Interactive children (status badge, future kebab menu) call `stopPropagation` so they don't double-trigger. Mirror the same pattern on `/services` rows so the entire row opens the existing edit popover instead of only the kebab.
+
+- [ ] **Theme switch moves into the user menu** (next to Sign out). Remove the standalone toggle from the sidebar. Three options: Light / Dark / System. Reuses the existing next-themes integration.
+
+- [ ] **Show `createdAt` / `updatedAt` on the booking detail page** as a small footer ("Submitted 2 days ago · last updated 1h ago"). Helps admins triage public requests by age. Use the existing `formatDistanceToNow` pattern; full timestamp on hover/title attribute.
+
+- [ ] **Confirmation dialog on Cancel and Reject.** Both are terminal-state transitions; Cancel fans out push+email notifications to assigned squad members. Use the same `DeleteBookingConfirm`-style pattern. Copy should name the side effects ("This will notify N squad members.").
+
+- [ ] **Public booking-request URL surfaced on the dashboard.** Small "Share with customers" panel with the canonical homepage form URL and a Copy button. Otherwise operators have to remember/look it up. Pair with §1's empty-state Welcome panel for first-login users — same content surface.
+
+- [ ] **`?returnTo=` round-trip from `/login`.** From iter-29's deferred follow-up: anonymous email-link click currently lands on `/login`, then on `/` after sign-in — user has to re-click the original link. Fix: preserve original URL in `?returnTo=` in `proxy.ts`'s redirect, and have `app/login/page.tsx` honour it with `router.replace(returnTo)` on successful auth. Validate `returnTo` is same-origin to avoid open-redirect.
+
+- [ ] **`/bookings?status=…` tab navigation uses `router.push`, not `replace`.** With URL-driven tabs (§2), each tab switch should add a history entry so Back returns to the previously selected tab. One-line spec for the implementer; flagging here so PR review doesn't have to.
+
+- [ ] **Validate `customerEmail` as an email in the booking input schema.** Currently the zod schema may accept any string in `customerEmail`; broken values silently fail when the offer email tries to send. Add `z.string().email().optional()` (or non-optional once §6 lands) and surface validation in the form. Same for customer-side public booking-request schema if it's separate.
+
 - [ ] *(add more here as you find them — drop a one-line description; the implementer will sort scope vs defer)*
 
 ## Heads-up from iter-29
