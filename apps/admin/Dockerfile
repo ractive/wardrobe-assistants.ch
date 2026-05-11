@@ -25,11 +25,20 @@ COPY . .
 # - DATABASE_URL on a remote libsql:// scheme (not file:)
 # - BETTER_AUTH_SECRET as 64 hex chars (32 bytes)
 # These are placeholders only; runtime container env replaces them.
+#
+# Exception: NEXT_PUBLIC_VAPID_PUBLIC_KEY (iter-23 web push) is inlined into
+# the client bundle by `next build`, so it MUST be its real value at build
+# time — setting it on the runtime container has no effect. Plumbed in via
+# build-arg from the deploy workflow (GH variable VAPID_PUBLIC_KEY). It's
+# safe to bake in because the public half of a VAPID keypair is meant to be
+# public; the private half stays in container runtime env only.
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=""
 ENV DATABASE_URL=libsql://build-placeholder.invalid \
     BETTER_AUTH_SECRET=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
     BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch \
     RESEND_API_KEY=build-placeholder \
-    EMAIL_FROM=admin@wardrobe-assistants.ch
+    EMAIL_FROM=admin@wardrobe-assistants.ch \
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 RUN npm -w apps/admin run build
 
 # Distroless runtime: no shell, no apk, no npm — just a pinned Node binary

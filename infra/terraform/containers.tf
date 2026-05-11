@@ -21,9 +21,16 @@
 //   HOSTNAME              0.0.0.0
 //
 // Required for iter-23 web push (admin PWA notifications):
-//   NEXT_PUBLIC_VAPID_PUBLIC_KEY   ~87 base64url chars; exposed to browser
-//   VAPID_PRIVATE_KEY              ~43 base64url chars; NEVER expose
-//   VAPID_SUBJECT                  mailto:info@wardrobe-assistants.ch
+//   NEXT_PUBLIC_VAPID_PUBLIC_KEY   ~87 base64url chars; inlined by `next
+//                                  build` into the client bundle — set as
+//                                  GH Actions variable VAPID_PUBLIC_KEY,
+//                                  NOT as container runtime env. The
+//                                  deploy workflow passes it as a Docker
+//                                  build-arg (see .github/workflows/deploy.yml).
+//   VAPID_PRIVATE_KEY              ~43 base64url chars; runtime container
+//                                  env only — NEVER expose to client.
+//   VAPID_SUBJECT                  mailto:info@wardrobe-assistants.ch;
+//                                  runtime container env.
 // Generate with `npx web-push generate-vapid-keys --json`. Rotation
 // invalidates every existing browser subscription — treat as permanent.
 
