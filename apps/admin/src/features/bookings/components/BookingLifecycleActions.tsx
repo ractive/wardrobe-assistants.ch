@@ -12,6 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import {
   adminAcceptOffer,
@@ -20,6 +25,41 @@ import {
   sendOffer,
   sendRevisedOffer,
 } from "../server/actions";
+
+// ---------------------------------------------------------------------------
+// A.6: Contextual helper copy per lifecycle status
+// ---------------------------------------------------------------------------
+
+const STATUS_HELPER: Record<string, string> = {
+  created: "This booking is new. Send offer to email the customer the quote.",
+  offered: "Offer sent. Waiting for the customer to accept.",
+  accepted: "Customer accepted. Assign squad members to dispatch the work.",
+};
+
+// ---------------------------------------------------------------------------
+// A.6: (i) info popover — Popover (not Tooltip) so it works on touch and
+// keyboard without screen-reader gaps.
+// ---------------------------------------------------------------------------
+
+function InfoPopover({ title, children }: { title: string; children: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Info: ${title}`}
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted-foreground)] text-xs leading-none hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ring)]"
+        >
+          i
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 text-sm" side="top" aria-label={title}>
+        <p className="font-medium">{title}</p>
+        <p className="mt-1 text-[var(--muted-foreground)]">{children}</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Send offer dialog
@@ -615,61 +655,104 @@ export function BookingLifecycleButtons({
 
   const totalFormatted = `CHF ${lineItemsTotal.toLocaleString("en-CH")}.-`;
 
+  const helperText = STATUS_HELPER[status];
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        {showSendOffer && (
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => setSendOfferOpen(true)}
-            disabled={selectionCount === 0}
-            title={
-              selectionCount === 0
-                ? "Add line items before sending the offer"
-                : undefined
-            }
-          >
-            Send offer
-          </Button>
-        )}
-        {showSendRevised && (
-          <Button
-            type="button"
-            variant={status === "accepted" ? "destructive" : "default"}
-            onClick={() => setSendRevisedOpen(true)}
-          >
-            Send revised offer
-          </Button>
-        )}
-        {showAccept && (
-          <Button
-            type="button"
-            variant={status === "offered" ? "outline" : "default"}
-            onClick={() => setAcceptOpen(true)}
-          >
-            {status === "offered"
-              ? "Accept on customer's behalf"
-              : "Accept booking"}
-          </Button>
-        )}
-        {showReject && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setRejectOpen(true)}
-          >
-            Reject booking
-          </Button>
-        )}
-        {showCancel && (
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => setCancelOpen(true)}
-          >
-            Cancel booking
-          </Button>
+      <div className="flex flex-col gap-2">
+        {/* Action buttons — 2-col grid on narrow screens, wrapping row on wider */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {showSendOffer && (
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => setSendOfferOpen(true)}
+                disabled={selectionCount === 0}
+                title={
+                  selectionCount === 0
+                    ? "Add line items before sending the offer"
+                    : undefined
+                }
+              >
+                Send offer
+              </Button>
+              <InfoPopover title="Send offer">
+                Snapshots the current line items and emails the quote to the
+                customer. The booking moves to &apos;offered&apos; status.
+              </InfoPopover>
+            </div>
+          )}
+          {showSendRevised && (
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant={status === "accepted" ? "destructive" : "default"}
+                onClick={() => setSendRevisedOpen(true)}
+              >
+                Send revised offer
+              </Button>
+              <InfoPopover title="Send revised offer">
+                Emails an updated quote to the customer. If the booking is
+                already accepted, the customer must re-confirm. Status returns
+                to &apos;offered&apos;.
+              </InfoPopover>
+            </div>
+          )}
+          {showAccept && (
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant={status === "offered" ? "outline" : "default"}
+                onClick={() => setAcceptOpen(true)}
+              >
+                {status === "offered"
+                  ? "Accept on customer's behalf"
+                  : "Accept booking"}
+              </Button>
+              <InfoPopover title="Accept booking">
+                Marks the booking as accepted. Use when the customer confirms
+                outside the offer link (e.g. by phone). Status moves to
+                &apos;accepted&apos;.
+              </InfoPopover>
+            </div>
+          )}
+          {showReject && (
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRejectOpen(true)}
+              >
+                Reject booking
+              </Button>
+              <InfoPopover title="Reject booking">
+                Declines the booking request and emails the customer. This is a
+                terminal action and cannot be undone.
+              </InfoPopover>
+            </div>
+          )}
+          {showCancel && (
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setCancelOpen(true)}
+              >
+                Cancel booking
+              </Button>
+              <InfoPopover title="Cancel booking">
+                Cancels the accepted booking, notifies all assigned squad
+                members via push + email, and emails the customer. This is a
+                terminal action and cannot be undone.
+              </InfoPopover>
+            </div>
+          )}
+        </div>
+
+        {/* A.6: contextual helper line, one sentence per non-terminal status */}
+        {helperText && (
+          <p className="text-[var(--muted-foreground)] text-sm">{helperText}</p>
         )}
       </div>
       <SendOfferDialog
