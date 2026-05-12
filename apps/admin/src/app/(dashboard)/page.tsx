@@ -12,6 +12,7 @@ import { HasPermission } from "@/components/HasPermission";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
 import { RecentBookingsTable } from "@/components/RecentBookingsTable";
+import { ShareWithCustomers } from "@/components/ShareWithCustomers";
 import { Button } from "@/components/ui/button";
 import { getCachedSession, roleForUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -148,6 +149,8 @@ export default async function DashboardHome() {
     upcomingCount === 0 &&
     (recentBookings?.length ?? 0) === 0;
 
+  const bookingRequestUrl = `${process.env.NEXT_PUBLIC_PUBLIC_BASE_URL ?? process.env.PUBLIC_SITE_URL ?? "https://wardrobe-assistants.ch"}/booking-request`;
+
   return (
     <section className="flex flex-col gap-8">
       <PageHeader title="Overview" description={`Welcome back, ${greeting}`} />
@@ -190,24 +193,22 @@ export default async function DashboardHome() {
         <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6">
           <h2 className="text-lg font-medium">Get started</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            No bookings yet. Here are two ways to kick things off:
+            No bookings yet. Create one manually or share the link below with
+            customers.
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button asChild>
               <Link href="/bookings">Create a booking</Link>
             </Button>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium">
-                Share the public booking-request URL
-              </p>
-              <p className="break-all text-xs text-muted-foreground">
-                {process.env.PUBLIC_SITE_URL ??
-                  "https://wardrobe-assistants.ch"}
-                /booking-request
-              </p>
-            </div>
           </div>
         </div>
+      )}
+
+      {/* Share-with-customers panel — always visible to BOOKING_VIEW holders (D.2) */}
+      {canViewBookings && (
+        <HasPermission perm="BOOKING_VIEW">
+          <ShareWithCustomers bookingRequestUrl={bookingRequestUrl} />
+        </HasPermission>
       )}
 
       {/* Recent bookings */}
