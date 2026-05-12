@@ -124,6 +124,14 @@ export const updateBookingInput = z.object({
 });
 export type UpdateBookingInput = z.infer<typeof updateBookingInput>;
 
+// iter-37 §C.1–C.3: RHF resolver schema for edit mode — same as
+// updateBookingInput but without bookingId (the form never renders a bookingId
+// input; it's injected via closure when calling the server action).
+export const editBookingFormInput = updateBookingInput.omit({
+  bookingId: true,
+});
+export type EditBookingFormInput = z.infer<typeof editBookingFormInput>;
+
 export const deleteBookingInput = z.object({
   bookingId: z.string().min(1),
 });

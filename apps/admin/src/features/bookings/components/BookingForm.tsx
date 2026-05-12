@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import {
   type CreateBookingInput,
   createBookingInput,
-  updateBookingInput,
+  editBookingFormInput,
 } from "../schema";
 import { createBooking, updateBooking } from "../server/actions";
 
@@ -81,7 +81,10 @@ export function BookingForm(props: Props) {
   const router = useRouter();
 
   // Pick schema by mode so validation rules differ cleanly.
-  const schema = isEdit ? updateBookingInput : createBookingInput;
+  // Edit uses editBookingFormInput (updateBookingInput without bookingId — the
+  // form never renders a bookingId input; it's injected via closure in the
+  // action dispatch). Create uses createBookingInput with strict required fields.
+  const schema = isEdit ? editBookingFormInput : createBookingInput;
 
   const form = useForm<FormValues>({
     // `as never` suppresses the RHF/Zod generic mismatch between FormValues

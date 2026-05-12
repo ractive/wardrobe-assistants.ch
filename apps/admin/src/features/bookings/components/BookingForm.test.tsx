@@ -44,6 +44,20 @@ async function pickFirstAvailableDate(
   throw new Error("No selectable day found in calendar");
 }
 
+// iter-37 §C.3: helper to fill the now-required When/Where fields on create.
+async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
+  // Start time — required for new bookings (iter-37 §C.3).
+  await user.type(screen.getByPlaceholderText("e.g. 19:30"), "18:00");
+  // Duration — required, min 5h (iter-37 §C.2+C.3).
+  const durationInput = screen.getByRole("spinbutton");
+  await user.clear(durationInput);
+  await user.type(durationInput, "8");
+  // City — required for new bookings (iter-37 §C.3).
+  // The City label renders with a required asterisk; use getByLabelText which
+  // strips trailing text, so we match on the exact accessible label.
+  await user.type(screen.getByLabelText(/^City/), "Zurich");
+}
+
 describe("BookingForm — create mode", () => {
   it("happy path: fills the form, picks a date, calls createBooking with parsed input", async () => {
     createBooking.mockResolvedValueOnce({
@@ -57,6 +71,7 @@ describe("BookingForm — create mode", () => {
     await user.type(screen.getByLabelText("Name"), "Curtain Up");
     await user.type(screen.getByLabelText("Venue"), "Stadttheater");
     await pickFirstAvailableDate(user);
+    await fillRequiredFields(user);
     await user.click(screen.getByRole("button", { name: "Create booking" }));
 
     await waitFor(() => expect(createBooking).toHaveBeenCalledTimes(1));
@@ -64,6 +79,9 @@ describe("BookingForm — create mode", () => {
     expect(callArg).toMatchObject({
       name: "Curtain Up",
       venue: "Stadttheater",
+      startTime: "18:00",
+      durationHours: 8,
+      venueCity: "Zurich",
     });
     expect(callArg.date).toBeInstanceOf(Date);
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
@@ -83,6 +101,7 @@ describe("BookingForm — create mode", () => {
     await user.type(screen.getByLabelText("Name"), "Curtain Up");
     await user.type(screen.getByLabelText("Venue"), "Stadttheater");
     await pickFirstAvailableDate(user);
+    await fillRequiredFields(user);
     await user.click(screen.getByRole("button", { name: "Create booking" }));
 
     await waitFor(() =>

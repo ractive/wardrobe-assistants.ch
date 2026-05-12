@@ -673,8 +673,10 @@ describe("bookings feature — smoke", () => {
         name: "Accept-path booking",
         date: new Date("2026-09-01T18:00:00.000Z"),
         venue: "Studio E",
+        // iter-37 §C.2: min 5h required for new bookings — use 6h for the
+        // hourly-service price calculation test (previously 3h, now 6h).
         ...optionalBookingFields,
-        durationHours: 3,
+        durationHours: 6,
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
