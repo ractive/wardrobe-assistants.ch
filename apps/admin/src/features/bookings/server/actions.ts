@@ -21,16 +21,21 @@ import { notifyUser } from "@/lib/notify";
 import { withPermission } from "@/lib/permissions";
 import {
   type ActionResult,
+  type AddBookingSelectionInput,
   type ApproveRequestInput,
   type AssignUserInput,
+  addBookingSelectionInput,
   approveRequestInput,
   assignUserInput,
+  type BookingSelectionItem,
   type CancelBookingInput,
   type CreateBookingInput,
   cancelBookingInput,
   createBookingInput,
   type DeleteBookingInput,
+  type DeleteBookingSelectionInput,
   deleteBookingInput,
+  deleteBookingSelectionInput,
   type MessageBookingAssigneesInput,
   messageBookingAssigneesInput,
   type RejectBookingInput,
@@ -43,8 +48,10 @@ import {
   requestParticipationInput,
   type UnassignUserInput,
   type UpdateBookingInput,
+  type UpdateBookingSelectionQuantityInput,
   unassignUserInput,
   updateBookingInput,
+  updateBookingSelectionQuantityInput,
 } from "../schema";
 
 // v4 UUID generator using crypto.randomUUID (Node 19+, Edge runtime safe).
@@ -758,6 +765,210 @@ export const replaceBookingSelections = withPermission(
 
     revalidatePath(`/bookings/${bookingId}`);
     return { error: false, message: "Line items updated." };
+  },
+);
+
+// ---------------------------------------------------------------------------
+// A.4/A.5: Granular per-row line-item mutations
+// ---------------------------------------------------------------------------
+
+type AddSelectionResult =
+  | { error: true; message: string }
+  | { error: false; message: string; selection: BookingSelectionItem };
+
+export const addBookingSelection = withPermission(
+  "BOOKING_CREATE",
+  async (
+    actorId,
+    raw: AddBookingSelectionInput,
+  ): Promise<AddSelectionResult> => {
+    const parsed = addBookingSelectionInput.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+    const { bookingId, serviceId, quantity } = parsed.data;
+
+    const bookingRows = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) return { error: true, message: "Booking not found." };
+    if (booking.status === "rejected" || booking.status === "cancelled") {
+      return {
+        error: true,
+        message: "Line items cannot be edited on a closed booking.",
+      };
+    }
+
+    const svcRows = await db
+      .select({
+        id: services.id,
+        name: services.name,
+        archived: services.archived,
+        priceType: services.priceType,
+        price: services.price,
+      })
+      .from(services)
+      .where(eq(services.id, serviceId))
+      .limit(1);
+    const svc = svcRows[0];
+    if (!svc) return { error: true, message: "Service not found." };
+    if (svc.archived) {
+      return {
+        error: true,
+        message: "Archived services cannot be added to a booking.",
+      };
+    }
+
+    // Determine next position index.
+    const existingRows = await db
+      .select({ position: bookingServiceSelection.position })
+      .from(bookingServiceSelection)
+      .where(eq(bookingServiceSelection.bookingId, bookingId));
+    const nextPosition = existingRows.length;
+
+    const newId = ulid();
+    await db.insert(bookingServiceSelection).values({
+      id: newId,
+      bookingId,
+      serviceId,
+      quantity,
+      position: nextPosition,
+    });
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.selection.added",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { serviceId, quantity },
+    });
+
+    revalidatePath(`/bookings/${bookingId}`);
+    return {
+      error: false,
+      message: "Service added.",
+      selection: {
+        id: newId,
+        serviceId,
+        serviceName: svc.name,
+        serviceArchived: svc.archived,
+        priceType: svc.priceType as "fixed" | "hourly",
+        unitPrice: svc.price,
+        quantity,
+        position: nextPosition,
+      },
+    };
+  },
+);
+
+export const deleteBookingSelection = withPermission(
+  "BOOKING_CREATE",
+  async (actorId, raw: DeleteBookingSelectionInput): Promise<ActionResult> => {
+    const parsed = deleteBookingSelectionInput.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+    const { bookingId, selectionId } = parsed.data;
+
+    const bookingRows = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) return { error: true, message: "Booking not found." };
+    if (booking.status === "rejected" || booking.status === "cancelled") {
+      return {
+        error: true,
+        message: "Line items cannot be edited on a closed booking.",
+      };
+    }
+
+    await db
+      .delete(bookingServiceSelection)
+      .where(
+        and(
+          eq(bookingServiceSelection.id, selectionId),
+          eq(bookingServiceSelection.bookingId, bookingId),
+        ),
+      );
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.selection.deleted",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { selectionId },
+    });
+
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Line item removed." };
+  },
+);
+
+export const updateBookingSelectionQuantity = withPermission(
+  "BOOKING_CREATE",
+  async (
+    actorId,
+    raw: UpdateBookingSelectionQuantityInput,
+  ): Promise<ActionResult> => {
+    const parsed = updateBookingSelectionQuantityInput.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        error: true,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+    const { bookingId, selectionId, quantity } = parsed.data;
+
+    const bookingRows = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    const booking = bookingRows[0];
+    if (!booking) return { error: true, message: "Booking not found." };
+    if (booking.status === "rejected" || booking.status === "cancelled") {
+      return {
+        error: true,
+        message: "Line items cannot be edited on a closed booking.",
+      };
+    }
+
+    const updated = await db
+      .update(bookingServiceSelection)
+      .set({ quantity })
+      .where(
+        and(
+          eq(bookingServiceSelection.id, selectionId),
+          eq(bookingServiceSelection.bookingId, bookingId),
+        ),
+      )
+      .returning({ id: bookingServiceSelection.id });
+
+    if (updated.length === 0) {
+      return { error: true, message: "Line item not found." };
+    }
+
+    await recordAudit({
+      actorUserId: actorId,
+      action: "booking.selection.quantity.updated",
+      targetType: "booking",
+      targetId: bookingId,
+      metadata: { selectionId, quantity },
+    });
+
+    revalidatePath(`/bookings/${bookingId}`);
+    return { error: false, message: "Quantity updated." };
   },
 );
 

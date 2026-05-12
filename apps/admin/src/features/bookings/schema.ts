@@ -325,3 +325,30 @@ export const actionResult = z.discriminatedUnion("error", [
   z.object({ error: z.literal(true), message: z.string() }),
 ]);
 export type ActionResult = z.infer<typeof actionResult>;
+
+// A.4/A.5: granular per-row line-item mutations (replaces bulk replaceBookingSelections
+// for the autosave UX — each row saves independently).
+
+export const addBookingSelectionInput = z.object({
+  bookingId: z.string().min(1),
+  serviceId: z.string().min(1),
+  quantity: z.coerce.number().int().positive().max(10_000),
+});
+export type AddBookingSelectionInput = z.infer<typeof addBookingSelectionInput>;
+
+export const deleteBookingSelectionInput = z.object({
+  bookingId: z.string().min(1),
+  selectionId: z.string().min(1),
+});
+export type DeleteBookingSelectionInput = z.infer<
+  typeof deleteBookingSelectionInput
+>;
+
+export const updateBookingSelectionQuantityInput = z.object({
+  bookingId: z.string().min(1),
+  selectionId: z.string().min(1),
+  quantity: z.coerce.number().int().positive().max(10_000),
+});
+export type UpdateBookingSelectionQuantityInput = z.infer<
+  typeof updateBookingSelectionQuantityInput
+>;
