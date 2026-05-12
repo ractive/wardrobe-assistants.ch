@@ -38,7 +38,8 @@ ENV DATABASE_URL=libsql://build-placeholder.invalid \
     BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch \
     RESEND_API_KEY=build-placeholder \
     EMAIL_FROM=admin@wardrobe-assistants.ch \
-    NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY \
+    NEXT_TELEMETRY_DISABLED=1
 RUN npm -w apps/admin run build
 
 # Distroless runtime: no shell, no apk, no npm — just a pinned Node binary
@@ -61,6 +62,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # iter-16b container hardening (audit C-SEC-06): drop root. Distroless ships
 # a baked-in `nonroot` user (UID/GID 65532) so we just chown the COPY layers

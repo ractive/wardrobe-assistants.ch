@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+env:
+  # Disable Next.js anonymous telemetry across all jobs (build-homepage runs
+  # `next build` directly on the runner; admin's Dockerfile sets this too so
+  # buildx and the distroless runtime stay quiet).
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
   # Cheap signal first: typecheck + Vitest + both Next builds. No
   # paths-ignore so md/pen-only changes still get insurance against a stale
