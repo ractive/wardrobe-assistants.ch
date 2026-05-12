@@ -62,7 +62,10 @@ export async function listBookings(filter: BookingStatusFilter = "all") {
   const whereClause = (() => {
     switch (filter) {
       case "new-requests":
-        return and(eq(bookings.status, "created"), isNull(bookings.createdBy));
+        // Show every booking in `created` — customer-submitted *and* admin drafts.
+        // The tab badge (`countNewRequests`) stays scoped to customer-submitted
+        // so the "needs triage" signal isn't diluted by admins' own drafts.
+        return eq(bookings.status, "created");
       case "offered":
         return eq(bookings.status, "offered");
       case "accepted":
