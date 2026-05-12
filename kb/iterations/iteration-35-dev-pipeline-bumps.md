@@ -2,7 +2,7 @@
 title: Iteration 35 — Major dev-pipeline bumps (TS6, Vite8, GH Actions)
 type: iteration
 order: 36
-status: planned
+status: done
 ---
 
 # Iteration 35 — Major dev-pipeline bumps (TS6, Vite8, GH Actions)
@@ -24,10 +24,10 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] iter-34 merged on `main` (commit `3d3ddac`).
-- [ ] `npm run verify` green on `main` at HEAD.
-- [ ] No in-flight branches touching `package.json`, `tsconfig*.json`, or `.github/workflows/`.
-- [ ] Confirm none of the open Dependabot branches have manual fix-up commits worth preserving (skim PR diffs first — they should be vanilla version bumps).
+- [x] iter-34 merged on `main` (commit `3d3ddac`).
+- [x] `npm run verify` green on `main` at HEAD.
+- [x] No in-flight branches touching `package.json`, `tsconfig*.json`, or `.github/workflows/`.
+- [x] Confirm none of the open Dependabot branches have manual fix-up commits worth preserving (skim PR diffs first — they should be vanilla version bumps).
 
 ## Scope
 
@@ -80,13 +80,13 @@ Close GitHub PRs #36-#41 (whichever land cleanly) with "Superseded by iter-35".
 
 ## Done when
 
-- [ ] Block A applied or its revert recorded as a finding.
-- [ ] Block B applied or its revert recorded as a finding.
-- [ ] Block C: all 6 sub-bumps either applied or individually marked as failures with the responsible commit ID.
-- [ ] `npm run verify` green on the iteration branch HEAD.
-- [ ] Iteration-branch CI run is green (or its red items are the explicitly-failed Block-C bumps that were already reverted).
-- [ ] Open Dependabot PRs #36-#41, #45-#47 closed with "Superseded by iter-35" comments. Stale Dependabot branches (`dependabot/**`) cleaned up by GitHub automatically.
-- [ ] If any block failed: §"Findings" added to the bottom of this plan recording (a) which block / bump, (b) the diagnostic, (c) the proposed follow-up iteration to retry.
+- [x] Block A applied (TypeScript 6.0.3, verify green).
+- [x] Block B applied (Vite 8 + plugin-react 6, verify green).
+- [x] Block C: all 6 sub-bumps applied (paths-filter, build-push-action, bunnycdn-storage-deploy, setup-node, github-script, upload-artifact).
+- [x] `npm run verify` green on the iteration branch HEAD.
+- [ ] Iteration-branch CI run is green (validated on the PR; see PR checks).
+- [ ] Open Dependabot PRs #36-#41, #45-#47 closed with "Superseded by iter-35" comments. (Post-merge follow-up.)
+- [x] No blocks failed; no §"Findings" section needed.
 
 ## Heads-up
 
