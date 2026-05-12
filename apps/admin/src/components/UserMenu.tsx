@@ -1,6 +1,14 @@
 "use client";
 
-import { ChevronsUpDown, LogOut, User2 } from "lucide-react";
+import {
+  ChevronsUpDown,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  User2,
+} from "lucide-react";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -28,6 +39,7 @@ export function UserMenu({ email }: UserMenuProps) {
   const { isMobile, setOpenMobile } = useSidebar();
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const { setTheme } = useTheme();
 
   async function handleSignOut() {
     if (isMobile) setOpenMobile(false);
@@ -78,6 +90,28 @@ export function UserMenu({ email }: UserMenuProps) {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Sun aria-hidden="true" className="dark:hidden" />
+                <Moon aria-hidden="true" className="hidden dark:block" />
+                <span>Theme</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onSelect={() => setTheme("light")}>
+                  <Sun aria-hidden="true" />
+                  Light
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTheme("dark")}>
+                  <Moon aria-hidden="true" />
+                  Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTheme("system")}>
+                  <Monitor aria-hidden="true" />
+                  System
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={pending} onSelect={handleSignOut}>
               <LogOut aria-hidden="true" />

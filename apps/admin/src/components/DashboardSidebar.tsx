@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import {
   Sidebar,
@@ -95,17 +94,10 @@ export function DashboardSidebar({
 
       <SidebarFooter>
         {/*
-          Composition choice: two separate triggers side-by-side.
-          UserMenu occupies the full-width slot (email label + sign-out dropdown).
-          ThemeToggle sits as a compact icon button below the user menu, visible
-          even in icon-collapsed state. This keeps the theme affordance always
-          reachable without adding a sub-menu level inside the user dropdown,
-          which would be an extra click for a common action.
+          Theme toggle moved inside UserMenu as a DropdownMenuSub (D.1).
+          This compacts the sidebar footer to a single user menu trigger.
         */}
         <UserMenu email={userEmail} />
-        <div className="flex justify-center px-2 pb-1">
-          <ThemeToggle />
-        </div>
       </SidebarFooter>
 
       <SidebarRail />

@@ -16,6 +16,11 @@ vi.mock("@/lib/auth-client", () => ({
   authClient: { signOut: vi.fn() },
 }));
 
+// Mock next-themes — UserMenu calls useTheme for the theme sub-menu (D.1).
+vi.mock("next-themes", () => ({
+  useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
+}));
+
 import { UserMenu } from "./UserMenu";
 
 describe("UserMenu a11y", () => {
