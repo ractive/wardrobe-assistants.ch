@@ -319,10 +319,13 @@ export function AcceptBookingDialog({
 
 export function RejectBookingDialog({
   bookingId,
+  customerEmail,
   open,
   onOpenChange,
 }: {
   bookingId: string;
+  /** Customer email — shown in the confirmation copy if present. */
+  customerEmail: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -372,9 +375,16 @@ export function RejectBookingDialog({
         <DialogHeader>
           <DialogTitle>Reject booking?</DialogTitle>
           <DialogDescription>
-            Decline this booking request. You may optionally provide a reason.
+            This will move the booking to a terminal state. This can't be
+            undone.
           </DialogDescription>
         </DialogHeader>
+        {customerEmail && (
+          <p className="text-sm">
+            The customer at <span className="font-medium">{customerEmail}</span>{" "}
+            will be notified by email.
+          </p>
+        )}
         <div className="space-y-2">
           <label
             htmlFor="reject-reason"
@@ -481,7 +491,9 @@ export function CancelBookingDialog({
         <DialogHeader>
           <DialogTitle>Cancel booking?</DialogTitle>
           <DialogDescription>
-            Cancel this accepted booking. You may optionally provide a reason.
+            {squadMemberNames.length > 0
+              ? `This will notify ${squadMemberNames.length} squad ${squadMemberNames.length === 1 ? "member" : "members"} and email the customer. This can't be undone.`
+              : "This will email the customer. This can't be undone."}
           </DialogDescription>
         </DialogHeader>
         {squadMemberNames.length > 0 && (
@@ -682,6 +694,7 @@ export function BookingLifecycleButtons({
       />
       <RejectBookingDialog
         bookingId={bookingId}
+        customerEmail={customerEmail}
         open={rejectOpen}
         onOpenChange={setRejectOpen}
       />
