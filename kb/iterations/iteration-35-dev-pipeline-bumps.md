@@ -62,9 +62,9 @@ Inventory at HEAD (from `awk '/uses:/' .github/workflows/*.yml | sort -u`):
 | `dorny/paths-filter@v3` | `@v4` | `deploy.yml` | low |
 | `docker/build-push-action@v6` | `@v7` | `deploy.yml` | low (semver-only) |
 | `ayeressian/bunnycdn-storage-deploy@v2.2.5` | `@v2.4.5` | `deploy.yml` | low (minor) |
-| `actions/setup-node@v4` | `@v6` | `deploy.yml`, `codeql.yml` | low-medium (cache: arg unchanged in v6) |
-| `actions/github-script@v7` | `@v9` | `deploy.yml` | medium (large API surface) |
-| `actions/upload-artifact@v4` | `@v7` | `deploy.yml` | medium-high (artifact path semantics changed across majors) |
+| `actions/setup-node@v4` | `@v6` | `deploy.yml` | low-medium (cache: arg unchanged in v6) |
+| `actions/github-script@v7` | `@v9` | `terraform-drift-check.yml`, `terraform-plan.yml` | medium (large API surface) |
+| `actions/upload-artifact@v4` | `@v7` | `terraform-plan.yml` | medium-high (artifact path semantics changed across majors) |
 
 Commit shapes:
 1. `ci(deps): bump dorny/paths-filter 3 -> 4 (iter-35 §C.1)`
@@ -93,7 +93,7 @@ Close GitHub PRs #36-#41 (whichever land cleanly) with "Superseded by iter-35".
 - **Not in scope:** runtime dependency majors (React, Next.js, Drizzle, Better Auth, shadcn primitives, lucide-react, react-day-picker). All currently on latest within their major per iter-33 §A-DEPS-04 / §A-DEPS-05.
 - **`@vitejs/plugin-react` is not used by Next.js builds.** It only powers the Vitest React test environment. If Vitest tests stay green, this bump is a no-op for production.
 - **`actions/upload-artifact@v7` upgrade path:** v4 → v7 went through multiple major versions; the GitHub release notes call out artifact-name uniqueness rules and behaviour around `if-no-files-found`. Skim before bumping — most workflows aren't affected, but verify.
-- **`actions/github-script@v9`** moved to Node 20 then Node 22 across majors; confirm `runs-on` and `node-version` interactions in `deploy.yml` still align.
+- **`actions/github-script@v9`** moved to Node 20 then Node 22 across majors; confirm `runs-on` and `node-version` interactions in the Terraform workflows still align.
 - **Memory follow-ups still pending after iter-35:**
   - `project_kb_restructure_pending` — split `kb/admin-architecture/design-system.md` into per-topic wiki pages. Doc-only.
   - Lighthouse baseline capture (iter-34 §3 deferred per CodeRabbit). Worth doing before any iteration that adds homepage SEO work.
