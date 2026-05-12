@@ -24,11 +24,13 @@ Source: [audit-2026-05-09-consolidated.md](audit-2026-05-09-consolidated.md)
 | C-SEC-01 | No security headers / CSP | 16b | 🟡 |
 | C-SEC-02 | No rate limiting on Better Auth endpoints | 16f | 🟡 |
 | C-SEC-03 | `BunnyWay/actions/container-update-image@main` mutable ref | 16b | 🟡 |
-| C-SEC-04 | Admin pull-zone caches with cookies, no app-side `Cache-Control` | 16b | 🟡 |
+| C-SEC-04 | Admin pull-zone caches with cookies, no app-side `Cache-Control` | 16b → revised 2026-05-12 | 🟢 (see note) |
 | C-SEC-05 | `seed-temp-admin` no production guard, no 2FA | 16b | 🟡 |
 | C-SEC-06 | Admin container runs as root | 16b | 🟡 |
 | C-SEC-07 | Email header injection (CR/LF in messageUser subject) | 16b | 🟡 |
 | C-CI-01 | CI doesn't run `lint` (`verify` skipped) | 16b | 🟡 |
+
+> **Note on C-SEC-04 (revised 2026-05-12).** iter-16b's mechanism (`strip_cookies = true` on the admin pull-zone, commit `6572cb6`) was misread as "only strips cookies on cached responses" but is actually unconditional — it severed Better Auth's session cookies at the edge and broke login (zero `Set-Cookie` reached the browser; users saw "submit does nothing"). Fix landed 2026-05-12 as a pair: `strip_cookies = false` in `infra/terraform/pullzones.tf` (commit `d60b40e`) + `Cache-Control: private, no-store, must-revalidate` enforced on every `/api/auth/*` response in `apps/admin/src/app/api/auth/[...all]/route.ts` (commit `9da5df8`). The two together preserve the original C-SEC-04 intent (CDN must never store a session-bearing response) without breaking the cookie path. Debug trail: `../ff-rdp/kb/dogfooding/dogfooding-session-42.md`. Do not re-enable `strip_cookies` here without a companion edge rule that varies the cache key on cookies.
 
 ### Group 2 — Medium severity (iter-16f, except UI-flavoured ones)
 
