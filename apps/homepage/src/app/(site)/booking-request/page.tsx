@@ -1,3 +1,4 @@
+import { publicServicesResponseSchema } from "@wardrobe-assistants/shared/public-services-schema";
 import type { Metadata } from "next";
 import { contactEmail, siteName, siteUrl } from "@/app/site-config";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
@@ -65,8 +66,20 @@ async function fetchServices(): Promise<ServiceEntry[]> {
       );
       return [];
     }
-    const body = (await res.json()) as { services?: ServiceEntry[] };
-    return Array.isArray(body.services) ? body.services : [];
+    // iter-34 §6: runtime-validate the response against the shared schema so a
+    // malformed admin response can't break the static build. On parse failure
+    // we log and fall through to the empty-services path below (which already
+    // ships valid UX — the form renders with an email fallback message).
+    const json: unknown = await res.json();
+    const parsed = publicServicesResponseSchema.safeParse(json);
+    if (!parsed.success) {
+      console.error(
+        "[booking-request] services response failed schema validation",
+        parsed.error.flatten(),
+      );
+      return [];
+    }
+    return parsed.data.services satisfies ServiceEntry[];
   } catch (err) {
     // Build-time fetch failures (e.g. admin not yet deployed, or timeout)
     // should not break the static build. The form renders with an empty
