@@ -46,21 +46,29 @@ resource "bunnynet_pullzone_hostname" "homepage_www" {
   }
 }
 
-// Admin pull-zone caching posture (iter-16b edge hardening, audit C-SEC-04):
+// Admin pull-zone caching posture (revised 2026-05-12, audit C-SEC-04):
 //   - `cache_enabled = true` matches live state and the MC controller's
 //     defaults.
-//   - `strip_cookies = true` is the CDN-side belt-and-suspenders to the
-//     `Cache-Control: private, no-store, must-revalidate` header the admin
-//     app emits via `apps/admin/next.config.ts`'s `headers()` block. Even if
-//     a future header regression slips through, cookies will not be part of
-//     the cache key here — the worst case becomes "no caching", not "leak
-//     user A's session payload to user B".
+//   - `strip_cookies = false` — the iter-16b flip to `true` unintentionally
+//     stripped *every* `Set-Cookie` response header at the edge (the bunny
+//     setting is unconditional, not "only on cached responses"), which
+//     broke Better Auth login: the 200 OK reached the browser without the
+//     session cookie. The earlier comment promised an accompanying edge
+//     rule to "bypass cache for cookie-bearing requests" but that half
+//     never landed.
+//   The defense against caching authenticated bodies now relies on the
+//   app emitting `Cache-Control: private, no-store, must-revalidate` via
+//   `apps/admin/next.config.ts`'s `headers()` block. If you ever see a
+//   Set-Cookie response leak through with a cacheable Cache-Control,
+//   fix it at the origin (route handler / Better Auth response shape) —
+//   do *not* re-enable `strip_cookies` here without first adding the
+//   companion edge rule that varies the cache key on cookies.
 // The admin pull-zone serves only authenticated traffic; there is no public
 // surface that depends on cookie-bearing cache hits.
 resource "bunnynet_pullzone" "admin_cdn" {
   name          = "mc-r6f39iacv2"
   cache_enabled = true
-  strip_cookies = true
+  strip_cookies = false
 
   origin {
     type                  = "ComputeContainer"
