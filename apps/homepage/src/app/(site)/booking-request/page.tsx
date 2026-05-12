@@ -18,12 +18,26 @@ export const metadata: Metadata = {
   description: pageDescription,
   alternates: { canonical: canonicalPath },
   openGraph: {
-    type: "article",
+    type: "website",
     url: canonicalPath,
     siteName,
     title: pageTitle,
     description: pageDescription,
     locale: "en_CH",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Request a wardrobe crew booking — Wardrobe Assistants Switzerland",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: ["/og-image.png"],
   },
   robots: { index: true, follow: true },
 };

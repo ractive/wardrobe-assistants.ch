@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { siteName } from "@/app/site-config";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
 import {
   ClipboardList,
@@ -10,6 +12,41 @@ import {
 } from "@/components/icons";
 import { LinkButton } from "@/components/LinkButton";
 import { ServiceCard } from "@/components/ServiceCard";
+
+const pageTitle = "Wardrobe Assistants — Backstage Crews in Switzerland";
+const pageDescription =
+  "Professional tour wardrobe assistants for theatres, concerts and festivals across Switzerland. Quick changes, ironing, repairs, laundry and load-in support.";
+const canonicalPath = "/";
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  alternates: {
+    canonical: canonicalPath,
+  },
+  openGraph: {
+    type: "website",
+    url: canonicalPath,
+    siteName,
+    title: pageTitle,
+    description: pageDescription,
+    locale: "en_CH",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Wardrobe Assistants — backstage wardrobe crews in Switzerland",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: ["/og-image.png"],
+  },
+};
 
 const servicesRow1 = [
   {

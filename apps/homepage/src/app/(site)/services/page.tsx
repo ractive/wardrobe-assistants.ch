@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     canonical: canonicalPath,
   },
   openGraph: {
-    type: "article",
+    type: "website",
     url: canonicalPath,
     siteName,
     title: pageTitle,
