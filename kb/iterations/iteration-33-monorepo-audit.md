@@ -2,7 +2,7 @@
 title: Iteration 33 — Monorepo audit + obvious cleanups
 type: iteration
 order: 34
-status: planned
+status: done
 ---
 
 # Iteration 33 — Monorepo audit + obvious cleanups
