@@ -14,6 +14,8 @@ Always wrap any animation-related class in the `motion-safe:` Tailwind variant s
 <button
   className="motion-safe:transition-colors motion-safe:duration-200 hover:bg-secondary"
 >
+  Save
+</button>
 ```
 
 **Mobile-first answer:** identical.

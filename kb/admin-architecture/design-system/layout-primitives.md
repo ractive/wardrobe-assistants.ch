@@ -25,7 +25,7 @@ type PageHeaderProps = {
 **Desktop answer:** `actions` floats right of the title; `<Empty>` keeps centred content but caps width.
 
 **Don't:**
-- Building these primitives until a slice needs them — premature.
+- Building these primitives before a slice needs them — premature.
 - Hand-rolling an empty-state component — use `<Empty>` from `@/components/ui/empty`.
 - Inventing alternative slot names — stick to `title / description / actions / icon / action`.
 

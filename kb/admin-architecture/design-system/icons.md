@@ -14,7 +14,7 @@ status: current
 | Button-leading (icon before button label) | `size-4` (default; `size-5` only when the button is `lg`) |
 | Standalone tap target | wrap in a `size-11` interactive element so the touch target is ≥ 44×44 |
 
-All icons in interactive context (buttons, links, dropdowns) get `aria-hidden="true"` plus a sibling text label or an `aria-label` on the wrapper. **No Unicode dingbats** (✓ ✗ ➜ ⚠️) — they crash screen readers and bypass our typographic scale (F-FE-23).
+All icons in interactive context (buttons, links, dropdowns) get `aria-hidden="true"` plus a sibling text label or an `aria-label` on the wrapper. **No Unicode dingbats** (✓ ✗ ➜ ⚠️) — they are announced inconsistently by screen readers (e.g. "check mark" or "heavy multiplication x") and bypass our typographic scale (F-FE-23).
 
 ```tsx
 <Button>

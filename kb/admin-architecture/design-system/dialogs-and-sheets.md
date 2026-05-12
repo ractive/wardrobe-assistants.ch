@@ -11,7 +11,7 @@ Long or form-shaped content gets a **`Sheet`** (bottom-anchored on mobile, side-
 | Pattern | Use |
 |---|---|
 | `Dialog` | Confirms (delete, archive), 1–2 line copy + Cancel/Confirm |
-| `Sheet` (`side="bottom"` on mobile, `side="right"` on desktop) | Forms, multi-field edits, anything taller than ~50% of viewport |
+| `Sheet` (`side="bottom"` on mobile, `side="right"` on desktop) | Forms, multi-field edits, anything taller than ~60% of viewport |
 
 Destructive `Dialog`s **disable Esc-to-close while pending** (`onEscapeKeyDown={(e) => isPending && e.preventDefault()}`) — intentional, prevents an accidental dismiss while the request is in flight.
 

@@ -95,7 +95,7 @@ Close GitHub PRs #36-#41 (whichever land cleanly) with "Superseded by iter-35".
 - **`actions/upload-artifact@v7` upgrade path:** v4 → v7 went through multiple major versions; the GitHub release notes call out artifact-name uniqueness rules and behaviour around `if-no-files-found`. Skim before bumping — most workflows aren't affected, but verify.
 - **`actions/github-script@v9`** moved to Node 20 then Node 22 across majors; confirm `runs-on` and `node-version` interactions in the Terraform workflows still align.
 - **Memory follow-ups still pending after iter-35:**
-  - `project_kb_restructure_pending` — split `kb/admin-architecture/design-system/README.md` into per-topic wiki pages. Doc-only.
+  - ~~`project_kb_restructure_pending` — split `design-system.md` into per-topic wiki pages.~~ **Done in iter-36** — split into `kb/admin-architecture/design-system/*.md` with `README.md` hub.
   - Lighthouse baseline capture (iter-34 §3 deferred per CodeRabbit). Worth doing before any iteration that adds homepage SEO work.
   - `useMemo` / `useCallback` removal sweep (audit A-REACT-02). Needs per-call review, not a mechanical pass.
   - `forwardRef` → ref-as-prop sweep (audit A-REACT-03). Waiting on shadcn registry upstream — re-check periodically.
