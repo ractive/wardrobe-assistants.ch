@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload to bunny Storage Zone and purge Pull Zone
         if: steps.changes.outputs.app == 'true'
-        uses: ayeressian/bunnycdn-storage-deploy@v2.2.5
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
           source: "apps/homepage/out"
           destination: "/"
