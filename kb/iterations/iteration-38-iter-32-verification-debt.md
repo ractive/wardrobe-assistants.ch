@@ -2,7 +2,7 @@
 title: Iteration 38 — iter-32 verification debt + iter-31 deploy smokes
 type: iteration
 order: 39
-status: planned
+status: implemented
 ---
 
 # Iteration 38 — iter-32 verification debt + iter-31 deploy smokes

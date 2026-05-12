@@ -41,4 +41,9 @@ Before any commit:
 2. `npm run verify` — `lint && typecheck && test`. Stops at first failure.
 3. `npm run verify:tf` — `tofu fmt -check && tofu validate` (only when `infra/terraform/**` changed; requires `tofu init` first).
 
+Standalone checks (run when relevant; not in `verify`):
+
+- `npm run check:contrast` — iter-38 §B. Re-derives WCAG AA contrast ratios for every documented `:root` + `.dark` token pair in `apps/admin/src/app/globals.css`. Run after any palette / theme-token edit. Standalone (not in `verify`) because the current bordeaux palette has known fails recorded in `kb/audits/iter-38-manual-verification.md` for iter-38b to fix.
+- `npm run smoke:public` — iter-38 §D. Curls the admin's public proxy paths + the homepage `/booking-request` catalog endpoint against prod (override via `BASE_URL`). Run post-deploy.
+
 Read-only snapshot fixtures (`kb/bunny-snapshot-*/**`) and TF (`infra/terraform/**`) are excluded from Biome via `biome.json` — don't loosen the exclusions to "fix" formatter complaints.
