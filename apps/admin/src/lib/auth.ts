@@ -35,11 +35,37 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
-    // iter-16f / C-SEC-15: keep the auth-layer floor in sync with the
-    // 12-char zod schema used by the login + set-password forms. Without
-    // this, the form schema is the only check on password length.
-    minPasswordLength: 12,
+    // iter-16f / C-SEC-15 (original floor 12) + iter-39 §C.1 (relaxed to 8):
+    // matches NIST SP 800-63B, which permits ≥8 for user-chosen passwords
+    // when paired with breach + rate-limit defenses (which we already have:
+    // RATE_LIMITS.login, RATE_LIMITS.passwordReset). 12 was costing real
+    // onboarding friction. Keep this in sync with the zod schema in
+    // app/set-password/page.tsx.
+    minPasswordLength: 8,
     sendResetPassword: async ({ user, url }) => {
+      // iter-39 §C.2: Better Auth re-uses the password-reset primitive for
+      // the initial invitation flow (see features/users/server/actions.ts
+      // `inviteUser` → `requestPasswordReset`). Branch the template on the
+      // user_profile.status: `invited` rows haven't activated yet → send
+      // the welcome / activate template. Everything else is a genuine
+      // forgot-password retry → send the reset template. The token + URL
+      // shape is identical for both, only the user-facing copy differs.
+      const rows = await db
+        .select({
+          status: userProfile.status,
+          firstName: userProfile.firstName,
+        })
+        .from(userProfile)
+        .where(eq(userProfile.userId, user.id))
+        .limit(1);
+      const profile = rows[0];
+      if (profile?.status === "invited") {
+        await sendTemplated("welcomeInvite", user.email, {
+          activateUrl: url,
+          firstName: profile.firstName ?? null,
+        });
+        return;
+      }
       await sendTemplated("passwordReset", user.email, { resetUrl: url });
     },
   },

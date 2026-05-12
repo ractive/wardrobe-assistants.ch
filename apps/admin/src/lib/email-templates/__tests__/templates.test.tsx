@@ -6,6 +6,7 @@ import ParticipationRequested from "../participation-requested";
 import PasswordReset from "../password-reset";
 import UserDirectMessage from "../user-direct-message";
 import VerifyEmail from "../verify-email";
+import WelcomeInvite from "../welcome-invite";
 
 describe("assignmentInvite template", () => {
   const params = {
@@ -100,6 +101,40 @@ describe("passwordReset template", () => {
       plainText: true,
     });
     expect(text).toMatchSnapshot();
+  });
+});
+
+describe("welcomeInvite template", () => {
+  const params = {
+    activateUrl:
+      "https://admin.wardrobe-assistants.ch/set-password?token=abc123",
+    firstName: "Alex",
+  };
+
+  it("renders html snapshot", async () => {
+    const html = await render(<WelcomeInvite {...params} />);
+    expect(html).toMatchSnapshot();
+  });
+
+  it("renders plaintext snapshot", async () => {
+    const text = await render(<WelcomeInvite {...params} />, {
+      plainText: true,
+    });
+    expect(text).toMatchSnapshot();
+  });
+
+  it("renders without firstName (greeting falls back to 'Welcome!')", async () => {
+    const html = await render(
+      <WelcomeInvite activateUrl={params.activateUrl} firstName={null} />,
+    );
+    expect(html).toContain("Welcome!");
+    expect(html).not.toContain("Welcome, ");
+  });
+
+  it("uses welcome / activate copy, not 'reset password'", async () => {
+    const html = await render(<WelcomeInvite {...params} />);
+    expect(html).toContain("Activate your account");
+    expect(html).not.toMatch(/reset your password/i);
   });
 });
 

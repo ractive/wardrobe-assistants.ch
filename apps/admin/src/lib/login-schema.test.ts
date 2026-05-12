@@ -19,10 +19,11 @@ describe("login schemas", () => {
   });
 
   // Login validates submittability, not policy. A short password must be
-  // accepted client-side so users with legacy pre-12-char passwords can
+  // accepted client-side so users with legacy pre-floor passwords can
   // still hit the server (and either succeed if their password actually
-  // works, or be redirected to "forgot password"). The 12-char floor is
-  // a *creation* rule, exercised in apps/admin/src/app/set-password.
+  // works, or be redirected to "forgot password"). The current 8-char
+  // floor (iter-39 §C.1, was 12 in iter-16f) is a *creation* rule,
+  // exercised in apps/admin/src/app/set-password.
   it("accepts short passwords (creation rules apply server-side only)", () => {
     const r = credentialsSchema.safeParse({
       email: "a@b.com",

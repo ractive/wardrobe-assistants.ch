@@ -33,8 +33,20 @@ const SESSION_COOKIE_NAMES = [
 // (`/api/public/services`, `/api/public/booking-requests`) are not redirected
 // to /login. The boundary anchor `(?:$|[/?])` ensures `/api/publicly-evil`
 // cannot slip through.
+// iter-39 §A.4: PWA manifest (`/manifest.webmanifest`, emitted by
+// `app/manifest.ts`) must be reachable without a session cookie. Without
+// this entry the proxy 302s the request to `/login`, the browser parses
+// the redirect's HTML as JSON, and DevTools logs
+// `Manifest: Line: 1, column: 1, Syntax`. The manifest's referenced
+// icons (`/icon-192.png`, `/icon-512.png`, `/icon-maskable-512.png`,
+// `/badge-72.png` — see `app/manifest.ts` + `public/`) live at the root
+// and are caught by this proxy's matcher; they also need to be public
+// or the browser can't fully install the PWA (Copilot, iter-39 review).
+// All entries here are leaf resources — `(?:$|\?)` keeps subpaths like
+// `/manifest.webmanifest/anything` out of the allow-list (CodeRabbit,
+// iter-39 review).
 const PUBLIC_PATH_RE =
-  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth(?:$|[/?])|api\/public(?:$|[/?]))/;
+  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth(?:$|[/?])|api\/public(?:$|[/?])|manifest\.webmanifest(?:$|\?)|icon-192\.png(?:$|\?)|icon-512\.png(?:$|\?)|icon-maskable-512\.png(?:$|\?)|badge-72\.png(?:$|\?))/;
 
 export type CspOptions = {
   nonce: string;

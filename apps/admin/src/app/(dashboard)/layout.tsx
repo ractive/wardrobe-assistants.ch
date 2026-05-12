@@ -29,12 +29,14 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/login");
   }
-  // Sidebar is role-gated (not permission-gated) so admins don't see the
-  // squad-member shortcuts and squad members don't see admin sections —
-  // ADMIN holds every permission, so a permission gate would show both sets.
+  // Admin-only entries are role-gated (not permission-gated): ADMIN holds
+  // every permission, so a permission gate would also show admins the
+  // squad-only entries below. The personal "My/Upcoming Bookings" entries
+  // are shown to *everyone* — both routes are auth-only and key off the
+  // current user's id, so an admin sees only the bookings the system thinks
+  // are theirs. iter-39 §B.1.
   const role = await roleForUserId(session.user.id);
   const isAdmin = role === "ADMIN";
-  const isSquadMember = role === "SQUAD_MEMBER";
   return (
     <SidebarProvider>
       <DashboardSidebar userEmail={session.user.email}>
@@ -45,20 +47,12 @@ export default async function DashboardLayout({
             <NavLink href="/services" label="Services" icon={Tag} />
           </>
         )}
-        {isSquadMember && (
-          <>
-            <NavLink
-              href="/my-bookings"
-              label="My Bookings"
-              icon={CalendarCheck}
-            />
-            <NavLink
-              href="/upcoming-bookings"
-              label="Upcoming Bookings"
-              icon={CalendarPlus}
-            />
-          </>
-        )}
+        <NavLink href="/my-bookings" label="My Bookings" icon={CalendarCheck} />
+        <NavLink
+          href="/upcoming-bookings"
+          label="Upcoming Bookings"
+          icon={CalendarPlus}
+        />
       </DashboardSidebar>
       <SidebarInset>
         <header className="flex items-center gap-3 border-[var(--border)] border-b px-4 py-3 md:px-6 md:py-4">

@@ -2,7 +2,7 @@
 title: Iteration 39 — Squad-member surface bugs + auth onboarding fixes
 type: iteration
 order: 40
-status: planned
+status: implemented
 ---
 
 # Iteration 39 — Squad-member surface bugs + auth onboarding fixes
@@ -24,12 +24,12 @@ Implemented autonomously by `/ralph-loop` where possible; some squad-member bugs
 - **Sidebar visibility for `/my-bookings` + `/upcoming-bookings`**: show to *everyone* (admins included), not just squad members. The current squad-only gate is a leftover from when the dashboard hadn't been built — admins also have bookings they're personally on, and "View bookings the system thinks are yours" is useful regardless of role. No permission-catalog change needed (these routes are already auth-only).
 - **`ff-rdp` dogfooding** report appended at `../ff-rdp/kb/dogfooding/dogfooding-session-<next>.md`. This iteration is heavy on browser repro — make the report substantive.
 
-## Pre-flight
+## Pre-flight [4/4]
 
-- [ ] iter-38 merged on `main` (commit `d2b4b50`); the recent CDN + auth-response fixes (`d60b40e`, `9da5df8`) landed.
-- [ ] `npm run verify` green on this iteration's branch base.
-- [ ] No in-flight branches touching `apps/admin/src/components/DashboardSidebar.tsx`, `apps/admin/src/app/(dashboard)/my-bookings/`, `apps/admin/src/app/(dashboard)/upcoming-bookings/`, `apps/admin/src/lib/auth.ts`, `apps/admin/src/lib/rate-limit.ts`, `apps/admin/src/lib/email-templates/`, or the schema zod files.
-- [ ] Confirm the squad-member account `james+squadmember@ractive.ch` is still usable (post-merge of `d60b40e`).
+- [x] iter-38 merged on `main` (commit `d2b4b50`); the recent CDN + auth-response fixes (`d60b40e`, `9da5df8`) landed.
+- [x] `npm run verify` green on this iteration's branch base.
+- [x] No in-flight branches touching `apps/admin/src/components/DashboardSidebar.tsx`, `apps/admin/src/app/(dashboard)/my-bookings/`, `apps/admin/src/app/(dashboard)/upcoming-bookings/`, `apps/admin/src/lib/auth.ts`, `apps/admin/src/lib/rate-limit.ts`, `apps/admin/src/lib/email-templates/`, or the schema zod files.
+- [x] Confirm the squad-member account `james+squadmember@ractive.ch` is still usable (post-merge of `d60b40e`).
 
 ## Scope
 
@@ -61,18 +61,18 @@ Each item: open with a 1–3 line repro + root cause before listing the fix. Use
 
 3. **Loosen the password-set rate limit (Option A from Decisions).** `apps/admin/src/lib/rate-limit.ts:94` — change `passwordReset` from `{ limit: 3, windowMs: 60 * 60 * 1000 }` to `{ limit: 5, windowMs: 15 * 60 * 1000 }`. Update the matching test in `apps/admin/src/test/security.smoke.test.ts` (search for `passwordReset`). The new shape is a tighter window with a higher hit-count; equivalent protection against bulk reset-spam, but a legitimate first-attempt retry won't get caught.
 
-## Done when
+## Done when [10/10]
 
-- [ ] §A.1–§A.4 each have a one-paragraph "Repro + root cause" in the PR description (or the commit body), even if the fix is one line.
-- [ ] Squad member can navigate from a list row to the detail page and accept/decline their assignment without errors.
-- [ ] No ChunkLoadError on a fresh load of the squad-member booking confirm path. Document if the cause was deploy-skew (one-shot) vs persistent.
-- [ ] No Manifest syntax error in the console when clicking /my-bookings or /upcoming-bookings as a squad member.
-- [ ] Admin user sees "My Bookings" + "Upcoming Bookings" sidebar links.
-- [ ] Setting a password with 8 chars succeeds; setting with 7 chars fails with a clear message.
-- [ ] First-time invitee receives an email titled along the lines of "Welcome — activate your account", containing an "Activate your account" CTA, not "Reset your password". Existing forgot-password flow still ships the old template, unchanged.
-- [ ] An invitee can retry their password-set at least 4 times in a 15-minute window without hitting 429.
-- [ ] `npm run verify` green (lint + typecheck + 480+ tests). New tests cover the welcome-invite template, the rate-limit window change, and the 8-char password boundary.
-- [ ] `ff-rdp` dogfooding session appended.
+- [x] §A.1–§A.4 each have a one-paragraph "Repro + root cause" in the PR description (or the commit body), even if the fix is one line. (Captured in the iter-39 commit body `2b85da3`.)
+- [x] Squad member can navigate from a list row to the detail page and accept/decline their assignment without errors. (§A.1 fix closes §A.2 — the action surface already existed; only the row-click navigation was missing.)
+- [x] No ChunkLoadError on a fresh load of the squad-member booking confirm path. Documented as deploy-skew: admin SW is push-only with no fetch handler and `updateViaCache: "none"` is set, so a one-shot stale-bundle reference resolves on next hard refresh. No code change.
+- [x] No Manifest syntax error in the console when clicking /my-bookings or /upcoming-bookings as a squad member.
+- [x] Admin user sees "My Bookings" + "Upcoming Bookings" sidebar links.
+- [x] Setting a password with 8 chars succeeds; setting with 7 chars fails with a clear message.
+- [x] First-time invitee receives an email titled along the lines of "Welcome — activate your account", containing an "Activate your account" CTA, not "Reset your password". Existing forgot-password flow still ships the old template, unchanged.
+- [x] An invitee can retry their password-set at least 4 times in a 15-minute window without hitting 429.
+- [x] `npm run verify` green (lint + typecheck + 494 tests). New tests cover the welcome-invite template, the rate-limit window change, and the 8-char password boundary.
+- [x] `ff-rdp` dogfooding session appended (`../ff-rdp/kb/dogfooding/dogfooding-session-43.md`).
 
 ## Out of scope
 
