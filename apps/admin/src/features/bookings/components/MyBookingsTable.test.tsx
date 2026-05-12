@@ -62,6 +62,19 @@ describe("MyBookingsTable", () => {
     expect(badges.length).toBeGreaterThan(0);
   });
 
+  // iter-39 §A.1: row navigates to /my-bookings/<id> (the squad-member
+  // detail route), not /bookings/<id> (admin-only).
+  it("wraps each row in a Link to /my-bookings/<id>", () => {
+    render(<MyBookingsTable bookings={[baseBooking]} />);
+    const links = screen.getAllByRole("link", {
+      name: /open booking spring kickoff/i,
+    });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.getAttribute("href")).toBe("/my-bookings/b1");
+    }
+  });
+
   it("is axe-clean (empty)", async () => {
     const { container } = render(<MyBookingsTable bookings={[]} />);
     expect(await axe(container)).toHaveNoViolations();

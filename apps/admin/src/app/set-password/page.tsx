@@ -18,11 +18,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
-// iter-16f / C-SEC-15: 12-char floor matched to login-schema.ts. Length
-// over complexity rules (NIST SP 800-63B).
+// iter-16f / C-SEC-15 + iter-39 §C.1: 8-char floor matched to
+// lib/auth.ts `minPasswordLength`. NIST SP 800-63B permits ≥8 for
+// user-chosen passwords when paired with breach + rate-limit defenses.
 const schema = z
   .object({
-    newPassword: z.string().min(12, "Password must be at least 12 characters"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -93,8 +94,7 @@ function SetPasswordInner() {
                   />
                 </FormControl>
                 <p className="text-[var(--muted-foreground)] text-sm">
-                  Use a passphrase you don&apos;t reuse — at least 12
-                  characters.
+                  Use a passphrase you don&apos;t reuse — at least 8 characters.
                 </p>
                 <FormMessage />
               </FormItem>

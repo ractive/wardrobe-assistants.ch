@@ -183,6 +183,16 @@ describe("iter-16f security — cross-feature smoke", () => {
     expect(r11.message).toMatch(/limit/i);
   });
 
+  // iter-39 §C.3: passwordReset bucket relaxed from 3/1h to 5/15min so a
+  // freshly-invited user doesn't hit 429 retrying their first
+  // set-password. The bucket-shape assertion catches accidental
+  // re-tightenings.
+  it("passwordReset rate-limit bucket is 5 per 15 minutes (iter-39 §C.3)", async () => {
+    const { RATE_LIMITS } = await import("@/lib/rate-limit");
+    expect(RATE_LIMITS.passwordReset.limit).toBe(5);
+    expect(RATE_LIMITS.passwordReset.windowMs).toBe(15 * 60 * 1000);
+  });
+
   // The auth-route layer enforces the same primitive on raw HTTP. We
   // don't have a Next.js runtime in vitest, but the route exports
   // `POST` directly — calling it as a function is equivalent.

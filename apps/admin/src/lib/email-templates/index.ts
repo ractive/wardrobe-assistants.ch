@@ -35,6 +35,8 @@ import type { UserDirectMessageParams } from "./user-direct-message";
 import UserDirectMessage from "./user-direct-message";
 import type { VerifyEmailParams } from "./verify-email";
 import VerifyEmail from "./verify-email";
+import type { WelcomeInviteParams } from "./welcome-invite";
+import WelcomeInvite from "./welcome-invite";
 
 type TemplateEntry<P> = {
   component: (p: P) => React.ReactElement;
@@ -135,6 +137,11 @@ export const templates = {
     subject: () => "Verify your Wardrobe Assistants admin email",
   } satisfies TemplateEntry<VerifyEmailParams>,
 
+  welcomeInvite: {
+    component: WelcomeInvite,
+    subject: () => "Welcome to Wardrobe Assistants — activate your account",
+  } satisfies TemplateEntry<WelcomeInviteParams>,
+
   userDirectMessage: {
     component: UserDirectMessage,
     subject: (p: UserDirectMessageParams) => p.subject,
@@ -168,4 +175,5 @@ export type {
   PasswordResetParams,
   UserDirectMessageParams,
   VerifyEmailParams,
+  WelcomeInviteParams,
 };

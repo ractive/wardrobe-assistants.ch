@@ -33,8 +33,16 @@ const SESSION_COOKIE_NAMES = [
 // (`/api/public/services`, `/api/public/booking-requests`) are not redirected
 // to /login. The boundary anchor `(?:$|[/?])` ensures `/api/publicly-evil`
 // cannot slip through.
+// iter-39 §A.4: PWA manifest (`/manifest.webmanifest`, emitted by
+// `app/manifest.ts`) must be reachable without a session cookie. Without
+// this entry the proxy 302s the request to `/login`, the browser parses
+// the redirect's HTML as JSON, and DevTools logs
+// `Manifest: Line: 1, column: 1, Syntax`. The icons in `public/` are
+// already excluded by the matcher (no `_next/static` only — they live at
+// the root), so they don't need a public entry; `manifest.webmanifest`
+// goes through this proxy because it's served by the Next.js App Router.
 const PUBLIC_PATH_RE =
-  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth(?:$|[/?])|api\/public(?:$|[/?]))/;
+  /^\/(?:login(?:$|[/?])|set-password(?:$|[/?])|api\/auth(?:$|[/?])|api\/public(?:$|[/?])|manifest\.webmanifest(?:$|[/?]))/;
 
 export type CspOptions = {
   nonce: string;

@@ -92,6 +92,21 @@ describe("proxy — auth gate", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
+  it("does NOT redirect /manifest.webmanifest (PWA manifest, iter-39 §A.4)", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/manifest.webmanifest"),
+    );
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("rejects /manifest.webmanifest-evil prefix-bypass attempts", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/manifest.webmanifest-evil"),
+    );
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
+  });
+
   it("rejects /api/publicly-evil prefix-bypass attempts", () => {
     const res = proxy(
       makeRequest("https://admin.example.com/api/publicly-evil"),
