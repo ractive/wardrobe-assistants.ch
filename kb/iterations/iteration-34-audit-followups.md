@@ -62,7 +62,7 @@ Each is a one-liner re-exporting a shared `SegmentError` component in `apps/admi
 - **Verify metadata** on each homepage public page (`(site)/page.tsx`, `(site)/services/page.tsx`, `(site)/booking-request/page.tsx`, `(site)/datenschutz/page.tsx`, `(site)/impressum/page.tsx`): unique `title`, descriptive `description`, `alternates.canonical`, full `openGraph` block (title, description, url, type, locale, images), `twitter` block. Fill in any missing fields.
 - **`sitemap.ts`** — confirm every public route is enumerated; add any missing entries.
 - **`robots.ts`** — confirm `host` matches the canonical production origin.
-- **Capture Lighthouse baseline** for `npm run lighthouse:homepage` and `npm run lighthouse:services`. Record the scores inline in this iteration plan under §"Done when" so iter-35+ has a regression baseline.
+- **Lighthouse baseline (deferred):** `npm run lighthouse:homepage` and `npm run lighthouse:services` exist at the repo root but require a running live or local build, so they fall outside the automated ralph-loop scope. Run manually post-deploy to capture the regression baseline for iter-35+.
 
 ### 4. Conditional-UPDATE / `.returning()` audit (closes A-ADMIN-03)
 
