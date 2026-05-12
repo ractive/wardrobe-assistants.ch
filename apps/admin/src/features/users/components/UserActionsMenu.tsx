@@ -44,16 +44,25 @@ export function UserActionsMenu({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="min-h-11 min-w-11"
-                aria-label={`Delete ${user.displayName}`}
-                disabled={isSelf}
-                onClick={() => setDeleteOpen(true)}
-              >
-                <Trash2 aria-hidden="true" />
-              </Button>
+              <span tabIndex={isSelf ? 0 : -1} className="inline-flex">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="min-h-11 min-w-11"
+                  aria-label={`Delete ${user.displayName}`}
+                  aria-disabled={isSelf}
+                  onClick={() => {
+                    if (isSelf) return;
+                    setDeleteOpen(true);
+                  }}
+                  data-disabled={isSelf ? "" : undefined}
+                  style={
+                    isSelf ? { pointerEvents: "none", opacity: 0.5 } : undefined
+                  }
+                >
+                  <Trash2 aria-hidden="true" />
+                </Button>
+              </span>
             </TooltipTrigger>
             <TooltipContent>
               {isSelf ? "Cannot delete your own account" : "Delete user"}

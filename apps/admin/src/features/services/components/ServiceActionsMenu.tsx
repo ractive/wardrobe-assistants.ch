@@ -38,20 +38,34 @@ export function ServiceActionsMenu({ service }: { service: ServiceListItem }) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="min-h-11 min-w-11"
-                aria-label={
-                  service.archived
-                    ? `${service.name} is already archived`
-                    : `Archive ${service.name}`
-                }
-                disabled={service.archived}
-                onClick={() => setArchiveOpen(true)}
+              <span
+                tabIndex={service.archived ? 0 : -1}
+                className="inline-flex"
               >
-                <Archive aria-hidden="true" />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="min-h-11 min-w-11"
+                  aria-label={
+                    service.archived
+                      ? `${service.name} is already archived`
+                      : `Archive ${service.name}`
+                  }
+                  aria-disabled={service.archived}
+                  onClick={() => {
+                    if (service.archived) return;
+                    setArchiveOpen(true);
+                  }}
+                  data-disabled={service.archived ? "" : undefined}
+                  style={
+                    service.archived
+                      ? { pointerEvents: "none", opacity: 0.5 }
+                      : undefined
+                  }
+                >
+                  <Archive aria-hidden="true" />
+                </Button>
+              </span>
             </TooltipTrigger>
             <TooltipContent>
               {service.archived ? "Already archived" : "Archive service"}

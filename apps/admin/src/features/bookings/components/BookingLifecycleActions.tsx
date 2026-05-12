@@ -658,24 +658,34 @@ export function BookingLifecycleButtons({
             {showSendOffer && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={() => setSendOfferOpen(true)}
-                    disabled={selectionCount === 0}
-                    title={
-                      selectionCount === 0
-                        ? "Add line items before sending the offer"
-                        : undefined
-                    }
+                  <span
+                    tabIndex={selectionCount === 0 ? 0 : -1}
+                    className="inline-flex"
                   >
-                    Send offer
-                    <InfoIcon />
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={() => {
+                        if (selectionCount === 0) return;
+                        setSendOfferOpen(true);
+                      }}
+                      aria-disabled={selectionCount === 0}
+                      data-disabled={selectionCount === 0 ? "" : undefined}
+                      style={
+                        selectionCount === 0
+                          ? { pointerEvents: "none", opacity: 0.5 }
+                          : undefined
+                      }
+                    >
+                      Send offer
+                      <InfoIcon />
+                    </Button>
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  Snapshots the current line items and emails the offer to the
-                  customer. The booking moves to &apos;offered&apos; status.
+                  {selectionCount === 0
+                    ? "Add line items before sending the offer."
+                    : "Snapshots the current line items and emails the offer to the customer. The booking moves to 'offered' status."}
                 </TooltipContent>
               </Tooltip>
             )}
