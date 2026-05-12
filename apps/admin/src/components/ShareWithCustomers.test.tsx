@@ -1,6 +1,11 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
 
 // Mock sonner so toasts don't require a real Toaster in the DOM.
@@ -12,9 +17,23 @@ import { ShareWithCustomers } from "./ShareWithCustomers";
 
 const TEST_URL = "https://wardrobe-assistants.ch/booking-request";
 
+// Spy on happy-dom's built-in navigator.clipboard.writeText.
+// happy-dom ships its own Clipboard implementation, so stub/defineProperty
+// on navigator.clipboard doesn't intercept calls — vi.spyOn on the existing
+// method does. Use fireEvent for the click (userEvent.setup() uses pointer
+// event sequencing that skips async handlers in happy-dom).
+let writeTextSpy: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  writeTextSpy = vi
+    .spyOn(navigator.clipboard, "writeText")
+    .mockResolvedValue(undefined);
+});
+
 afterEach(() => {
+  writeTextSpy.mockRestore();
   cleanup();
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("ShareWithCustomers", () => {
@@ -31,37 +50,27 @@ describe("ShareWithCustomers", () => {
   });
 
   it("copies the URL to the clipboard and shows Copied state", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: { writeText },
-    });
-
-    const user = userEvent.setup();
     render(<ShareWithCustomers bookingRequestUrl={TEST_URL} />);
 
-    await user.click(
+    fireEvent.click(
       screen.getByRole("button", { name: /copy booking-request url/i }),
     );
 
+    await waitFor(() => expect(writeTextSpy).toHaveBeenCalledWith(TEST_URL));
     await waitFor(() =>
       expect(
         screen.getByRole("button", { name: /copied/i }),
       ).toBeInTheDocument(),
     );
-    expect(writeText).toHaveBeenCalledWith(TEST_URL);
   });
 
   it("shows error toast when clipboard write fails", async () => {
     const { toast } = await import("sonner");
-    const writeText = vi.fn().mockRejectedValue(new Error("Not allowed"));
-    Object.assign(navigator, {
-      clipboard: { writeText },
-    });
+    writeTextSpy.mockRejectedValueOnce(new Error("Not allowed"));
 
-    const user = userEvent.setup();
     render(<ShareWithCustomers bookingRequestUrl={TEST_URL} />);
 
-    await user.click(
+    fireEvent.click(
       screen.getByRole("button", { name: /copy booking-request url/i }),
     );
 
