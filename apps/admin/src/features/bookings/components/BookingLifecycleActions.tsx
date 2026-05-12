@@ -678,7 +678,7 @@ export function BookingLifecycleButtons({
                 Send offer
               </Button>
               <InfoPopover title="Send offer">
-                Snapshots the current line items and emails the quote to the
+                Snapshots the current line items and emails the offer to the
                 customer. The booking moves to &apos;offered&apos; status.
               </InfoPopover>
             </div>
