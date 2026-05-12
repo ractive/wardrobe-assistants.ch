@@ -104,13 +104,6 @@ export default async function BookingDetailPage({
 
   const isPublicRequest = booking.createdBy === null;
 
-  // iter-37 §C.3: "Needs completion" badge for legacy rows missing required
-  // fields (startTime, durationHours, city). These fields are enforced at
-  // app-layer for new submissions but were optional in earlier iterations, so
-  // legacy rows may lack them. DB NOT NULL is deferred.
-  const needsCompletion =
-    !booking.startTime || !booking.durationHours || !booking.city;
-
   return (
     <section className="flex flex-col gap-6">
       <div>
@@ -129,14 +122,6 @@ export default async function BookingDetailPage({
             <StatusBadge kind="booking" status={booking.status} />
             {isPublicRequest && (
               <Badge variant="outline">Public booking request</Badge>
-            )}
-            {needsCompletion && (
-              <Badge
-                variant="outline"
-                className="border-yellow-500 text-yellow-600"
-              >
-                Needs completion
-              </Badge>
             )}
           </div>
           <p className="text-[var(--muted-foreground)] text-sm">

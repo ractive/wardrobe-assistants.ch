@@ -1,15 +1,14 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { Mail, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { UserListItem } from "../schema";
 import { DeleteUserConfirm } from "./DeleteUserConfirm";
 import { MessageUserDialog } from "./MessageUserDialog";
@@ -26,30 +25,43 @@ export function UserActionsMenu({
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Actions for ${user.displayName}`}
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setMessageOpen(true)}>
-            Message user
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            disabled={isSelf}
-            onSelect={() => setDeleteOpen(true)}
-            className="text-[var(--destructive)] focus:text-[var(--destructive)]"
-          >
-            {isSelf ? "Delete (self — disabled)" : "Delete user"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <TooltipProvider>
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="min-h-11 min-w-11"
+                aria-label={`Message ${user.displayName}`}
+                onClick={() => setMessageOpen(true)}
+              >
+                <Mail aria-hidden="true" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Message user</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="min-h-11 min-w-11"
+                aria-label={`Delete ${user.displayName}`}
+                disabled={isSelf}
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 aria-hidden="true" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isSelf ? "Cannot delete your own account" : "Delete user"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
+
       <MessageUserDialog
         userId={user.id}
         displayName={user.displayName}

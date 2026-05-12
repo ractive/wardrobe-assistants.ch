@@ -1,15 +1,14 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { Archive, Pencil } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ServiceListItem } from "../schema";
 import { ArchiveServiceConfirm } from "./ArchiveServiceConfirm";
 import { EditServiceDialog } from "./ServiceDialog";
@@ -20,30 +19,47 @@ export function ServiceActionsMenu({ service }: { service: ServiceListItem }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Actions for ${service.name}`}
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            disabled={service.archived}
-            onSelect={() => setArchiveOpen(true)}
-            className="text-[var(--destructive)] focus:text-[var(--destructive)]"
-          >
-            {service.archived ? "Already archived" : "Archive"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <TooltipProvider>
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="min-h-11 min-w-11"
+                aria-label={`Edit ${service.name}`}
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil aria-hidden="true" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit service</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="min-h-11 min-w-11"
+                aria-label={
+                  service.archived
+                    ? `${service.name} is already archived`
+                    : `Archive ${service.name}`
+                }
+                disabled={service.archived}
+                onClick={() => setArchiveOpen(true)}
+              >
+                <Archive aria-hidden="true" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {service.archived ? "Already archived" : "Archive service"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
+
       <EditServiceDialog
         defaults={{
           serviceId: service.id,

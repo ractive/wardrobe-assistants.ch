@@ -156,6 +156,9 @@ export const inviteUser = withPermission(
       targetId: signUp.user.id,
       metadata: { email: input.email, role: input.role },
     });
+    console.log(
+      `[evt=user.invite userId=${actorId} targetUserId=${signUp.user.id}]`,
+    );
     return { error: false, message: "Invitation sent." };
   },
 );
@@ -184,6 +187,9 @@ export const deleteUser = withPermission(
       targetType: "user",
       targetId: parsed.data.userId,
     });
+    console.log(
+      `[evt=user.delete userId=${actorId} targetUserId=${parsed.data.userId}]`,
+    );
     return { error: false, message: "User deleted." };
   },
 );

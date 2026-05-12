@@ -112,15 +112,23 @@ describe("PushSubscribeToggle", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("shows Enable notifications button when SW is supported and no subscription", async () => {
+  it("shows the Notifications switch unchecked when SW is supported and no subscription", async () => {
     setupServiceWorkerEnv();
     const { container } = render(<PushSubscribeToggle />);
     await waitFor(() => {
-      expect(
-        within(container).getByRole("button", {
-          name: /enable push notifications/i,
-        }),
-      ).toBeInTheDocument();
+      const sw = within(container).getByRole("switch", {
+        name: /notifications/i,
+      });
+      expect(sw).toBeInTheDocument();
+      expect(sw).toHaveAttribute("aria-checked", "false");
+    });
+  });
+
+  it("shows a static Notifications label alongside the switch", async () => {
+    setupServiceWorkerEnv();
+    const { container } = render(<PushSubscribeToggle />);
+    await waitFor(() => {
+      expect(within(container).getByText("Notifications")).toBeInTheDocument();
     });
   });
 
@@ -128,10 +136,10 @@ describe("PushSubscribeToggle", () => {
     setupServiceWorkerEnv();
     const { container } = render(<PushSubscribeToggle />);
 
-    const btn = await within(container).findByRole("button", {
-      name: /enable push notifications/i,
+    const sw = await within(container).findByRole("switch", {
+      name: /notifications/i,
     });
-    fireEvent.click(btn);
+    fireEvent.click(sw);
 
     await waitFor(() => {
       expect(subscribePush).toHaveBeenCalledWith(
@@ -148,10 +156,10 @@ describe("PushSubscribeToggle", () => {
     setupServiceWorkerEnv({ permissionResult: "denied" });
     const { container } = render(<PushSubscribeToggle />);
 
-    const btn = await within(container).findByRole("button", {
-      name: /enable push notifications/i,
+    const sw = await within(container).findByRole("switch", {
+      name: /notifications/i,
     });
-    fireEvent.click(btn);
+    fireEvent.click(sw);
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
@@ -164,10 +172,10 @@ describe("PushSubscribeToggle", () => {
     setupServiceWorkerEnv({ subscribePushResult: { success: false } });
     const { container } = render(<PushSubscribeToggle />);
 
-    const btn = await within(container).findByRole("button", {
-      name: /enable push notifications/i,
+    const sw = await within(container).findByRole("switch", {
+      name: /notifications/i,
     });
-    fireEvent.click(btn);
+    fireEvent.click(sw);
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
@@ -189,10 +197,10 @@ describe("PushSubscribeToggle", () => {
     });
     const { container } = render(<PushSubscribeToggle />);
 
-    const btn = await within(container).findByRole("button", {
-      name: /enable push notifications/i,
+    const sw = await within(container).findByRole("switch", {
+      name: /notifications/i,
     });
-    fireEvent.click(btn);
+    fireEvent.click(sw);
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
@@ -208,11 +216,11 @@ describe("PushSubscribeToggle", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("is axe-clean when showing the Enable notifications button", async () => {
+  it("is axe-clean when showing the Notifications switch", async () => {
     setupServiceWorkerEnv();
     const { container } = render(<PushSubscribeToggle />);
-    await within(container).findByRole("button", {
-      name: /enable push notifications/i,
+    await within(container).findByRole("switch", {
+      name: /notifications/i,
     });
     expect(await axe(container)).toHaveNoViolations();
   });
