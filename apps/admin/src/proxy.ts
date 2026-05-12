@@ -80,6 +80,30 @@ export function buildContentSecurityPolicy({
   return directives.join("; ");
 }
 
+/**
+ * Validate that a `returnTo` value is safe for same-origin redirect.
+ *
+ * Accepts only paths that:
+ *   - Start with a single `/`
+ *   - Do not contain `://` (absolute URL) or `//` (protocol-relative URL)
+ *   - Do not start with `javascript:`
+ *
+ * Returns the path as-is when valid, or `"/"` as a safe fallback.
+ * Exported for unit testing.
+ */
+export function validateReturnTo(value: string | null | undefined): string {
+  if (!value) return "/";
+  if (
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("://") ||
+    /^javascript:/iu.test(value)
+  ) {
+    return "/";
+  }
+  return value;
+}
+
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   const nonce = btoa(crypto.randomUUID());
@@ -94,7 +118,10 @@ export function proxy(request: NextRequest): NextResponse {
     if (!hasSession) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.search = "";
+      // Preserve the original path so the login page can redirect back after
+      // successful authentication (D.3). Only the path + search + hash are
+      // forwarded — never the full URL — to avoid an open-redirect.
+      url.search = `?returnTo=${encodeURIComponent(pathname + request.nextUrl.search)}`;
       const redirect = NextResponse.redirect(url);
       redirect.headers.set("Content-Security-Policy", csp);
       return redirect;
