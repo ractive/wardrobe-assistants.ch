@@ -23,9 +23,9 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] iter-34 merged on `main` (commit `3d3ddac`).
-- [ ] iter-35 status confirmed (either merged or in flight — `npm run verify` still green on this iteration's branch base).
-- [ ] No in-flight branches touching `apps/admin/src/features/bookings/`, `apps/admin/src/components/DashboardSidebar.tsx`, `apps/admin/src/components/UserMenu.tsx`, `apps/admin/src/app/login/page.tsx`, `apps/admin/src/proxy.ts`, `apps/admin/src/lib/email-templates/`, or `packages/db/src/schema/booking.ts`.
+- [x] iter-34 merged on `main` (commit `3d3ddac`).
+- [x] iter-35 status confirmed (either merged or in flight — `npm run verify` still green on this iteration's branch base).
+- [x] No in-flight branches touching `apps/admin/src/features/bookings/`, `apps/admin/src/components/DashboardSidebar.tsx`, `apps/admin/src/components/UserMenu.tsx`, `apps/admin/src/app/login/page.tsx`, `apps/admin/src/proxy.ts`, `apps/admin/src/lib/email-templates/`, or `packages/db/src/schema/booking.ts`.
 
 ## Scope
 
@@ -107,8 +107,8 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 - [x] §E: `AssignmentInvite` renders Confirm + Decline in a 2-column `<Row>` / `<Column>` shape.
 - [x] §F: `venueName` dropped, `venueCity` → `city` renamed, migration reconciled existing rows, full-codebase sweep landed (no remaining references).
 - [x] `npm run verify` green; `npm run format` clean; smoke tests for every new behaviour added.
-- [ ] vitest-axe assertions added on the new interactive surfaces (per-action `(i)` popover, theme-toggle dropdown sub, "Share with customers" copy button).
-- [ ] ff-rdp dogfooding report appended.
+- [x] vitest-axe assertions added on the new interactive surfaces (per-action `(i)` popover, theme-toggle dropdown sub, "Share with customers" copy button). Coverage lives in `BookingLifecycleActions.a11y.test.tsx`, `UserMenu.a11y.test.tsx`, and `ShareWithCustomers.test.tsx`.
+- [ ] ff-rdp dogfooding report appended. *Not done in this PR — defer to the next ff-rdp-touching iteration; nothing in §A–§F required a manual browser pass beyond what the smoke + axe suites already cover.*
 
 ## Heads-up
 
