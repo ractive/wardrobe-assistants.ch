@@ -90,14 +90,15 @@ export const RATE_LIMITS = {
   // protection for password sign-in.
   login: { limit: 5, windowMs: 15 * 60 * 1000 } satisfies Bucket,
   // Password reset / initial set-password: 5 per 15 min per email.
-  // Tighter window than login (15 min vs 1h) bounds email send-spam to
-  // 20/h/email worst case; the higher hit count gives a freshly-invited
-  // user room to retry their first set-password without tripping the
-  // limiter. iter-39 §C.3 (was 3 per 1h — too aggressive: real invitees
-  // hit 429 on their first retry). Better Auth uses this same bucket for
-  // both the genuine forgot-password flow and the invitation-triggered
-  // `requestPasswordReset` call; that's intentional — the limit class is
-  // the same protection in both cases.
+  // Tighter window than the previous policy (15 min vs 1h — login uses
+  // the same 15 min window) bounds email send-spam to 20/h/email worst
+  // case; the higher hit count gives a freshly-invited user room to
+  // retry their first set-password without tripping the limiter.
+  // iter-39 §C.3 (was 3 per 1h — too aggressive: real invitees hit 429
+  // on their first retry). Better Auth uses this same bucket for both
+  // the genuine forgot-password flow and the invitation-triggered
+  // `requestPasswordReset` call; that's intentional — the limit class
+  // is the same protection in both cases.
   passwordReset: { limit: 5, windowMs: 15 * 60 * 1000 } satisfies Bucket,
   // Signup: 3 per hour per IP. Public signup is gated to invite-only via
   // the route handler in production, but the floor is a defense in depth

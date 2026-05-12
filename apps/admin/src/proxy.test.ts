@@ -107,6 +107,38 @@ describe("proxy — auth gate", () => {
     expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
   });
 
+  // CodeRabbit (iter-39 review): manifest is a leaf resource, so subpaths
+  // like /manifest.webmanifest/anything must not slip through the
+  // public-path allow-list.
+  it("rejects /manifest.webmanifest/<subpath> bypass attempts", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/manifest.webmanifest/anything"),
+    );
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
+  });
+
+  // Copilot (iter-39 review): manifest references icons in public/ which
+  // also need to be reachable without a session cookie or the browser
+  // can't install the PWA.
+  it.each([
+    "/icon-192.png",
+    "/icon-512.png",
+    "/icon-maskable-512.png",
+    "/badge-72.png",
+  ])("does NOT redirect %s (PWA icon)", (path) => {
+    const res = proxy(makeRequest(`https://admin.example.com${path}`));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("rejects /icon-192.png-evil prefix-bypass attempts", () => {
+    const res = proxy(
+      makeRequest("https://admin.example.com/icon-192.png-evil"),
+    );
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
+  });
+
   it("rejects /api/publicly-evil prefix-bypass attempts", () => {
     const res = proxy(
       makeRequest("https://admin.example.com/api/publicly-evil"),
