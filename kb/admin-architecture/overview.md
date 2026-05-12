@@ -36,13 +36,36 @@ Feature-folder layout in `apps/admin/src/features/<f>/` (Zod input schemas, serv
 | Topic | Doc |
 |---|---|
 | **New feature?** Start here | [`feature-slice-template.md`](feature-slice-template.md) — concrete checklist for iter-16/17/18 |
-| **Building UI?** Read first | [`design-system.md`](design-system.md) — tokens, breakpoints, forms, tables, dialogs, a11y baseline (mobile-first) |
+| **Building UI?** Read first | [`design-system/README.md`](design-system/README.md) — wiki hub; sub-pages listed below |
 | Folder structure, isolation rules | [`folder-structure.md`](folder-structure.md) |
 | Drizzle schemas, type contracts, identity model | [`data-layer.md`](data-layer.md) |
 | Server actions, queries, services, mocking | [`server-layer.md`](server-layer.md) |
 | Better Auth, RBAC, session shape, gates | [`auth-and-permissions.md`](auth-and-permissions.md) |
-| shadcn/ui, forms, tables, icons, conventions | [`ui-stack.md`](ui-stack.md) — library inventory; design-system rules in `design-system.md` |
+| shadcn/ui, forms, tables, icons, conventions | [`ui-stack.md`](ui-stack.md) — library inventory; design-system rules in [`design-system/`](design-system/README.md) |
 | TypeScript strictness, tsconfig.base.json | [`typescript-conventions.md`](typescript-conventions.md) |
+
+### Design-system sub-pages
+
+Per-topic pages under [`design-system/`](design-system/README.md) — read the one you need, not the whole set:
+
+| Topic | Page |
+|---|---|
+| Bordeaux brand tokens, theme management, hex bridge | [`design-system/tokens.md`](design-system/tokens.md) |
+| Breakpoints + 375px mobile-first cascade | [`design-system/breakpoints.md`](design-system/breakpoints.md) |
+| Spacing scale (page/section/card/inline) | [`design-system/spacing.md`](design-system/spacing.md) |
+| Typography roles (h1/h2/body/caption) | [`design-system/typography.md`](design-system/typography.md) |
+| Layout primitives (`<PageHeader>`, `<Empty>`) | [`design-system/layout-primitives.md`](design-system/layout-primitives.md) |
+| Forms — `<Form>` + RHF + Zod shape | [`design-system/forms.md`](design-system/forms.md) |
+| Tables — cards on mobile, table on desktop | [`design-system/tables.md`](design-system/tables.md) |
+| Dialogs vs sheets on mobile | [`design-system/dialogs-and-sheets.md`](design-system/dialogs-and-sheets.md) |
+| Shared `<StatusBadge>` variant maps | [`design-system/status-badges.md`](design-system/status-badges.md) |
+| Icons — `lucide-react`, `aria-hidden` | [`design-system/icons.md`](design-system/icons.md) |
+| `<HasPermission>` server vs client gating | [`design-system/permission-gating-ui.md`](design-system/permission-gating-ui.md) |
+| A11y baseline + `vitest-axe` smokes | [`design-system/a11y.md`](design-system/a11y.md) |
+| `motion-safe:` + default transition | [`design-system/animation.md`](design-system/animation.md) |
+| Anti-patterns checklist | [`design-system/anti-patterns.md`](design-system/anti-patterns.md) |
+| Vendored shadcn blocks | [`design-system/blocks.md`](design-system/blocks.md) |
+| Theme switcher (light/dark/system, CSP nonce) | [`design-system/theme.md`](design-system/theme.md) |
 
 ## Decision log
 

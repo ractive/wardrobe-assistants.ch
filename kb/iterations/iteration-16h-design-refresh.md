@@ -32,12 +32,12 @@ For each block: run with `--overwrite`, inspect `git diff`, keep the structural 
 
 - [x] **`@shadcn/sidebar-07`** → graft icon-collapse + footer pattern into our `DashboardSidebar.tsx`. Keep our `<HasPermission>` gates around each NavLink. Add the user menu and theme toggle to the footer.
 - [x] **`@shadcn/login-03`** → keep only the chrome: muted-bg full-screen flex shell, `max-w-sm` form column, brand-badge link above the form. **Restore** `src/app/login/page.tsx` to the iter-16g coordinator after the add (`git restore src/app/login/page.tsx`); the new chrome wraps it. Do not vendor `login-03/components/login-form.tsx` (uses `Field` primitives + social-login buttons we don't support).
-- [x] **`@shadcn/dashboard-01`** → reference only. The `--dry-run` showed it pulls 14 deps (`@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul`) we don't want yet. Run `add` against a scratch branch if you want to see the structure live; otherwise read the source via `mcp__shadcn__get_item_examples_from_registries`. Hand-write `(dashboard)/page.tsx` matching its layout: page header → 4-up KPI grid (1×4 mobile, 2×2 md:, 4×1 xl:) → chart placeholder (use `@shadcn/empty`) → recent-events mini-table (cards on mobile, table on desktop per `design-system.md` §7).
-- [x] `npx shadcn@latest add @shadcn/empty -c apps/admin`. Single new file; replaces the planned hand-rolled `<EmptyState>` from `design-system.md` §5.
+- [x] **`@shadcn/dashboard-01`** → reference only. The `--dry-run` showed it pulls 14 deps (`@dnd-kit/*`, `recharts`, `@tabler/icons-react`, `@tanstack/react-table`, `vaul`) we don't want yet. Run `add` against a scratch branch if you want to see the structure live; otherwise read the source via `mcp__shadcn__get_item_examples_from_registries`. Hand-write `(dashboard)/page.tsx` matching its layout: page header → 4-up KPI grid (1×4 mobile, 2×2 md:, 4×1 xl:) → chart placeholder (use `@shadcn/empty`) → recent-events mini-table (cards on mobile, table on desktop per `design-system/tables.md`).
+- [x] `npx shadcn@latest add @shadcn/empty -c apps/admin`. Single new file; replaces the planned hand-rolled `<EmptyState>` from `design-system/layout-primitives.md`.
 
 ## Scope — KB updates
 
-- [x] `design-system.md` §1 — replace the hex tokens table with "Tokens are sourced from `@shadcn/theme-neutral`. To re-sync, re-run `npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite`." Drop "dark-only" language throughout (admin now ships light + dark + system). Update §5 to reference `@shadcn/empty` instead of the planned hand-rolled `<EmptyState>`.
+- [x] `design-system/tokens.md` — replace the hex tokens table with "Tokens are sourced from `@shadcn/theme-neutral`. To re-sync, re-run `npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite`." Drop "dark-only" language throughout (admin now ships light + dark + system). Update §5 to reference `@shadcn/empty` instead of the planned hand-rolled `<EmptyState>`.
 - [x] `ui-stack.md` — note the MCP-first / dry-run-first / commit-then-add workflow.
 - [x] `decision-log.md` — single ADR: **"Admin adopts shadcn new-york + theme-neutral wholesale; no token-level brand customization."** Why: every iteration after this gets to track upstream instead of maintaining a parallel design system; brand identity stays on the customer-facing homepage where it matters.
 
@@ -53,7 +53,7 @@ For each block: run with `--overwrite`, inspect `git diff`, keep the structural 
 
 - **Bordeaux brand customization in the admin.** Deliberate — see the ADR. Deferred to **iter-16i** (re-applying the Bordeaux override on top of theme-neutral once the canonical baseline has settled). Customer-facing homepage keeps its brand independently.
 - **Real charts** (`recharts`, `chart-area-interactive`) — iter-22.
-- **TanStack Table for the recent-events list** — `design-system.md` §7 still applies.
+- **TanStack Table for the recent-events list** — `design-system/tables.md` still applies.
 - **`@shadcn/signup-XX`** — no public sign-up surface today.
 - **`@shadcn/drawer` / `@shadcn/input-otp`** — polish for a future iteration.
 - **Server-side theme persistence** — client-only via `next-themes` localStorage.
@@ -90,4 +90,4 @@ Removed:
 - [x] Theme toggle (Light / Dark / System) works in the sidebar footer; no flash on cold load.
 - [x] Sidebar collapses to icons on desktop, offcanvas on mobile; permission gates intact.
 - [x] Dashboard home matches `dashboard-01`'s layout shape (without its dependency bundle); login + set-password use `login-03` chrome around the iter-16g form bodies.
-- [x] Single ADR documents the "adopt over invent" stance; `design-system.md` and `ui-stack.md` reflect the upstream-tracked baseline.
+- [x] Single ADR documents the "adopt over invent" stance; `design-system/README.md` and `ui-stack.md` reflect the upstream-tracked baseline.

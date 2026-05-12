@@ -1,4 +1,4 @@
-// a11y smoke test for NoPermissionCard — uses vitest-axe per the design-system.md baseline.
+// a11y smoke test for NoPermissionCard — uses vitest-axe per the design-system/a11y.md baseline.
 
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";

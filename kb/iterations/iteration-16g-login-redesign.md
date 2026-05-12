@@ -15,7 +15,7 @@ Mobile responsiveness applied per design-system doc.
 
 ## Pre-flight
 
-- [x] iter-16c (design system) merged. `design-system.md` defines exactly how forms look on mobile/desktop.
+- [x] iter-16c (design system) merged. `design-system/README.md` defines exactly how forms look on mobile/desktop.
 - [x] iter-16d (nav + data cleanup) merged.
 - [x] iter-16e (forms + boundaries) merged. `useFormAction()` exists; `role="alert"` already wraps server-error spans on login + set-password.
 - [x] iter-16f (defense-in-depth) merged. Brings: password floor 12 (`login-schema.ts` + Better Auth `minPasswordLength`), set-password hint copy ("Use a passphrase you don't reuse — at least 12 characters"), rate-limit on auth POSTs (5/15min login per IP+email, 3/h reset per email, 3/h signup per IP) returning HTTP 429 + `Retry-After`. The redesign must preserve the 12-char min message text and gracefully surface the new 429 path (toast via `useFormAction` is already wired; verify the rate-limit message reads sensibly).

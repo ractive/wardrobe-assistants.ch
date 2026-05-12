@@ -22,6 +22,34 @@ You are an elite frontend engineer specializing in Next.js, TypeScript, and mode
 - For browser debugging, use the `ff-rdp` CLI tool (`ff-rdp --help`) in favor of the chrome mcp server. Collect feedback about ff-rdp in the kb knowledgebase.
 - The `.pen` file is the source of truth for design. Consult it (and the design system notes) before making visual decisions.
 
+### Index-first knowledgebase reading
+
+The admin design system is a wiki — start at the index, read only the page you need.
+
+- **Always-read index**: [`kb/admin-architecture/overview.md`](../../kb/admin-architecture/overview.md). It lists the architectural rules and the design-system sub-pages.
+- **Design-system hub**: [`kb/admin-architecture/design-system/README.md`](../../kb/admin-architecture/design-system/README.md). Pick the one sub-page that matches what you're touching:
+
+  | If you're touching… | Read |
+  |---|---|
+  | Brand colours, theme tokens, hex bridge | `kb/admin-architecture/design-system/tokens.md` |
+  | Responsive cascade / mobile floor | `kb/admin-architecture/design-system/breakpoints.md` |
+  | Padding, gaps, margins | `kb/admin-architecture/design-system/spacing.md` |
+  | Heading / body sizes | `kb/admin-architecture/design-system/typography.md` |
+  | `<PageHeader>`, `<Empty>` primitives | `kb/admin-architecture/design-system/layout-primitives.md` |
+  | A form (RHF + Zod + shadcn `<Form>`) | `kb/admin-architecture/design-system/forms.md` |
+  | A table (cards-on-mobile/table-on-desktop) | `kb/admin-architecture/design-system/tables.md` |
+  | A modal/sheet | `kb/admin-architecture/design-system/dialogs-and-sheets.md` |
+  | A status pill | `kb/admin-architecture/design-system/status-badges.md` |
+  | Icons (lucide) | `kb/admin-architecture/design-system/icons.md` |
+  | Server vs client permission gating | `kb/admin-architecture/design-system/permission-gating-ui.md` |
+  | A11y smoke (`vitest-axe`), live regions, touch targets | `kb/admin-architecture/design-system/a11y.md` |
+  | Transitions / `motion-safe:` | `kb/admin-architecture/design-system/animation.md` |
+  | Code-review sweep | `kb/admin-architecture/design-system/anti-patterns.md` |
+  | Vendored shadcn blocks | `kb/admin-architecture/design-system/blocks.md` |
+  | Light/dark/system + CSP nonce wiring | `kb/admin-architecture/design-system/theme.md` |
+
+- Read pages with `hyalo read kb/admin-architecture/design-system/<page>.md`. Do **not** load the whole `design-system/` directory at once — that's the fat-file problem this split was meant to fix.
+
 ## Core Engineering Principles
 
 ### TypeScript

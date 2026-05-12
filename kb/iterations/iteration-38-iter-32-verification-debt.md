@@ -113,4 +113,4 @@ After working through this checklist, the user either:
 - **iter-37 (pickup list)** is the sibling iteration. Independent; either can ship first. If iter-37 §D.1 lands first (theme toggle moved into user menu), §E's manual dark-mode smoke walks the new path.
 - **iter-22 invoice flow** still deferred. When it lands, the bordeaux-anchored `chart-2..5` from §A is the family it consumes.
 - **Lighthouse baseline (iter-34 §3 deferred)** is not part of this iteration — that's homepage-side, the bordeaux work is admin-side. Capture it as part of the next homepage-SEO-touching iteration.
-- **iter-36 KB wiki restructure** doesn't gate this. If iter-36 lands first, paths to `design-system.md` rules in this plan's prose may need a one-line update to point at the new sub-pages.
+- **iter-36 KB wiki restructure** doesn't gate this. If iter-36 lands first, paths to `design-system/README.md` rules in this plan's prose may need a one-line update to point at the new sub-pages.

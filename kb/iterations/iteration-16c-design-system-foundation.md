@@ -19,7 +19,7 @@ The design-system doc must treat **mobile/responsive as a first-class concern**:
 - [x] [Frontend audit consolidated](../audits/audit-2026-05-09-frontend-consolidated.md) re-read.
 - [x] Confirm: stay on stock shadcn/ui; do not adopt community shadcn extensions (Origin UI, Cult UI, Aceternity, etc.). Reference research in §6 of the consolidated audit.
 
-## Scope — `kb/admin-architecture/design-system.md` [14/14]
+## Scope — `kb/admin-architecture/design-system/README.md` [14/14]
 
 The doc covers each topic with a mobile-first answer + a desktop answer + a "don't do this" anti-pattern. Concrete code snippets where they help.
 
@@ -57,14 +57,14 @@ Sets up the tooling iter-16e/g need. No tests written here.
 ## Scope — cross-links [3/3]
 
 - [x] Update `kb/admin-architecture/overview.md` "Start here" table to add a "Design system" row pointing at the new doc.
-- [x] Update `kb/admin-architecture/feature-slice-template.md` to say "UI conventions: see [`design-system.md`](design-system.md)" — that line replaces any previously inline UI guidance.
-- [x] Update `CLAUDE.md` (admin section) to point at `design-system.md` alongside the slice template.
+- [x] Update `kb/admin-architecture/feature-slice-template.md` to say "UI conventions: see [`design-system/README.md`](design-system/README.md)" — that line replaces any previously inline UI guidance.
+- [x] Update `CLAUDE.md` (admin section) to point at `design-system/README.md` alongside the slice template.
 
 ## Verify [4/4]
 
 - [x] `npm run verify` — green.
 - [x] `npm run verify:tf` — green (no infra changes here, but confirm).
-- [x] `kb/admin-architecture/design-system.md` exists, covers all 14 topics in the scope above with mobile-first answers, and reads as a one-shot reference.
+- [x] `kb/admin-architecture/design-system/README.md` exists, covers all 14 topics in the scope above with mobile-first answers, and reads as a one-shot reference.
 - [x] Vendored primitives (`sidebar.tsx`, `sheet.tsx`, `skeleton.tsx`) exist in `components/ui/` and don't yet have any callers.
 
 ## Out of scope (deliberate)
@@ -78,7 +78,7 @@ Sets up the tooling iter-16e/g need. No tests written here.
 ## Critical files
 
 New:
-- `kb/admin-architecture/design-system.md`
+- `kb/admin-architecture/design-system/README.md`
 - `apps/admin/src/components/ui/sidebar.tsx` (vendored)
 - `apps/admin/src/components/ui/sheet.tsx` (vendored)
 - `apps/admin/src/components/ui/skeleton.tsx` (vendored)
@@ -92,6 +92,6 @@ Edited:
 
 ## Done when [3/3]
 
-- [x] `design-system.md` is the single contract for "how to build UI here", and iter-16d/e/g/17 can reference it as a complete instruction.
+- [x] `design-system/README.md` is the single contract for "how to build UI here", and iter-16d/e/g/17 can reference it as a complete instruction.
 - [x] Mobile/responsive is treated as a primitive, not a polish step — every section of the doc has a mobile-first answer.
 - [x] All vendored primitives + dev tooling are in place so iter-16d can start mechanical cleanup without setup tax.

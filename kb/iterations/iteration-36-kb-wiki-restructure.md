@@ -2,7 +2,7 @@
 title: Iteration 36 — KB wiki restructure (split design-system.md, harden overview as hub)
 type: iteration
 order: 37
-status: planned
+status: done
 ---
 
 # Iteration 36 — KB wiki restructure (split design-system.md, harden overview as hub)
@@ -26,9 +26,9 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [ ] iter-35 merged on `main` (or in flight without conflicts — this iteration is doc-only, parallel-safe).
-- [ ] No in-flight branches touching `kb/admin-architecture/`, `.claude/agents/nextjs-frontend-engineer.md`, or root `CLAUDE.md`.
-- [ ] `hyalo --version` succeeds (the CLI is the implementation tool for this iteration).
+- [x] iter-35 merged on `main` (or in flight without conflicts — this iteration is doc-only, parallel-safe).
+- [x] No in-flight branches touching `kb/admin-architecture/`, `.claude/agents/nextjs-frontend-engineer.md`, or root `CLAUDE.md`.
+- [x] `hyalo --version` succeeds (the CLI is the implementation tool for this iteration).
 
 ## Scope
 
@@ -119,14 +119,14 @@ The "Admin app architecture" section references `kb/admin-architecture/design-sy
 
 ## Done when
 
-- [ ] `kb/admin-architecture/design-system.md` deleted.
-- [ ] `kb/admin-architecture/design-system/` contains `README.md` + 16 sub-pages, each with frontmatter and "See also" footer.
-- [ ] `hyalo find "design-system.md"` (literal-string search) returns zero hits outside this iteration plan.
-- [ ] `overview.md` lists every sub-page in its detailed-docs section.
-- [ ] `.claude/agents/nextjs-frontend-engineer.md` points at the new paths in its index-first block.
-- [ ] Root `CLAUDE.md` and `.claude/CLAUDE.md` reference the new shape.
-- [ ] `npm run verify` green (should be a no-op — pure doc changes).
-- [ ] One commit per logical step (sub-pages created, README written, old file deleted + links rewritten, agent prompt, CLAUDE.md). Five-ish commits total; revertible per step.
+- [x] `kb/admin-architecture/design-system.md` deleted.
+- [x] `kb/admin-architecture/design-system/` contains `README.md` + 16 sub-pages, each with frontmatter and "See also" footer.
+- [x] `hyalo find "design-system.md"` (literal-string search) returns zero hits outside this iteration plan.
+- [x] `overview.md` lists every sub-page in its detailed-docs section.
+- [x] `.claude/agents/nextjs-frontend-engineer.md` points at the new paths in its index-first block.
+- [x] Root `CLAUDE.md` and `.claude/CLAUDE.md` reference the new shape.
+- [x] `npm run verify` green (should be a no-op — pure doc changes).
+- [x] One commit per logical step (sub-pages created, README written, old file deleted + links rewritten, agent prompt, CLAUDE.md). Five-ish commits total; revertible per step.
 
 ## Heads-up
 

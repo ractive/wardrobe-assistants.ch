@@ -123,7 +123,7 @@ Replace the two consecutive casts in `apps/admin/src/hooks/use-has-permission.ts
   - **TypeScript 6 + Vite 8** dev-pipeline bumps (A-TS-08 / A-DEPS-02 / A-DEPS-03). The audit's iter-37 candidate. Major-version risk; run with a green/red verify gate as its own iteration.
   - **`useMemo` / `useCallback` removal** (A-REACT-02). Audit advised "keep manual memos in `components/ui/`"; a sweep needs per-call judgement, not a mechanical pass.
   - **`forwardRef` → ref-as-prop** (A-REACT-03). Waiting on the shadcn registry to publish React-19-native primitives; diverging from upstream now creates merge debt.
-  - **`kb/admin-architecture/` wiki restructure.** Pending memory note (`project_kb_restructure_pending`) — split `design-system.md` into per-topic pages linked from `overview.md`. Worth doing soon to shrink agent context usage, but doc-only and parallel-safe; can land any time post iter-32.
+  - ~~**`kb/admin-architecture/` wiki restructure.** Pending memory note (`project_kb_restructure_pending`) — split `design-system.md` into per-topic pages linked from `overview.md`.~~ **Done in iter-36** — split into `kb/admin-architecture/design-system/*.md` with `README.md` hub.
 
 - **What's *truly* closed by this iteration:** every audit finding with `Disposition: queued` except the four above. After merge, `findings-index.md` and the iter-33 audit doc both need a status pass to mark items as resolved.
 
