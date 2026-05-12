@@ -51,7 +51,8 @@ describe("BookingsTable", () => {
     // Every link in the table body should target one of the booking hrefs.
     const tableBody = container.querySelector("tbody");
     expect(tableBody).not.toBeNull();
-    const links = within(tableBody!).getAllByRole("link");
+    if (!tableBody) throw new Error("tbody not found");
+    const links = within(tableBody).getAllByRole("link");
     const hrefs = links.map((l) => l.getAttribute("href"));
     expect(hrefs).toContain("/bookings/b1");
     expect(hrefs).toContain("/bookings/b2");

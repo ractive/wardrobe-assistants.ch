@@ -1109,7 +1109,7 @@ describe("offer flow — smoke", () => {
     const { bookingAssignments } = await import(
       "@wardrobe-assistants/db/schema"
     );
-    const { and, eq } = await import("drizzle-orm");
+    const { eq } = await import("drizzle-orm");
     const { sendPush } = await import("@/lib/push");
     const pushMock = sendPush as unknown as ReturnType<typeof vi.fn>;
     pushMock.mockClear();

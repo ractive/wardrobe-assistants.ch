@@ -570,18 +570,18 @@ describe("bookings feature — smoke", () => {
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
     const booking = list.find((b) => b.name === "Selections booking");
-    expect(booking).toBeDefined();
+    if (!booking) throw new Error("booking not found");
 
     const r = await harness.runAs(admin.cookies, () =>
       replaceBookingSelections({
-        bookingId: booking!.id,
+        bookingId: booking.id,
         selections: [{ serviceId: sewingId, quantity: 2 }],
       }),
     );
     expect(r.error, JSON.stringify(r)).toBe(false);
 
     const detail = await harness.runAs(admin.cookies, () =>
-      getBookingById(booking!.id),
+      getBookingById(booking.id),
     );
     expect(detail?.selections).toHaveLength(1);
     expect(detail?.selections[0]?.quantity).toBe(2);
@@ -680,7 +680,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Accept-path booking")!;
+    const booking = list.find((b) => b.name === "Accept-path booking");
+    if (!booking) throw new Error("booking not found");
 
     await harness.runAs(admin.cookies, () =>
       replaceBookingSelections({
@@ -722,7 +723,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Reject-then-accept")!;
+    const booking = list.find((b) => b.name === "Reject-then-accept");
+    if (!booking) throw new Error("booking not found");
 
     await harness.runAs(admin.cookies, () =>
       rejectBooking({ bookingId: booking.id, reason: undefined }),
@@ -782,7 +784,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Reject-path booking")!;
+    const booking = list.find((b) => b.name === "Reject-path booking");
+    if (!booking) throw new Error("booking not found");
 
     const r = await harness.runAs(admin.cookies, () =>
       rejectBooking({ bookingId: booking.id, reason: "Date conflict." }),
@@ -820,7 +823,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Reject-after-accept")!;
+    const booking = list.find((b) => b.name === "Reject-after-accept");
+    if (!booking) throw new Error("booking not found");
 
     await harness.runAs(admin.cookies, () =>
       adminAcceptOffer({ bookingId: booking.id }),
@@ -859,7 +863,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Cancel-path booking")!;
+    const booking = list.find((b) => b.name === "Cancel-path booking");
+    if (!booking) throw new Error("booking not found");
 
     await harness.runAs(admin.cookies, () =>
       adminAcceptOffer({ bookingId: booking.id }),
@@ -902,7 +907,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Cancel-from-created")!;
+    const booking = list.find((b) => b.name === "Cancel-from-created");
+    if (!booking) throw new Error("booking not found");
 
     const r = await harness.runAs(admin.cookies, () =>
       cancelBooking({ bookingId: booking.id, reason: undefined }),
@@ -944,7 +950,8 @@ describe("bookings feature — smoke", () => {
       }),
     );
     const list = await harness.runAs(admin.cookies, () => listBookings());
-    const booking = list.find((b) => b.name === "Race-cancel booking")!;
+    const booking = list.find((b) => b.name === "Race-cancel booking");
+    if (!booking) throw new Error("booking not found");
 
     await harness.runAs(admin.cookies, () =>
       adminAcceptOffer({ bookingId: booking.id }),

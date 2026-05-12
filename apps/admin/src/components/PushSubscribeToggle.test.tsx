@@ -93,12 +93,9 @@ describe("PushSubscribeToggle", () => {
   afterEach(() => {
     cleanup();
     delete process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    // biome-ignore lint/suspicious/noExplicitAny: cleanup
-    delete (navigator as unknown as Record<string, unknown>)["serviceWorker"];
-    // biome-ignore lint/suspicious/noExplicitAny: cleanup
-    delete (window as unknown as Record<string, unknown>)["PushManager"];
-    // biome-ignore lint/suspicious/noExplicitAny: cleanup
-    delete (window as unknown as Record<string, unknown>)["Notification"];
+    delete (navigator as unknown as Record<string, unknown>).serviceWorker;
+    delete (window as unknown as Record<string, unknown>).PushManager;
+    delete (window as unknown as Record<string, unknown>).Notification;
   });
 
   it("returns null when NEXT_PUBLIC_VAPID_PUBLIC_KEY is unset", async () => {
