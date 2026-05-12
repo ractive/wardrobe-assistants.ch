@@ -24,9 +24,9 @@ Implemented autonomously by `/ralph-loop` where possible; must leave the system 
 
 ## Pre-flight
 
-- [ ] iter-39 merged on `main`.
-- [ ] `npm run verify` green on this iteration's branch base.
-- [ ] No in-flight branches touching `apps/admin/src/features/bookings/components/`, `apps/admin/src/features/services/components/`, `apps/admin/src/features/users/components/`, `apps/admin/src/components/UserMenu.tsx` (notifications toggle lives here), or `apps/admin/src/lib/auth.ts` (log additions).
+- [x] iter-39 merged on `main`.
+- [x] `npm run verify` green on this iteration's branch base.
+- [x] No in-flight branches touching `apps/admin/src/features/bookings/components/`, `apps/admin/src/features/services/components/`, `apps/admin/src/features/users/components/`, `apps/admin/src/components/UserMenu.tsx` (notifications toggle lives here), or `apps/admin/src/lib/auth.ts` (log additions).
 
 ## Scope
 
@@ -86,16 +86,16 @@ Recommend one (likely A — the cross-device argument doesn't outweigh the schem
 
 ## Done when
 
-- [ ] §A.1: lifecycle action `(i)` is inside the button; tooltip shows on hover *and* on click/tap, and on keyboard focus.
-- [ ] §A.2: "Needs completion" badge is removed; no test references it.
-- [ ] §A.3: Edit form opens, what's wrong is documented, fixes for the documented issues land in this iteration.
-- [ ] §A.4: line-item amounts are left-aligned with `tabular-nums`; readable at 1920px wide.
-- [ ] §A.5: notifications toggle is a `<Switch>` with a static "Notifications" label, keyboard-operable, `aria-label` set.
-- [ ] §B.1 + §B.2: /users and /services rows show two icon buttons each, with tooltips and ≥44px tap targets, mobile-tested at 375px.
-- [ ] §C: at least 12 new log call sites land (5 auth, 7 booking lifecycle). Run admin locally, perform actions, confirm log lines appear in stdout. PII rule respected.
-- [ ] §D + §E: each has a written recommendation in the PR description; whatever's recommended either lands here or is queued explicitly.
-- [ ] `npm run verify` green. UI changes covered by axe tests where applicable.
-- [ ] `ff-rdp` dogfooding session appended.
+- [x] §A.1: lifecycle action `(i)` is inside the button; tooltip shows on hover *and* on click/tap, and on keyboard focus.
+- [x] §A.2: "Needs completion" badge is removed; no test references it.
+- [x] §A.3: Edit form opens, what's wrong is documented, fixes for the documented issues land in this iteration.
+- [x] §A.4: line-item amounts are left-aligned with `tabular-nums`; readable at 1920px wide.
+- [x] §A.5: notifications toggle is a `<Switch>` with a static "Notifications" label, keyboard-operable, `aria-label` set.
+- [x] §B.1 + §B.2: /users and /services rows show two icon buttons each, with tooltips and ≥44px tap targets, mobile-tested at 375px.
+- [ ] §C: at least 12 new log call sites land (5 auth, 7 booking lifecycle). Run admin locally, perform actions, confirm log lines appear in stdout. PII rule respected. *(15 sites total — 3 auth, 8 booking, 2 services, 2 users — exceeds the 12-site floor and the 7-booking sub-floor, but only 3/5 auth events landed: `signin.ok`, `signup.ok`, `password_reset.requested`. Missing: `signin.fail` and `password_reset.completion`. Queue for iter-41 alongside the structured-logging upgrade.)*
+- [x] §D + §E: each has a written recommendation in the PR description; whatever's recommended either lands here or is queued explicitly.
+- [x] `npm run verify` green. UI changes covered by axe tests where applicable.
+- [x] `ff-rdp` dogfooding session appended.
 
 ## Out of scope
 
