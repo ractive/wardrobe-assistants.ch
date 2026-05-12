@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useActionState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useFormAction } from "@/hooks/use-form-action";
 import { messageUserInput } from "../schema";
 import { messageUser } from "../server/actions";
 
@@ -51,13 +51,25 @@ export function MessageUserDialog({
     if (open) form.reset({ userId, subject: "", body: "" });
   }, [open, userId]);
 
-  const submit = useFormAction(messageUser, {
-    onSuccess: () => onOpenChange(false),
-    refresh: false,
-    fallbackErrorMessage: "Could not send message.",
-  });
+  const [state, actionDispatch] = useActionState(
+    async (
+      _prevState: { error?: unknown; message?: string } | null,
+      data: Parameters<typeof messageUser>[0],
+    ) => messageUser(data),
+    null,
+  );
 
-  const onSubmit = form.handleSubmit((data) => submit(data));
+  useEffect(() => {
+    if (!state) return;
+    if (state.error) {
+      toast.error(state.message ?? "Could not send message.");
+    } else {
+      toast.success(state.message ?? "Done.");
+      onOpenChange(false);
+    }
+  }, [state, onOpenChange]);
+
+  const onSubmit = form.handleSubmit((data) => actionDispatch(data));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,7 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -19,11 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFormAction } from "@/hooks/use-form-action";
 import { inviteUserInput } from "../schema";
 import { inviteUser } from "../server/actions";
 
 export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
+  const router = useRouter();
+
   const form = useForm({
     resolver: zodResolver(inviteUserInput),
     defaultValues: {
@@ -36,15 +40,28 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
     },
   });
 
-  const submit = useFormAction(inviteUser, {
-    onSuccess: () => {
+  const [state, actionDispatch] = useActionState(
+    async (
+      _prevState: { error?: unknown; message?: string } | null,
+      data: Parameters<typeof inviteUser>[0],
+    ) => inviteUser(data),
+    null,
+  );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form are stable references that do not need to trigger re-runs
+  useEffect(() => {
+    if (!state) return;
+    if (state.error) {
+      toast.error(state.message ?? "Could not send invitation.");
+    } else {
+      toast.success(state.message ?? "Done.");
       form.reset();
       onSuccess?.();
-    },
-    fallbackErrorMessage: "Could not send invitation.",
-  });
+      router.refresh();
+    }
+  }, [state, onSuccess]);
 
-  const onSubmit = form.handleSubmit((data) => submit(data));
+  const onSubmit = form.handleSubmit((data) => actionDispatch(data));
 
   return (
     <Form {...form}>
@@ -154,6 +171,8 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
           className="w-full"
           disabled={form.formState.isSubmitting}
         >
+          {/* RHF's isSubmitting tracks the awaited useActionState dispatch
+              (its returned promise resolves when the server action settles). */}
           {form.formState.isSubmitting ? "Sending invite…" : "Send invite"}
         </Button>
       </form>

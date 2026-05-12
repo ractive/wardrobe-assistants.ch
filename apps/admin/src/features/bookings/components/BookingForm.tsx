@@ -3,7 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -21,7 +24,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { useFormAction } from "@/hooks/use-form-action";
 import { cn } from "@/lib/utils";
 import { type CreateBookingInput, createBookingInput } from "../schema";
 import { createBooking, updateBooking } from "../server/actions";
@@ -70,10 +72,14 @@ type FormValues = {
 export function BookingForm(props: Props) {
   const isEdit = props.mode === "edit";
   const defaults = isEdit ? props.defaults : undefined;
+  const router = useRouter();
 
   const form = useForm<FormValues>({
     // Resolver enforces the parsed `CreateBookingInput` shape (date required)
     // even though the form-state type permits `date: undefined` mid-edit.
+    // `as never` suppresses the RHF/Zod generic mismatch: zodResolver's inferred
+    // output type (CreateBookingInput with date required) conflicts with FormValues
+    // (date optional mid-edit); the resolver itself enforces the constraint at runtime.
     resolver: zodResolver(createBookingInput) as never,
     defaultValues: {
       name: defaults?.name ?? "",
@@ -91,27 +97,39 @@ export function BookingForm(props: Props) {
     },
   });
 
-  const submit = useFormAction(
-    async (data: CreateBookingInput) =>
+  const fallbackErrorMessage = isEdit
+    ? "Could not update booking."
+    : "Could not create booking.";
+
+  const [state, actionDispatch] = useActionState(
+    async (
+      _prevState: { error?: unknown; message?: string } | null,
+      data: CreateBookingInput,
+    ) =>
       defaults
         ? updateBooking({ ...data, bookingId: defaults.bookingId })
         : createBooking(data),
-    {
-      onSuccess: () => {
-        if (!isEdit) form.reset();
-        props.onSuccess?.();
-      },
-      fallbackErrorMessage: isEdit
-        ? "Could not update booking."
-        : "Could not create booking.",
-    },
+    null,
   );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form/props are stable references that do not need to trigger re-runs
+  useEffect(() => {
+    if (!state) return;
+    if (state.error) {
+      toast.error(state.message ?? fallbackErrorMessage);
+    } else {
+      toast.success(state.message ?? "Done.");
+      if (!isEdit) form.reset();
+      props.onSuccess?.();
+      router.refresh();
+    }
+  }, [state, fallbackErrorMessage, isEdit]);
 
   // The resolver guarantees a real Date when handleSubmit fires, so parsing
   // is just the type-safe boundary — narrows `FormValues` (date optional) to
   // `CreateBookingInput` (date required) at runtime instead of via cast.
   const onSubmit = form.handleSubmit((data) =>
-    submit(createBookingInput.parse(data)),
+    actionDispatch(createBookingInput.parse(data)),
   );
 
   const submitLabel = isEdit ? "Save changes" : "Create booking";
@@ -344,6 +362,8 @@ export function BookingForm(props: Props) {
           className="w-full"
           disabled={form.formState.isSubmitting}
         >
+          {/* RHF's isSubmitting tracks the awaited useActionState dispatch
+              (its returned promise resolves when the server action settles). */}
           {form.formState.isSubmitting ? "Saving…" : submitLabel}
         </Button>
       </form>

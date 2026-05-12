@@ -6,6 +6,7 @@
 // priceType, price }` for non-archived services. `price` is a whole-CHF
 // integer matching `services.price`; no centimes anywhere in the wire format.
 import { services } from "@wardrobe-assistants/db/schema";
+import { publicServicesResponseSchema } from "@wardrobe-assistants/shared/public-services-schema";
 import { asc, eq } from "drizzle-orm";
 import { corsHeaders, isAllowedOrigin } from "@/lib/cors";
 import { db } from "@/lib/db";
@@ -68,7 +69,23 @@ export async function GET(req: Request): Promise<Response> {
       .where(eq(services.archived, false))
       .orderBy(asc(services.name));
 
-    return new Response(JSON.stringify({ services: rows }), {
+    // iter-34 §6: validate the response shape against the shared schema so
+    // the wire contract is defended at both ends. Drizzle row shapes already
+    // match by construction, so a parse failure here is a real bug — log
+    // loudly and signal an internal error so consumers (and ops dashboards)
+    // can see it; serving an empty 200 would mask the regression.
+    const parsed = publicServicesResponseSchema.safeParse({ services: rows });
+    if (!parsed.success) {
+      console.error(
+        "[public/services] response failed schema validation",
+        parsed.error.flatten(),
+      );
+      return new Response(JSON.stringify({ error: "internal_error" }), {
+        status: 500,
+        headers: baseHeaders,
+      });
+    }
+    return new Response(JSON.stringify(parsed.data), {
       status: 200,
       headers: baseHeaders,
     });

@@ -24,11 +24,20 @@ export const metadata: Metadata = {
     title: pageTitle,
     description: pageDescription,
     locale: "en_CH",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Privacy policy — Wardrobe Assistants Switzerland",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: pageTitle,
     description: pageDescription,
+    images: ["/og-image.png"],
   },
 };
 

@@ -908,4 +908,105 @@ describe("bookings feature — smoke", () => {
     expect(r.error).toBe(true);
     expect(r.message).toMatch(/cannot cancel/i);
   });
+
+  // iter-34 §4: deterministic race-safety smoke for the conditional-UPDATE
+  // guard on cancelBooking. The action reads booking.status (pre-tx), then
+  // UPDATEs with `WHERE id = ? AND status = 'accepted'` and inspects
+  // `.returning()` to detect a zero-row result. We exercise the zero-row
+  // path specifically by leaving the row in "accepted" (so the pre-tx
+  // guard passes) and intercepting the action's UPDATE so a concurrent
+  // committed transition (status -> "rejected") lands in the gap between
+  // pre-read and write. Without `WHERE status = ?` in the guard, the
+  // action would overwrite "rejected" with "cancelled" silently; without
+  // `.returning()` the zero-row case would still report success. Both
+  // halves are required and both are asserted here.
+  it("cancelBooking: concurrent transition between pre-read and UPDATE — zero-row error path", async () => {
+    const admin = await harness.seedAdmin({
+      email: "lifecycle-admin9@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, adminAcceptOffer, cancelBooking } = await import(
+      "./actions"
+    );
+    const { listBookings } = await import("./queries");
+    const { bookings } = await import("@wardrobe-assistants/db/schema");
+    const { eq } = await import("drizzle-orm");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Race-cancel booking",
+        date: new Date("2026-09-07T18:00:00.000Z"),
+        venue: "Studio K",
+        ...optionalBookingFields,
+      }),
+    );
+    const list = await harness.runAs(admin.cookies, () => listBookings());
+    const booking = list.find((b) => b.name === "Race-cancel booking")!;
+
+    await harness.runAs(admin.cookies, () =>
+      adminAcceptOffer({ bookingId: booking.id }),
+    );
+
+    // Race injector: spy on db.update so the action's first bookings UPDATE
+    // is preceded by a concurrent committed status flip to "rejected".
+    // Returning a hand-wrapped query builder lets us hook the terminal
+    // `.returning()` step to atomically execute the side write just before
+    // the action's UPDATE runs.
+    type UpdateFn = typeof harness.db.update;
+    const realUpdate = harness.db.update.bind(harness.db) as UpdateFn;
+    let injected = false;
+    const spy = vi.spyOn(harness.db, "update").mockImplementation(((
+      table: Parameters<UpdateFn>[0],
+    ) => {
+      if (!injected && table === bookings) {
+        injected = true;
+        const inner = realUpdate(table);
+        return {
+          // biome-ignore lint/suspicious/noExplicitAny: thin pass-through wrapper.
+          set: (vals: any) => {
+            const w = inner.set(vals);
+            return {
+              // biome-ignore lint/suspicious/noExplicitAny: thin pass-through wrapper.
+              where: (cond: any) => {
+                const r = w.where(cond);
+                return {
+                  // biome-ignore lint/suspicious/noExplicitAny: thin pass-through wrapper.
+                  returning: async (cols?: any) => {
+                    // Concurrent committed transition lands here.
+                    await realUpdate(bookings)
+                      .set({ status: "rejected" })
+                      .where(eq(bookings.id, booking.id));
+                    return cols ? r.returning(cols) : r.returning();
+                  },
+                };
+              },
+            };
+          },
+        };
+      }
+      return realUpdate(table);
+      // biome-ignore lint/suspicious/noExplicitAny: drizzle's UpdateFn return is structurally compatible.
+    }) as any);
+
+    let r: Awaited<ReturnType<typeof cancelBooking>>;
+    try {
+      r = await harness.runAs(admin.cookies, () =>
+        cancelBooking({ bookingId: booking.id, reason: undefined }),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(r.error, JSON.stringify(r)).toBe(true);
+    expect(r.message).toMatch(/changed during cancel/i);
+
+    // Final state reflects the racing committer's transition, not our cancel.
+    const after = await harness.db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, booking.id))
+      .limit(1);
+    expect(after[0]?.status).toBe("rejected");
+  });
 });

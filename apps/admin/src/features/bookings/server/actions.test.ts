@@ -284,6 +284,10 @@ describe("assignUser", () => {
     dbMock.pushSelect([baseBooking]);
     dbMock.pushSelect([{ email: "u@example.com" }]);
     dbMock.pushSelect([{ status: "requested" }]);
+    // iter-34 §4: conditional UPDATE on existing assignment now `.returning()`s
+    // the row; mock a one-row result so the action's race-detection path is
+    // not falsely triggered.
+    dbMock._updateReturning = [{ userId: "u1" }];
     const r = await assignUser({ bookingId: "b1", userId: "u1" });
     expect(r.error).toBe(false);
     expect(notifyUserMock).toHaveBeenCalledOnce();
