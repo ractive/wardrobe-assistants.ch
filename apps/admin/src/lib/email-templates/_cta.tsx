@@ -1,4 +1,4 @@
-import { Button } from "@react-email/components";
+import { Button } from "react-email";
 import { brand, brandForeground } from "./_tokens";
 
 type Variant = "primary" | "secondary";
@@ -29,7 +29,7 @@ const variantStyle = {
 /**
  * Email CTA button. Use whenever a link defines an action a recipient is
  * expected to take (open a booking, accept an offer, reset password, etc.).
- * Renders as a styled `@react-email/components` Button so most major email
+ * Renders as a styled `react-email` Button so most major email
  * clients render it as a recognisable button rather than a bare link.
  *
  * Use `variant="secondary"` for the lesser of two paired actions

@@ -1,11 +1,4 @@
-import {
-  Body,
-  Container,
-  Head,
-  Html,
-  Preview,
-  Text,
-} from "@react-email/components";
+import { Body, Container, Head, Html, Preview, Text } from "react-email";
 
 export type UserDirectMessageParams = {
   /** Dynamic subject supplied by the sender — included in the registry so subject: (p) => p.subject works */

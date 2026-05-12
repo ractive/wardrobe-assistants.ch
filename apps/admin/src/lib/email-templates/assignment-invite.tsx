@@ -8,7 +8,7 @@ import {
   Preview,
   Row,
   Text,
-} from "@react-email/components";
+} from "react-email";
 import type { PushPayload } from "../push";
 import { CtaButton } from "./_cta";
 import { brand } from "./_tokens";

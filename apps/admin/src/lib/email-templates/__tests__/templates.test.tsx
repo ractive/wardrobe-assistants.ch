@@ -1,4 +1,4 @@
-import { render } from "@react-email/render";
+import { render } from "react-email";
 import { describe, expect, it } from "vitest";
 import AssignmentInvite from "../assignment-invite";
 import BookingBroadcast from "../booking-broadcast";

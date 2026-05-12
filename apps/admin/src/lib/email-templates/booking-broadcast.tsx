@@ -6,7 +6,7 @@ import {
   Html,
   Preview,
   Text,
-} from "@react-email/components";
+} from "react-email";
 import type { PushPayload } from "../push";
 import { brand } from "./_tokens";
 

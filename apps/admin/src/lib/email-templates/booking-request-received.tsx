@@ -6,7 +6,7 @@ import {
   Html,
   Preview,
   Text,
-} from "@react-email/components";
+} from "react-email";
 import { brand } from "./_tokens";
 
 // iter-26: customer-side autoreply confirming a booking request was received.

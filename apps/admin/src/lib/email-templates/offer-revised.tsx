@@ -6,7 +6,7 @@ import {
   Html,
   Preview,
   Text,
-} from "@react-email/components";
+} from "react-email";
 import { CtaButton } from "./_cta";
 import { brand } from "./_tokens";
 

@@ -1,5 +1,5 @@
-import { render } from "@react-email/render";
 import * as React from "react";
+import { render } from "react-email";
 import { Resend } from "resend";
 import { type ParamsFor, type TemplateKey, templates } from "./email-templates";
 import { env } from "./env";
