@@ -27,15 +27,17 @@ vi.mock("@/lib/push", () => ({
   sendPush: vi.fn(async () => ({ sent: 0 })),
 }));
 
+// iter-37 §C.3: startTime, durationHours, venueCity are now required on new
+// bookings (app-layer validation). All smoke test fixtures must supply them.
 const optionalBookingFields = {
   notes: undefined,
   customerName: undefined,
   customerEmail: undefined,
   customerPhone: undefined,
-  startTime: undefined,
-  durationHours: undefined,
+  startTime: "18:00",
+  durationHours: 8,
   venueName: undefined,
-  venueCity: undefined,
+  venueCity: "Zurich",
   comment: undefined,
 } as const;
 
@@ -55,7 +57,7 @@ async function setupAssignedBooking(opts: {
       venue: "Studio Confirm",
       ...optionalBookingFields,
       startTime: "18:00",
-      durationHours: 3,
+      durationHours: 8,
     }),
   );
   const list = await harness.runAs(opts.admin.cookies, () => listBookings());

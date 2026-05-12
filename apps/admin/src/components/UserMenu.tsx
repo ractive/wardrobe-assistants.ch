@@ -8,8 +8,8 @@ import {
   Sun,
   User2,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useState } from "react";
 import { toast } from "sonner";
 import {

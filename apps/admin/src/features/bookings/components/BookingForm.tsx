@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
@@ -25,7 +25,11 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { type CreateBookingInput, createBookingInput } from "../schema";
+import {
+  type CreateBookingInput,
+  createBookingInput,
+  updateBookingInput,
+} from "../schema";
 import { createBooking, updateBooking } from "../server/actions";
 
 export interface EditDefaults {
@@ -66,21 +70,24 @@ type FormValues = {
   comment?: string;
 };
 
-// Both modes drive the same set of input fields. We use the create input
-// schema for client validation and pass the bookingId through closure when in
-// edit mode — keeps the form a single component without `any` gymnastics.
+// iter-37 §C.1–C.5: create and edit modes use different schemas.
+// Create: future-only date (via Calendar disabled prop), 5h min duration,
+//         startTime/durationHours/venueCity required, email validated.
+// Edit:   no date restriction (admins fix typos on past bookings), relaxed
+//         duration (min 1 so legacy sub-5h rows can still be edited).
 export function BookingForm(props: Props) {
   const isEdit = props.mode === "edit";
   const defaults = isEdit ? props.defaults : undefined;
   const router = useRouter();
 
+  // Pick schema by mode so validation rules differ cleanly.
+  const schema = isEdit ? updateBookingInput : createBookingInput;
+
   const form = useForm<FormValues>({
-    // Resolver enforces the parsed `CreateBookingInput` shape (date required)
-    // even though the form-state type permits `date: undefined` mid-edit.
-    // `as never` suppresses the RHF/Zod generic mismatch: zodResolver's inferred
-    // output type (CreateBookingInput with date required) conflicts with FormValues
-    // (date optional mid-edit); the resolver itself enforces the constraint at runtime.
-    resolver: zodResolver(createBookingInput) as never,
+    // `as never` suppresses the RHF/Zod generic mismatch between FormValues
+    // (date optional mid-edit) and the schema's inferred output (date required).
+    // The resolver enforces the constraint at runtime.
+    resolver: zodResolver(schema) as never,
     defaultValues: {
       name: defaults?.name ?? "",
       date: defaults?.date,
@@ -129,7 +136,7 @@ export function BookingForm(props: Props) {
   // is just the type-safe boundary — narrows `FormValues` (date optional) to
   // `CreateBookingInput` (date required) at runtime instead of via cast.
   const onSubmit = form.handleSubmit((data) =>
-    actionDispatch(createBookingInput.parse(data)),
+    actionDispatch(schema.parse(data) as CreateBookingInput),
   );
 
   const submitLabel = isEdit ? "Save changes" : "Create booking";
@@ -150,7 +157,10 @@ export function BookingForm(props: Props) {
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+        {/* iter-37 §C.4: When fieldset (date, time, duration) */}
+        <fieldset className="space-y-3 rounded-md border border-[var(--border)] p-4">
+          <legend className="px-1 text-sm font-medium">When</legend>
           <FormField
             control={form.control}
             name="date"
@@ -176,10 +186,13 @@ export function BookingForm(props: Props) {
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
+                    {/* iter-37 §C.1: future-only in create mode; edit is unrestricted
+                        so admins can fix typos on past bookings. */}
                     <Calendar
                       mode="single"
                       selected={field.value}
                       onSelect={(d) => field.onChange(d)}
+                      disabled={!isEdit ? (d) => d < startOfToday() : undefined}
                       autoFocus
                     />
                   </PopoverContent>
@@ -188,6 +201,79 @@ export function BookingForm(props: Props) {
               </FormItem>
             )}
           />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Start time (HH:MM)
+                    {!isEdit && (
+                      <span
+                        className="ml-1 text-[var(--destructive)]"
+                        aria-hidden="true"
+                      >
+                        *
+                      </span>
+                    )}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. 19:30"
+                      autoComplete="off"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="durationHours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Duration (hours)
+                    {!isEdit && (
+                      <span
+                        className="ml-1 text-[var(--destructive)]"
+                        aria-hidden="true"
+                      >
+                        *
+                      </span>
+                    )}
+                  </FormLabel>
+                  <FormControl>
+                    {/* iter-37 §C.2: min=5 for new bookings; min=1 for edits so
+                        admins can fix legacy rows without being blocked. */}
+                    <Input
+                      type="number"
+                      min={isEdit ? 1 : 5}
+                      max={24}
+                      placeholder={isEdit ? "e.g. 4" : "e.g. 8"}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : Number(e.target.value),
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </fieldset>
+
+        {/* iter-37 §C.4: Where fieldset (venue, city) */}
+        <fieldset className="space-y-3 rounded-md border border-[var(--border)] p-4">
+          <legend className="px-1 text-sm font-medium">Where</legend>
           <FormField
             control={form.control}
             name="venue"
@@ -201,7 +287,44 @@ export function BookingForm(props: Props) {
               </FormItem>
             )}
           />
-        </div>
+          <FormField
+            control={form.control}
+            name="venueCity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  City
+                  {!isEdit && (
+                    <span
+                      className="ml-1 text-[var(--destructive)]"
+                      aria-hidden="true"
+                    >
+                      *
+                    </span>
+                  )}
+                </FormLabel>
+                <FormControl>
+                  <Input autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="venueName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Venue name (optional)</FormLabel>
+                <FormControl>
+                  <Input autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </fieldset>
+
         <FormField
           control={form.control}
           name="notes"
@@ -241,6 +364,7 @@ export function BookingForm(props: Props) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
+                    {/* iter-37 §C.5: email validated by zod schema on both create/edit. */}
                     <Input type="email" autoComplete="off" {...field} />
                   </FormControl>
                   <FormMessage />
@@ -255,86 +379,6 @@ export function BookingForm(props: Props) {
                   <FormLabel>Phone</FormLabel>
                   <FormControl>
                     <Input type="tel" autoComplete="off" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </fieldset>
-
-        <fieldset className="space-y-3 rounded-md border border-[var(--border)] p-4">
-          <legend className="px-1 text-sm font-medium">
-            Schedule &amp; venue (optional)
-          </legend>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="startTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start time (HH:MM)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g. 19:30"
-                      autoComplete="off"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="durationHours"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Duration (hours)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={24}
-                      placeholder="e.g. 4"
-                      {...field}
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === ""
-                            ? undefined
-                            : Number(e.target.value),
-                        )
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="venueName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Venue name</FormLabel>
-                  <FormControl>
-                    <Input autoComplete="off" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="venueCity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input autoComplete="off" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
