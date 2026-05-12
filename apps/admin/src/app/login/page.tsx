@@ -1,16 +1,39 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { BrandBadge } from "@/components/BrandBadge";
 import { CredentialsStep } from "./credentials-step";
 import { TotpStep } from "./totp-step";
 
 type Step = "credentials" | "totp";
 
+/**
+ * Validate that a returnTo value is safe for same-origin redirect.
+ * Mirror of the proxy.ts validator — keeps the client-side check consistent.
+ */
+function validateReturnTo(value: string | null): string {
+  if (!value) return "/";
+  if (
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("://") ||
+    /^javascript:/iu.test(value)
+  ) {
+    return "/";
+  }
+  return value;
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("credentials");
+
+  const returnTo = useMemo(
+    () => validateReturnTo(searchParams.get("returnTo")),
+    [searchParams],
+  );
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
@@ -35,11 +58,11 @@ export default function LoginPage() {
                   setStep("totp");
                   return;
                 }
-                router.replace("/");
+                router.replace(returnTo);
               }}
             />
           ) : (
-            <TotpStep onSuccess={() => router.replace("/")} />
+            <TotpStep onSuccess={() => router.replace(returnTo)} />
           )}
         </main>
       </div>

@@ -76,6 +76,14 @@ export function BookingsTable({
       </ul>
 
       {/* Desktop: table (≥ md) */}
+      {/*
+       * Whole-row click: each <TableCell> has p-0 so the inner <Link> fills
+       * the full cell area. All non-interactive cells wrap their content in a
+       * block-level <Link href="/bookings/<id>"> so clicking anywhere on the
+       * row navigates without requiring JS router imperative calls (RSC-safe).
+       * The RequestsBadge cell is also non-interactive (display-only badge),
+       * so it is included in the link region.
+       */}
       <div className="hidden rounded-md border border-[var(--border)] md:block">
         <Table aria-label="Bookings">
           <TableHeader>
@@ -88,40 +96,83 @@ export function BookingsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bookings.map((booking) => (
-              <TableRow key={booking.id}>
-                <TableCell>
-                  <div className="flex flex-wrap items-center gap-2">
+            {bookings.map((booking) => {
+              const href = `/bookings/${booking.id}`;
+              const cellLink = "block px-2 py-3 hover:bg-transparent";
+              return (
+                <TableRow
+                  key={booking.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
+                  {/* Name cell — primary link text */}
+                  <TableCell className="p-0">
                     <Link
-                      href={`/bookings/${booking.id}`}
-                      className="font-medium hover:underline"
+                      href={href}
+                      className={cellLink}
+                      aria-label={`Open booking ${booking.name}`}
                     >
-                      {booking.name}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium hover:underline">
+                          {booking.name}
+                        </span>
+                        {booking.isPublicRequest && (
+                          <Badge variant="outline" className="text-xs">
+                            Public request
+                          </Badge>
+                        )}
+                        {pendingRequestsCountByBooking && (
+                          <RequestsBadge
+                            count={
+                              pendingRequestsCountByBooking.get(booking.id) ?? 0
+                            }
+                          />
+                        )}
+                      </div>
                     </Link>
-                    {booking.isPublicRequest && (
-                      <Badge variant="outline" className="text-xs">
-                        Public request
-                      </Badge>
-                    )}
-                    {pendingRequestsCountByBooking && (
-                      <RequestsBadge
-                        count={
-                          pendingRequestsCountByBooking.get(booking.id) ?? 0
-                        }
-                      />
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>{format(booking.date, "yyyy-MM-dd")}</TableCell>
-                <TableCell>{booking.venue}</TableCell>
-                <TableCell>
-                  <StatusBadge kind="booking" status={booking.status} />
-                </TableCell>
-                <TableCell className="text-[var(--muted-foreground)]">
-                  {booking.assigneesCount}
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell className="p-0">
+                    <Link
+                      href={href}
+                      className={cellLink}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    >
+                      {format(booking.date, "yyyy-MM-dd")}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="p-0">
+                    <Link
+                      href={href}
+                      className={cellLink}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    >
+                      {booking.venue}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="p-0">
+                    <Link
+                      href={href}
+                      className={cellLink}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    >
+                      <StatusBadge kind="booking" status={booking.status} />
+                    </Link>
+                  </TableCell>
+                  <TableCell className="p-0">
+                    <Link
+                      href={href}
+                      className={`${cellLink} text-[var(--muted-foreground)]`}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    >
+                      {booking.assigneesCount}
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

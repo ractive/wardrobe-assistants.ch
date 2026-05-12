@@ -30,8 +30,6 @@ const schema = z
     path: ["confirmPassword"],
   });
 
-type FormValues = z.infer<typeof schema>;
-
 function SetPasswordInner() {
   const router = useRouter();
   const params = useSearchParams();

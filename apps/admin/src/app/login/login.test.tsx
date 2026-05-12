@@ -15,6 +15,9 @@ vi.mock("@/lib/auth-client", () => ({
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace }),
+  // Return no returnTo param by default; individual tests can override by
+  // rendering with a different mock if needed.
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 import LoginPage from "./page";

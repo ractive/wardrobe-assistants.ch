@@ -17,8 +17,8 @@ export type OfferSentParams = {
   /** Pre-formatted date string, e.g. "Saturday, 1 March 2026". */
   date: string;
   startTime?: string;
-  venueName: string;
-  venueCity?: string;
+  venue: string;
+  city?: string;
   offerVersion: number;
   /** Public offer page URL. */
   offerUrl: string;
@@ -51,8 +51,8 @@ export default function OfferSent(p: OfferSentParams) {
             <strong>When:</strong> {p.date}
             {p.startTime ? ` at ${p.startTime}` : ""}
             <br />
-            <strong>Where:</strong> {p.venueName}
-            {p.venueCity ? `, ${p.venueCity}` : ""}
+            <strong>Where:</strong> {p.venue}
+            {p.city ? `, ${p.city}` : ""}
             <br />
             <strong>Total:</strong> {p.totalFormatted}
             {p.offerVersion > 1 ? (

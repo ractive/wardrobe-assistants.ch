@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
-// Mock next-themes so ThemeToggle renders without a real ThemeProvider.
+// Mock next-themes so UserMenu's theme sub-menu renders without a real ThemeProvider.
 const mockSetTheme = vi.fn();
 vi.mock("next-themes", () => ({
   useTheme: () => ({ setTheme: mockSetTheme, theme: "system" }),
@@ -91,11 +91,13 @@ describe("DashboardSidebar", () => {
     expect(screen.getByText("test@example.com")).toBeInTheDocument();
   });
 
-  it("renders the theme toggle button in the footer", () => {
+  it("does not render a standalone theme toggle button (moved into user menu)", () => {
     renderSidebar("/");
+    // The ThemeToggle standalone button was removed from the sidebar footer in D.1.
+    // Theme selection is now a DropdownMenuSub inside UserMenu.
     expect(
-      screen.getByRole("button", { name: /toggle theme/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /toggle theme/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("is axe-clean", async () => {

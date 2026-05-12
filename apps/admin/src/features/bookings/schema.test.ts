@@ -15,13 +15,18 @@ import {
 } from "./schema";
 
 describe("createBookingInput", () => {
+  // iter-37 §C.2+C.3: startTime, durationHours (≥5), city are now
+  // required for new bookings at the app layer.
   const valid = {
     name: "Spring kickoff",
     date: new Date("2026-06-01T18:00:00.000Z"),
     venue: "Studio A",
+    startTime: "18:00",
+    durationHours: 8,
+    city: "Zurich",
   };
 
-  it("accepts a minimal valid booking", () => {
+  it("accepts a minimal valid booking with required fields", () => {
     expect(createBookingInput.safeParse(valid).success).toBe(true);
   });
 
@@ -58,24 +63,151 @@ describe("createBookingInput", () => {
     });
     expect(r.success).toBe(true);
   });
-});
 
-describe("updateBookingInput", () => {
-  const valid = {
-    bookingId: "bk-1",
-    name: "Updated",
-    date: new Date(),
-    venue: "Studio B",
-  };
-
-  it("requires bookingId", () => {
+  // iter-37 §C.2: hard 5h minimum on new bookings.
+  it("rejects durationHours below 5", () => {
     expect(
-      updateBookingInput.safeParse({ ...valid, bookingId: "" }).success,
+      createBookingInput.safeParse({ ...valid, durationHours: 4 }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: 1 }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: 0 }).success,
     ).toBe(false);
   });
 
-  it("accepts a valid update", () => {
-    expect(updateBookingInput.safeParse(valid).success).toBe(true);
+  it("accepts durationHours of exactly 5", () => {
+    const r = createBookingInput.safeParse({ ...valid, durationHours: 5 });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejects negative durationHours", () => {
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: -1 }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: -5 }).success,
+    ).toBe(false);
+  });
+
+  it("rejects non-integer durationHours", () => {
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: 5.5 }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: 4.9 }).success,
+    ).toBe(false);
+  });
+
+  // iter-37 §C.3: startTime required for new bookings.
+  it("rejects missing or empty startTime", () => {
+    expect(
+      createBookingInput.safeParse({ ...valid, startTime: undefined }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, startTime: "" }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, startTime: "25:00" }).success,
+    ).toBe(false);
+  });
+
+  // iter-37 §C.3: city required for new bookings.
+  it("rejects missing or empty city", () => {
+    expect(createBookingInput.safeParse({ ...valid, city: "" }).success).toBe(
+      false,
+    );
+    expect(
+      createBookingInput.safeParse({ ...valid, city: undefined }).success,
+    ).toBe(false);
+  });
+
+  // iter-37 §C.5: customerEmail validated as proper email.
+  it("rejects malformed customerEmail", () => {
+    expect(
+      createBookingInput.safeParse({ ...valid, customerEmail: "not-an-email" })
+        .success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, customerEmail: "@missing.com" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("accepts valid customerEmail and normalises empty to undefined", () => {
+    const filled = createBookingInput.safeParse({
+      ...valid,
+      customerEmail: "alice@example.com",
+    });
+    expect(filled.success).toBe(true);
+
+    const empty = createBookingInput.safeParse({
+      ...valid,
+      customerEmail: "",
+    });
+    expect(empty.success).toBe(true);
+    if (empty.success) expect(empty.data.customerEmail).toBeUndefined();
+  });
+});
+
+describe("updateBookingInput — relaxed validation for edits", () => {
+  const validUpdate = {
+    bookingId: "bk-1",
+    name: "Updated",
+    date: new Date("2024-01-01T18:00:00.000Z"), // past date — allowed on edit
+    venue: "Studio B",
+  };
+
+  // iter-37 §C.2: edit allows sub-5h duration so admins can fix legacy rows.
+  it("accepts durationHours below 5 on edit", () => {
+    expect(
+      updateBookingInput.safeParse({ ...validUpdate, durationHours: 3 })
+        .success,
+    ).toBe(true);
+    expect(
+      updateBookingInput.safeParse({ ...validUpdate, durationHours: 1 })
+        .success,
+    ).toBe(true);
+  });
+
+  // iter-37 §C.1: edit does not restrict past dates (no date restriction at schema level).
+  it("accepts past dates on edit", () => {
+    const r = updateBookingInput.safeParse({
+      ...validUpdate,
+      date: new Date("2020-01-01"),
+    });
+    expect(r.success).toBe(true);
+  });
+
+  // iter-37 §C.3: edit allows missing startTime/city (legacy rows).
+  it("accepts missing startTime and city on edit", () => {
+    const r = updateBookingInput.safeParse({
+      ...validUpdate,
+      startTime: undefined,
+      city: undefined,
+    });
+    expect(r.success).toBe(true);
+  });
+
+  // iter-37 §C.5: email still validated on edit.
+  it("rejects malformed customerEmail on edit", () => {
+    expect(
+      updateBookingInput.safeParse({
+        ...validUpdate,
+        customerEmail: "not-an-email",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires a non-empty bookingId", () => {
+    expect(
+      updateBookingInput.safeParse({ ...validUpdate, bookingId: "" }).success,
+    ).toBe(false);
+    expect(
+      updateBookingInput.safeParse({ ...validUpdate, bookingId: undefined })
+        .success,
+    ).toBe(false);
   });
 });
 

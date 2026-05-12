@@ -47,33 +47,43 @@ const startTimeField = z
   .optional()
   .transform((v) => (v === "" || v === undefined ? undefined : v));
 
+// iter-37 §C.2+C.3: duration for new bookings — 5h minimum, required.
+// Edit uses a relaxed inline union (min 1, optional) so admins can fix
+// legacy rows without being blocked by the floor.
+const durationHoursCreateRequired = z.coerce
+  .number({ error: "Bookings must be at least 5 hours." })
+  .int()
+  .min(5, "Bookings must be at least 5 hours.");
+
+// iter-37 §C.3: startTime required for new bookings.
+const startTimeFieldRequired = z
+  .string()
+  .trim()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Start time must be HH:MM");
+
 export const createBookingInput = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
   date: dateField,
   venue: z.string().trim().min(1, "Venue is required").max(200),
   notes: optionalTrimmedText(10_000),
-  // Optional new fields. Customer-submitted bookings (iter-26) supply all of
-  // them; admin-created bookings can leave them blank.
+  // iter-37 §C.3: required for new submissions (app-layer only).
   customerName: optionalTrimmedText(200),
+  // iter-37 §C.5: validated as email on both create and update.
   customerEmail: z
-    .union([
-      z.string().trim().email("Customer email is invalid"),
-      z.literal(""),
-    ])
+    .string()
+    .trim()
+    .email("Customer email is invalid")
+    .max(200)
     .optional()
+    .or(z.literal(""))
     .transform((v) => (v === "" || v === undefined ? undefined : v)),
   customerPhone: optionalTrimmedText(50),
-  startTime: startTimeField,
-  durationHours: z
-    .union([z.coerce.number().int().min(1).max(24), z.nan(), z.literal("")])
-    .optional()
-    .transform((v) =>
-      v === "" || v === undefined || (typeof v === "number" && Number.isNaN(v))
-        ? undefined
-        : v,
-    ),
-  venueName: optionalTrimmedText(200),
-  venueCity: optionalTrimmedText(200),
+  // iter-37 §C.3: startTime required for new bookings.
+  startTime: startTimeFieldRequired,
+  // iter-37 §C.2+C.3: 5h minimum, required for new bookings.
+  durationHours: durationHoursCreateRequired,
+  // iter-37 §C.3: city required for new bookings.
+  city: z.string().trim().min(1, "City is required").max(200),
   comment: optionalTrimmedText(10_000),
 });
 export type CreateBookingInput = z.infer<typeof createBookingInput>;
@@ -85,15 +95,20 @@ export const updateBookingInput = z.object({
   venue: z.string().trim().min(1, "Venue is required").max(200),
   notes: optionalTrimmedText(10_000),
   customerName: optionalTrimmedText(200),
+  // iter-37 §C.5: validated as email on update too.
   customerEmail: z
-    .union([
-      z.string().trim().email("Customer email is invalid"),
-      z.literal(""),
-    ])
+    .string()
+    .trim()
+    .email("Customer email is invalid")
+    .max(200)
     .optional()
+    .or(z.literal(""))
     .transform((v) => (v === "" || v === undefined ? undefined : v)),
   customerPhone: optionalTrimmedText(50),
+  // Edit keeps the relaxed startTime (optional) so admins can fix past bookings.
   startTime: startTimeField,
+  // iter-37 §C.2: edit uses min(1) so admins can fix legacy rows without the
+  // 5h floor blocking them. Only new bookings enforce the floor.
   durationHours: z
     .union([z.coerce.number().int().min(1).max(24), z.nan(), z.literal("")])
     .optional()
@@ -102,11 +117,19 @@ export const updateBookingInput = z.object({
         ? undefined
         : v,
     ),
-  venueName: optionalTrimmedText(200),
-  venueCity: optionalTrimmedText(200),
+  city: optionalTrimmedText(200),
   comment: optionalTrimmedText(10_000),
 });
 export type UpdateBookingInput = z.infer<typeof updateBookingInput>;
+
+// iter-37 §C.1–C.3: RHF resolver schema for edit mode — same as
+// updateBookingInput but without bookingId (the form never renders a bookingId
+// input; it's injected via closure when calling the server action).
+// iter-37 §F: venueName dropped, venueCity renamed to city.
+export const editBookingFormInput = updateBookingInput.omit({
+  bookingId: true,
+});
+export type EditBookingFormInput = z.infer<typeof editBookingFormInput>;
 
 export const deleteBookingInput = z.object({
   bookingId: z.string().min(1),
@@ -252,8 +275,7 @@ export const bookingDetail = z.object({
   customerPhone: z.string().nullable(),
   startTime: z.string().nullable(),
   durationHours: z.number().int().nullable(),
-  venueName: z.string().nullable(),
-  venueCity: z.string().nullable(),
+  city: z.string().nullable(),
   comment: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -325,3 +347,30 @@ export const actionResult = z.discriminatedUnion("error", [
   z.object({ error: z.literal(true), message: z.string() }),
 ]);
 export type ActionResult = z.infer<typeof actionResult>;
+
+// A.4/A.5: granular per-row line-item mutations (replaces bulk replaceBookingSelections
+// for the autosave UX — each row saves independently).
+
+export const addBookingSelectionInput = z.object({
+  bookingId: z.string().min(1),
+  serviceId: z.string().min(1),
+  quantity: z.coerce.number().int().positive().max(10_000),
+});
+export type AddBookingSelectionInput = z.infer<typeof addBookingSelectionInput>;
+
+export const deleteBookingSelectionInput = z.object({
+  bookingId: z.string().min(1),
+  selectionId: z.string().min(1),
+});
+export type DeleteBookingSelectionInput = z.infer<
+  typeof deleteBookingSelectionInput
+>;
+
+export const updateBookingSelectionQuantityInput = z.object({
+  bookingId: z.string().min(1),
+  selectionId: z.string().min(1),
+  quantity: z.coerce.number().int().positive().max(10_000),
+});
+export type UpdateBookingSelectionQuantityInput = z.infer<
+  typeof updateBookingSelectionQuantityInput
+>;

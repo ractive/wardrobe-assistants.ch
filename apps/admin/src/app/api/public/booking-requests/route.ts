@@ -169,10 +169,9 @@ export async function POST(req: Request): Promise<Response> {
       id: bookingId,
       name: bookingName,
       date: bookingDate,
-      // The admin-side `venue` column predates the venueName/venueCity split;
-      // populate it with the human-readable composition so existing list views
-      // stay informative.
-      venue: `${payload.venueName}, ${payload.venueCity}`,
+      // `venue` doubles as the human-readable label for admin list views;
+      // compose venue name + city from the public form fields.
+      venue: `${payload.venue}, ${payload.city}`,
       notes: null,
       status: "created",
       createdBy: null,
@@ -183,8 +182,7 @@ export async function POST(req: Request): Promise<Response> {
       customerPhone: payload.customerPhone,
       startTime: payload.startTime,
       durationHours: payload.durationHours,
-      venueName: payload.venueName,
-      venueCity: payload.venueCity,
+      city: payload.city,
       comment: payload.comment ?? null,
       createdAt: now,
       updatedAt: now,
@@ -209,7 +207,7 @@ export async function POST(req: Request): Promise<Response> {
   });
   const summary = [
     `When: ${bookingDateStr} at ${payload.startTime} (${payload.durationHours}h)`,
-    `Where: ${payload.venueName}, ${payload.venueCity}`,
+    `Where: ${payload.venue}, ${payload.city}`,
     ...serviceLines.map((l) => `- ${l}`),
   ];
   const bookingUrl = `${env.betterAuthUrl}/bookings/${bookingId}`;
@@ -219,8 +217,8 @@ export async function POST(req: Request): Promise<Response> {
     customerName: payload.customerName,
     customerEmail: normalizedEmail,
     customerPhone: payload.customerPhone,
-    venueCity: payload.venueCity,
-    venueName: payload.venueName,
+    city: payload.city,
+    venue: payload.venue,
     date: bookingDateStr,
     startTime: payload.startTime,
     durationHours: payload.durationHours,

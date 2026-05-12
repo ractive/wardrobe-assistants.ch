@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
 
@@ -53,6 +53,20 @@ describe("ServicesTable", () => {
     expect(screen.getAllByText("Archived").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Fixed").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Hourly").length).toBeGreaterThan(0);
+  });
+
+  it("clicking a desktop table row opens the edit dialog", () => {
+    const service = sample[0];
+    if (!service) throw new Error("sample[0] is undefined");
+    render(<ServicesTable services={[service]} />);
+    // The ServiceTableRow renders a row with aria-label "Edit service <name>".
+    const row = screen.getByRole("button", {
+      name: /Edit service Sewing kit/i,
+    });
+    fireEvent.click(row);
+    // The edit dialog title should now be visible.
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Edit service")).toBeInTheDocument();
   });
 
   it("is axe-clean", async () => {

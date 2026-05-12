@@ -5,7 +5,7 @@
 // NextRequest here.
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { buildContentSecurityPolicy, proxy } from "./proxy";
+import { buildContentSecurityPolicy, proxy, validateReturnTo } from "./proxy";
 
 function makeRequest(
   url: string,
@@ -27,7 +27,7 @@ describe("proxy — auth gate", () => {
   it("redirects unauthenticated requests on protected paths to /login", () => {
     const res = proxy(makeRequest("https://admin.example.com/"));
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toMatch(/\/login$/u);
+    expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
   });
 
   it("passes through when a session cookie is present", () => {
@@ -97,13 +97,87 @@ describe("proxy — auth gate", () => {
       makeRequest("https://admin.example.com/api/publicly-evil"),
     );
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toMatch(/\/login$/u);
+    expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
   });
 
   it("rejects /login-evil prefix-bypass attempts", () => {
     const res = proxy(makeRequest("https://admin.example.com/login-evil"));
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toMatch(/\/login$/u);
+    expect(res.headers.get("location")).toMatch(/\/login(\?|$)/u);
+  });
+
+  it("appends returnTo with the original path on redirect to /login", () => {
+    const res = proxy(makeRequest("https://admin.example.com/bookings/123"));
+    expect(res.status).toBe(307);
+    const location = res.headers.get("location") ?? "";
+    expect(location).toContain("/login");
+    expect(location).toContain("returnTo=");
+    // The encoded path must include the original page, not just /login.
+    const url = new URL(location, "https://admin.example.com");
+    const returnTo = decodeURIComponent(url.searchParams.get("returnTo") ?? "");
+    expect(returnTo).toBe("/bookings/123");
+  });
+});
+
+describe("proxy — validateReturnTo", () => {
+  it("accepts a simple absolute path", () => {
+    expect(validateReturnTo("/legit/path")).toBe("/legit/path");
+  });
+
+  it("accepts the root path /", () => {
+    expect(validateReturnTo("/")).toBe("/");
+  });
+
+  it("rejects a protocol-relative URL (//evil.com/)", () => {
+    expect(validateReturnTo("//evil.com/")).toBe("/");
+  });
+
+  it("rejects an https:// absolute URL", () => {
+    expect(validateReturnTo("https://evil.com/")).toBe("/");
+  });
+
+  it("rejects javascript: scheme", () => {
+    expect(validateReturnTo("javascript:alert(1)")).toBe("/");
+  });
+
+  it("returns / for null", () => {
+    expect(validateReturnTo(null)).toBe("/");
+  });
+
+  it("returns / for undefined", () => {
+    expect(validateReturnTo(undefined)).toBe("/");
+  });
+
+  it("returns / for empty string", () => {
+    expect(validateReturnTo("")).toBe("/");
+  });
+
+  it("rejects backslash-prefixed paths (browsers normalize \\ → /)", () => {
+    expect(validateReturnTo("/\\/evil.com")).toBe("/");
+    expect(validateReturnTo("\\\\evil.com")).toBe("/");
+  });
+
+  it("rejects URL-encoded slash variants", () => {
+    expect(validateReturnTo("/%2f%2fevil.com")).toBe("/");
+    expect(validateReturnTo("/%2F/evil.com")).toBe("/");
+    expect(validateReturnTo("/%5c%5cevil.com")).toBe("/");
+  });
+
+  it("rejects mixed-case dangerous schemes", () => {
+    expect(validateReturnTo("jAvAsCrIpT:alert(1)")).toBe("/");
+    expect(validateReturnTo("HTTPS://evil.com")).toBe("/");
+    expect(validateReturnTo("data:text/html,<script>alert(1)</script>")).toBe(
+      "/",
+    );
+    expect(validateReturnTo("vbscript:msgbox(1)")).toBe("/");
+    expect(validateReturnTo("file:///etc/passwd")).toBe("/");
+  });
+
+  it("rejects whitespace/control characters that bypass startsWith checks", () => {
+    expect(validateReturnTo(" //evil.com")).toBe("/");
+    expect(validateReturnTo("/\tevil.com")).toBe("/");
+    expect(validateReturnTo("/\nevil.com")).toBe("/");
+    expect(validateReturnTo("/\r//evil.com")).toBe("/");
   });
 });
 

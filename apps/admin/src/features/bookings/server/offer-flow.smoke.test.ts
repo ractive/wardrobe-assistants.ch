@@ -29,15 +29,16 @@ vi.mock("@/lib/push", () => ({
   sendPush: vi.fn(async () => ({ sent: 0 })),
 }));
 
+// iter-37 §C.3: startTime, durationHours, city are now required on new
+// bookings (app-layer validation). All smoke test fixtures must supply them.
 const optionalBookingFields = {
   notes: undefined,
   customerName: undefined,
   customerEmail: undefined,
   customerPhone: undefined,
-  startTime: undefined,
-  durationHours: undefined,
-  venueName: undefined,
-  venueCity: undefined,
+  startTime: "18:00",
+  durationHours: 8,
+  city: "Zurich",
   comment: undefined,
 } as const;
 
@@ -1107,7 +1108,7 @@ describe("offer flow — smoke", () => {
     const { bookingAssignments } = await import(
       "@wardrobe-assistants/db/schema"
     );
-    const { and, eq } = await import("drizzle-orm");
+    const { eq } = await import("drizzle-orm");
     const { sendPush } = await import("@/lib/push");
     const pushMock = sendPush as unknown as ReturnType<typeof vi.fn>;
     pushMock.mockClear();

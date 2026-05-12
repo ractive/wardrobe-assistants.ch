@@ -31,6 +31,17 @@ describe("assignmentInvite template", () => {
     });
     expect(text).toMatchSnapshot();
   });
+
+  it("renders Confirm and Decline buttons in the same table row", async () => {
+    const html = await render(<AssignmentInvite {...params} />);
+    // React Email Row renders as <table>, Column as <td>.
+    // Require both buttons inside td siblings within the SAME <tr> — a
+    // looser <table>...<td>...<td>...</table> match would silently accept
+    // buttons split across separate rows.
+    const sameTr =
+      /<tr[^>]*>.*?<td[^>]*>.*?Confirm.*?<\/td>.*?<td[^>]*>.*?Decline.*?<\/td>.*?<\/tr>/s;
+    expect(html).toMatch(sameTr);
+  });
 });
 
 describe("bookingBroadcast template", () => {

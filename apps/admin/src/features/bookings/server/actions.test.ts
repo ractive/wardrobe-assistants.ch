@@ -159,6 +159,8 @@ afterEach(() => {
 });
 
 describe("createBooking", () => {
+  // iter-37 §C.3: startTime, durationHours, city are now required for
+  // new bookings at the app layer.
   const valid = {
     name: "Spring",
     date: new Date("2026-06-01"),
@@ -167,10 +169,9 @@ describe("createBooking", () => {
     customerName: undefined,
     customerEmail: undefined,
     customerPhone: undefined,
-    startTime: undefined,
-    durationHours: undefined,
-    venueName: undefined,
-    venueCity: undefined,
+    startTime: "18:00",
+    durationHours: 8,
+    city: "Zurich",
     comment: undefined,
   };
 
@@ -197,8 +198,7 @@ const updateBookingBase = {
   customerPhone: undefined,
   startTime: undefined,
   durationHours: undefined,
-  venueName: undefined,
-  venueCity: undefined,
+  city: undefined,
   comment: undefined,
 } as const;
 

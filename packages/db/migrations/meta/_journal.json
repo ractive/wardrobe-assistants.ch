@@ -71,6 +71,13 @@
       "when": 1778484356305,
       "tag": "0009_abandoned_infant_terrible",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1778573960925,
+      "tag": "0010_drop_venue_name_rename_venue_city",
+      "breakpoints": true
     }
   ]
 }

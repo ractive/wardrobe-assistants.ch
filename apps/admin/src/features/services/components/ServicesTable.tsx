@@ -2,13 +2,13 @@ import { StatusBadge } from "@/components/StatusBadge";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import type { ServiceListItem } from "../schema";
 import { ServiceActionsMenu } from "./ServiceActionsMenu";
+import { ServiceTableRow } from "./ServiceTableRow";
 
 export function ServicesTable({ services }: { services: ServiceListItem[] }) {
   if (services.length === 0) {
@@ -58,6 +58,12 @@ export function ServicesTable({ services }: { services: ServiceListItem[] }) {
       </ul>
 
       {/* Desktop: table (≥ md) */}
+      {/*
+       * Whole-row click: ServiceTableRow is a client component that owns
+       * edit-dialog state. Clicking anywhere on the row opens the edit dialog.
+       * The ServiceActionsMenu (kebab) calls e.stopPropagation() so its own
+       * interactions don't double-trigger the row handler.
+       */}
       <div className="hidden rounded-md border border-[var(--border)] md:block">
         <Table aria-label="Services">
           <TableHeader>
@@ -73,31 +79,7 @@ export function ServicesTable({ services }: { services: ServiceListItem[] }) {
           </TableHeader>
           <TableBody>
             {services.map((service) => (
-              <TableRow key={service.id}>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium">{service.name}</span>
-                    <span className="text-[var(--muted-foreground)] text-xs">
-                      {service.description}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <StatusBadge kind="serviceType" status={service.priceType} />
-                </TableCell>
-                <TableCell>{service.priceFormatted}</TableCell>
-                <TableCell>
-                  <StatusBadge
-                    kind="serviceStatus"
-                    status={service.archived ? "archived" : "active"}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end">
-                    <ServiceActionsMenu service={service} />
-                  </div>
-                </TableCell>
-              </TableRow>
+              <ServiceTableRow key={service.id} service={service} />
             ))}
           </TableBody>
         </Table>

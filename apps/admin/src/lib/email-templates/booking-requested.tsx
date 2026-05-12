@@ -18,8 +18,8 @@ export type BookingRequestedParams = {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  venueCity: string;
-  venueName: string;
+  city: string;
+  venue: string;
   date: string; // pre-formatted date, e.g. "Saturday, 1 March 2026"
   startTime: string;
   durationHours: number;
@@ -33,7 +33,7 @@ export type BookingRequestedParams = {
 export function pushPayload(p: BookingRequestedParams): PushPayload {
   return {
     title: "New booking request",
-    body: `${p.customerName} · ${p.date} · ${p.venueCity}`,
+    body: `${p.customerName} · ${p.date} · ${p.city}`,
     url: `/bookings/${p.bookingId}`,
   };
 }
@@ -67,7 +67,7 @@ export default function BookingRequested(p: BookingRequestedParams) {
             <strong>When:</strong> {p.date} at {p.startTime} ({p.durationHours}
             h)
             <br />
-            <strong>Where:</strong> {p.venueName}, {p.venueCity}
+            <strong>Where:</strong> {p.venue}, {p.city}
           </Text>
           {p.serviceLines.length > 0 ? (
             <Text style={{ color: "#555555", fontSize: "14px" }}>
