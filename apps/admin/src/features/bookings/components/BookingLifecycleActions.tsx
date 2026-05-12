@@ -575,18 +575,22 @@ export function BookingLifecycleButtons({
   const [rejectOpen, setRejectOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
 
-  const showSendOffer = canSendOffer && status === "created";
+  // A.1: hide ALL lifecycle actions on terminal statuses.
+  const isTerminal = status === "cancelled" || status === "rejected";
+
+  const showSendOffer = canSendOffer && status === "created" && !isTerminal;
   // iter-28: "Send revised offer" visible for offered/accepted with ≥1 line item.
   const showSendRevised =
     canSendOffer &&
     (status === "offered" || status === "accepted") &&
-    selectionCount > 0;
+    selectionCount > 0 &&
+    !isTerminal;
   const showAccept =
-    canAccept && (status === "created" || status === "offered");
+    canAccept && (status === "created" || status === "offered") && !isTerminal;
   // iter-28: reject also works from offered state.
   const showReject =
-    canReject && (status === "created" || status === "offered");
-  const showCancel = canCancel && status === "accepted";
+    canReject && (status === "created" || status === "offered") && !isTerminal;
+  const showCancel = canCancel && status === "accepted" && !isTerminal;
 
   if (
     !showSendOffer &&

@@ -1,14 +1,9 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { BookingDetail } from "../schema";
 import { EditBookingDialog } from "./BookingDialog";
 import { DeleteBookingConfirm } from "./DeleteBookingConfirm";
@@ -32,61 +27,63 @@ export function BookingDetailActions({
   // the trigger here so admins don't open a dialog that can't submit.
   // Every field present in the form is also rendered on the detail page,
   // so disabling Edit doesn't hide any information.
+  // A.1: hide ALL lifecycle actions (Edit, Message assignees) on terminal status.
+  // Delete stays visible so admins can still purge bad rows.
   const isClosed =
     booking.status === "rejected" || booking.status === "cancelled";
 
-  const editButton = (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={() => setEditOpen(true)}
-      disabled={isClosed}
-      aria-disabled={isClosed}
-    >
-      Edit
-    </Button>
-  );
+  const submittedAgo = formatDistanceToNow(booking.createdAt, {
+    addSuffix: true,
+  });
+  const updatedAgo = formatDistanceToNow(booking.updatedAt, {
+    addSuffix: true,
+  });
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {isClosed ? (
-        <TooltipProvider>
-          <Tooltip>
-            {/* Wrap in a span so the tooltip has a hoverable target even
-                when the underlying <button> is disabled (browsers swallow
-                pointer events on disabled buttons). */}
-            <TooltipTrigger asChild>
-              <span>{editButton}</span>
-            </TooltipTrigger>
-            <TooltipContent>
-              {booking.status === "cancelled"
-                ? "Cancelled bookings can't be edited."
-                : "Rejected bookings can't be edited."}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ) : (
-        editButton
-      )}
-      {canMessage ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setMessageOpen(true)}
-          disabled={booking.assignees.length === 0}
-        >
-          Message assignees
-        </Button>
-      ) : null}
-      {canDelete ? (
-        <Button
-          type="button"
-          variant="destructive"
-          onClick={() => setDeleteOpen(true)}
-        >
-          Delete
-        </Button>
-      ) : null}
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2">
+        {/* A.1: Edit and Message hidden on terminal status */}
+        {!isClosed && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEditOpen(true)}
+          >
+            Edit
+          </Button>
+        )}
+        {canMessage && !isClosed ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setMessageOpen(true)}
+            disabled={booking.assignees.length === 0}
+          >
+            Message assignees
+          </Button>
+        ) : null}
+        {canDelete ? (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
+            Delete
+          </Button>
+        ) : null}
+      </div>
+
+      {/* A.2: createdAt / updatedAt muted footer */}
+      <p className="text-[var(--muted-foreground)] text-xs">
+        <span title={booking.createdAt.toISOString()}>
+          Submitted {submittedAgo}
+        </span>
+        {" · "}
+        <span title={booking.updatedAt.toISOString()}>
+          last updated {updatedAgo}
+        </span>
+      </p>
+
       <EditBookingDialog
         defaults={{
           bookingId: booking.id,
