@@ -65,14 +65,21 @@ export default function AssignmentInvite(p: AssignmentInviteParams) {
           ) : null}
           <Row style={{ margin: "24px 0" }}>
             <Column style={{ paddingRight: "8px" }}>
-              <CtaButton href={p.confirmUrl} variant="primary">
-                Confirm
-              </CtaButton>
+              {/* Wrap each CTA in a Text (paragraph) so the React Email
+                  plaintext renderer separates Confirm/Decline lines instead
+                  of concatenating them into a single run. */}
+              <Text style={{ margin: 0 }}>
+                <CtaButton href={p.confirmUrl} variant="primary">
+                  Confirm
+                </CtaButton>
+              </Text>
             </Column>
             <Column>
-              <CtaButton href={p.declineUrl} variant="secondary">
-                Decline
-              </CtaButton>
+              <Text style={{ margin: 0 }}>
+                <CtaButton href={p.declineUrl} variant="secondary">
+                  Decline
+                </CtaButton>
+              </Text>
             </Column>
           </Row>
           <Text style={{ color: "#777777", fontSize: "13px" }}>

@@ -194,6 +194,7 @@ function LineItemRow({
             toast.error(result.message);
             // Roll back the optimistic ref so the next blur retries.
             savedQuantityRef.current = item.quantity;
+            return;
           }
           onQuantityChanged(item.id, newQty);
         })
@@ -204,6 +205,14 @@ function LineItemRow({
     },
     [bookingId, item.id, item.quantity, onQuantityChanged],
   );
+
+  // Cancel any pending debounced save on unmount so we don't fire a save
+  // after the component has been torn down.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   function handleQuantityChange(value: number) {
     setQuantity(value);

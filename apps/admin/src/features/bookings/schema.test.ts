@@ -82,6 +82,24 @@ describe("createBookingInput", () => {
     expect(r.success).toBe(true);
   });
 
+  it("rejects negative durationHours", () => {
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: -1 }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: -5 }).success,
+    ).toBe(false);
+  });
+
+  it("rejects non-integer durationHours", () => {
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: 5.5 }).success,
+    ).toBe(false);
+    expect(
+      createBookingInput.safeParse({ ...valid, durationHours: 4.9 }).success,
+    ).toBe(false);
+  });
+
   // iter-37 §C.3: startTime required for new bookings.
   it("rejects missing or empty startTime", () => {
     expect(
@@ -179,6 +197,16 @@ describe("updateBookingInput — relaxed validation for edits", () => {
         ...validUpdate,
         customerEmail: "not-an-email",
       }).success,
+    ).toBe(false);
+  });
+
+  it("requires a non-empty bookingId", () => {
+    expect(
+      updateBookingInput.safeParse({ ...validUpdate, bookingId: "" }).success,
+    ).toBe(false);
+    expect(
+      updateBookingInput.safeParse({ ...validUpdate, bookingId: undefined })
+        .success,
     ).toBe(false);
   });
 });

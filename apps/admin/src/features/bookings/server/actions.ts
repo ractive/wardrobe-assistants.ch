@@ -823,12 +823,16 @@ export const addBookingSelection = withPermission(
       };
     }
 
-    // Determine next position index.
+    // Determine next position index. Using row count would collide after
+    // deletions; take `max(position) + 1` so positions stay unique.
     const existingRows = await db
       .select({ position: bookingServiceSelection.position })
       .from(bookingServiceSelection)
       .where(eq(bookingServiceSelection.bookingId, bookingId));
-    const nextPosition = existingRows.length;
+    const nextPosition =
+      existingRows.length === 0
+        ? 0
+        : Math.max(...existingRows.map((r) => r.position)) + 1;
 
     const newId = ulid();
     await db.insert(bookingServiceSelection).values({

@@ -32,13 +32,15 @@ describe("assignmentInvite template", () => {
     expect(text).toMatchSnapshot();
   });
 
-  it("renders Confirm and Decline buttons in a 2-column table", async () => {
+  it("renders Confirm and Decline buttons in the same table row", async () => {
     const html = await render(<AssignmentInvite {...params} />);
     // React Email Row renders as <table>, Column as <td>.
-    // Assert both buttons appear inside td siblings of the same table row.
-    const tableWithTwoTd =
-      /<table[^>]*>.*?<td[^>]*>.*?Confirm.*?<\/td>.*?<td[^>]*>.*?Decline.*?<\/td>.*?<\/table>/s;
-    expect(html).toMatch(tableWithTwoTd);
+    // Require both buttons inside td siblings within the SAME <tr> — a
+    // looser <table>...<td>...<td>...</table> match would silently accept
+    // buttons split across separate rows.
+    const sameTr =
+      /<tr[^>]*>.*?<td[^>]*>.*?Confirm.*?<\/td>.*?<td[^>]*>.*?Decline.*?<\/td>.*?<\/tr>/s;
+    expect(html).toMatch(sameTr);
   });
 });
 

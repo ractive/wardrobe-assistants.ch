@@ -93,11 +93,22 @@ export function buildContentSecurityPolicy({
  */
 export function validateReturnTo(value: string | null | undefined): string {
   if (!value) return "/";
+  // Reject backslashes outright — some browsers normalize `\` to `/`, which
+  // would turn `/\\evil.com` into `//evil.com` after redirect.
+  if (value.includes("\\")) return "/";
+  // Reject any control or whitespace characters (CR/LF/TAB/space/etc.) — they
+  // can sneak past `startsWith("/")` checks and confuse downstream URL parsers.
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: deliberately rejects control chars from user-supplied returnTo
+  if (/[\s\u0000-\u001f\u007f]/u.test(value)) return "/";
+  // Reject URL-encoded slashes that would re-introduce a protocol-relative
+  // prefix once Next.js decodes the path.
+  if (/%2f|%5c/iu.test(value)) return "/";
   if (
     !value.startsWith("/") ||
     value.startsWith("//") ||
     value.includes("://") ||
-    /^javascript:/iu.test(value)
+    /^\/(?:javascript|data|vbscript|file):/iu.test(value) ||
+    /^(?:javascript|data|vbscript|file):/iu.test(value)
   ) {
     return "/";
   }
@@ -119,8 +130,9 @@ export function proxy(request: NextRequest): NextResponse {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       // Preserve the original path so the login page can redirect back after
-      // successful authentication (D.3). Only the path + search + hash are
+      // successful authentication (D.3). Only the path + search are
       // forwarded — never the full URL — to avoid an open-redirect.
+      // (The hash is not visible to the server, so it isn't forwarded.)
       url.search = `?returnTo=${encodeURIComponent(pathname + request.nextUrl.search)}`;
       const redirect = NextResponse.redirect(url);
       redirect.headers.set("Content-Security-Policy", csp);

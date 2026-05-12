@@ -151,6 +151,34 @@ describe("proxy — validateReturnTo", () => {
   it("returns / for empty string", () => {
     expect(validateReturnTo("")).toBe("/");
   });
+
+  it("rejects backslash-prefixed paths (browsers normalize \\ → /)", () => {
+    expect(validateReturnTo("/\\/evil.com")).toBe("/");
+    expect(validateReturnTo("\\\\evil.com")).toBe("/");
+  });
+
+  it("rejects URL-encoded slash variants", () => {
+    expect(validateReturnTo("/%2f%2fevil.com")).toBe("/");
+    expect(validateReturnTo("/%2F/evil.com")).toBe("/");
+    expect(validateReturnTo("/%5c%5cevil.com")).toBe("/");
+  });
+
+  it("rejects mixed-case dangerous schemes", () => {
+    expect(validateReturnTo("jAvAsCrIpT:alert(1)")).toBe("/");
+    expect(validateReturnTo("HTTPS://evil.com")).toBe("/");
+    expect(validateReturnTo("data:text/html,<script>alert(1)</script>")).toBe(
+      "/",
+    );
+    expect(validateReturnTo("vbscript:msgbox(1)")).toBe("/");
+    expect(validateReturnTo("file:///etc/passwd")).toBe("/");
+  });
+
+  it("rejects whitespace/control characters that bypass startsWith checks", () => {
+    expect(validateReturnTo(" //evil.com")).toBe("/");
+    expect(validateReturnTo("/\tevil.com")).toBe("/");
+    expect(validateReturnTo("/\nevil.com")).toBe("/");
+    expect(validateReturnTo("/\r//evil.com")).toBe("/");
+  });
 });
 
 describe("proxy — CSP", () => {

@@ -133,7 +133,7 @@ export default async function BookingDetailPage({
             {needsCompletion && (
               <Badge
                 variant="outline"
-                className="border-[var(--warning,theme(colors.yellow.500))] text-[var(--warning,theme(colors.yellow.600))]"
+                className="border-yellow-500 text-yellow-600"
               >
                 Needs completion
               </Badge>
