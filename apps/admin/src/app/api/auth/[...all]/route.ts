@@ -129,7 +129,20 @@ function tooManyRequests(result: RateLimitResult): Response {
   );
 }
 
-export const GET = baseHandler.GET;
+// Defense-in-depth pair with `infra/terraform/pullzones.tf` (`strip_cookies =
+// false`): force the strongest no-cache shape on every auth response so the
+// bunny CDN cannot cache a Set-Cookie / session-bearing body. Better Auth's
+// default `Cache-Control: no-cache` is too weak — bunny treats it as
+// "revalidate before serving cache hit" rather than "do not store." `must-
+// revalidate` reinforces the no-store directive for older intermediaries.
+function withNoStore(res: Response): Response {
+  res.headers.set("Cache-Control", "private, no-store, must-revalidate");
+  return res;
+}
+
+export async function GET(req: Request): Promise<Response> {
+  return withNoStore(await baseHandler.GET(req));
+}
 
 export async function POST(req: Request): Promise<Response> {
   const url = new URL(req.url);
@@ -141,8 +154,8 @@ export async function POST(req: Request): Promise<Response> {
     const key = buildLimiterKey(match, ip, identifier);
     const result = consume(key, RATE_LIMITS[match.bucket]);
     if (!result.allowed) {
-      return tooManyRequests(result);
+      return withNoStore(tooManyRequests(result));
     }
   }
-  return baseHandler.POST(req);
+  return withNoStore(await baseHandler.POST(req));
 }
