@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: "npm"
@@ -47,14 +47,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: "npm"
 
       - name: Detect non-doc changes
         id: changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             app:
@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload to bunny Storage Zone and purge Pull Zone
         if: steps.changes.outputs.app == 'true'
-        uses: ayeressian/bunnycdn-storage-deploy@v2.2.5
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
           source: "apps/homepage/out"
           destination: "/"
@@ -106,7 +106,7 @@ jobs:
 
       - name: Detect non-doc changes
         id: changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             app:
@@ -131,7 +131,7 @@ jobs:
 
       - name: Build and push admin image
         if: steps.changes.outputs.app == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/admin/Dockerfile
