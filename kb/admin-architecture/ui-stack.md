@@ -20,7 +20,7 @@ status: current
 | Validation | `zod` | Same schemas used server-side for `action.parse(unsafe)` |
 | Tables | `@tanstack/react-table` | Headless; shadcn has a copy-paste data-table recipe built on it |
 | Toasts | `sonner` | shadcn-recommended toast |
-| Theme switching | `next-themes` `^0.4.6` | Light / dark / system; see `design-system.md` §16 |
+| Theme switching | `next-themes` `^0.4.6` | Light / dark / system; see [`design-system/theme.md`](design-system/theme.md) |
 | Date helpers | `date-fns` | Add when first needed |
 | Date picker | `react-day-picker` | Comes via `npx shadcn add calendar` |
 
@@ -32,7 +32,7 @@ Tokens are sourced from `@shadcn/theme-neutral` (oklch, light + dark, full seman
 npx shadcn@latest add @shadcn/theme-neutral -c apps/admin --overwrite
 ```
 
-No project-specific token overrides exist yet. Bordeaux brand re-application on `--primary` and derivatives is planned for iter-16i. See [`design-system.md §1`](design-system.md) for the full override surface.
+No project-specific token overrides exist yet. Bordeaux brand re-application on `--primary` and derivatives is planned for iter-16i. See [`design-system/tokens.md`](design-system/tokens.md) for the full override surface.
 
 ## shadcn install workflow
 
@@ -167,7 +167,7 @@ The `app/(dashboard)/layout.tsx` already exists (iter-7b). For iter-14+, add a s
 
 ## Blocks
 
-Shadcn blocks adopted from [`https://ui.shadcn.com/blocks`](https://ui.shadcn.com/blocks). See [`design-system.md §15`](design-system.md) for usage detail per block.
+Shadcn blocks adopted from [`https://ui.shadcn.com/blocks`](https://ui.shadcn.com/blocks). See [`design-system/blocks.md`](design-system/blocks.md) for usage detail per block.
 
 | Block | Status | Notes |
 |---|---|---|

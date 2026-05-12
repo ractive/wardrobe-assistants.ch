@@ -111,8 +111,8 @@ Industry-canonical pattern, citations: [Stripe invoice line item](https://docs.s
 
 ## Scope — UI [3/3]
 
-- [x] `<ServicesTable>` columns: Name, Type (fixed / hourly badge via `<StatusBadge kind="serviceType">`), Price (formatted), Status (active / archived). Cards on mobile, table on desktop per `design-system.md` §7. Actions menu: edit, archive (no delete). Confirm-dialog before archive.
-- [x] `<ServiceDialog>` for create + edit. Form fields: name, description (textarea), priceType (radio: Fixed / Hourly), price (number input — whole CHF, validates positive integer). Submit lock + form-level error region per `design-system.md` §6.
+- [x] `<ServicesTable>` columns: Name, Type (fixed / hourly badge via `<StatusBadge kind="serviceType">`), Price (formatted), Status (active / archived). Cards on mobile, table on desktop per `design-system/tables.md`. Actions menu: edit, archive (no delete). Confirm-dialog before archive.
+- [x] `<ServiceDialog>` for create + edit. Form fields: name, description (textarea), priceType (radio: Fixed / Hourly), price (number input — whole CHF, validates positive integer). Submit lock + form-level error region per `design-system/forms.md`.
 - [x] Sidebar "Services" link in the Manage group (iter-16h's grouped nav), gated by `<HasPermission perm="SERVICE_CREATE">`. Icon: `Tag` from `lucide-react`.
 
 ## Scope — verify [4/4]

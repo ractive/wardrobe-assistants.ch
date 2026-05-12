@@ -24,7 +24,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 - **`--chart-1..5` is re-derived as a bordeaux-anchored sequence**, not the stock multicolor set. `chart-1` matches `--primary`; `chart-2..5` step through complementary hues (warm desaturated browns / soft rose / muted gold) so business charts (when iter-22 lands) read as one family.
 - **Sidebar tokens diverge from main surface tokens.** Sidebar background is darker / more saturated bordeaux than the page background, mirroring shadcn's pattern of a tinted sidebar against a near-white content area. In dark mode the inversion holds.
 - **Existing per-component hardcoded color banners stay as Tailwind palette colors** (amber/green/red). These appear in `apps/admin/src/app/(public)/offer/[token]/page.tsx`, `app/(dashboard)/my-bookings/[bookingId]/page.tsx`, `features/bookings/components/AssignmentActionPrompt.tsx`, `features/bookings/components/WithdrawAssignmentDialog.tsx`. They communicate transient state (pending action, withdrawal, etc.) and shouldn't bind to the brand primary. Audit them once for contrast on the new background, but don't migrate them onto the token system.
-- **Document the palette in `kb/admin-architecture/design-system.md`.** The design-system doc currently describes tokens generically; this iteration pins the specific brand identity.
+- **Document the palette in `kb/admin-architecture/design-system/README.md`.** The design-system doc currently describes tokens generically; this iteration pins the specific brand identity.
 - **Visual regression + smoke use ff-rdp.** §5 baseline screenshots, focus-ring checks (§8b), StatusBadge audit (§8c), sidebar-primary check (§8d), and loading-skeleton visual (§8e) all go through `ff-rdp` per `CLAUDE.md`. Append a dogfooding session report at `../ff-rdp/kb/dogfooding/dogfooding-session-<next>.md` — this iteration in particular is graphics-heavy and likely to surface ff-rdp friction worth capturing.
 
 ## Pre-flight
@@ -342,9 +342,9 @@ For every foreground/background pair in the new palette, verify contrast ratio �
 
 If any pair fails, adjust the lightness of the lighter token until it passes. Document the original generator value and the override in the CSS comment.
 
-### 7. Cleanup + rewrite `design-system.md`
+### 7. Cleanup + rewrite `design-system/README.md`
 
-`kb/admin-architecture/design-system.md` is partly stale — it predates iter-24 (event→booking rename), references an old iter-16i Bordeaux plan that this iteration supersedes, and doesn't mention the shadcn MCP server. Do a heavy pass, not a tweak. Audit every section against the codebase before editing.
+`kb/admin-architecture/design-system/README.md` is partly stale — it predates iter-24 (event→booking rename), references an old iter-16i Bordeaux plan that this iteration supersedes, and doesn't mention the shadcn MCP server. Do a heavy pass, not a tweak. Audit every section against the codebase before editing.
 
 **Staleness to fix (audited):**
 - §1 "Tokens" references `@shadcn/theme-neutral` as the source — replace with the bordeaux palette from §1 of this plan (the pinned TweakCN theme).
@@ -457,7 +457,7 @@ So instead of trying to share tokens at runtime, share them at **compile time** 
 4. Re-run the snapshot tests with `-u`; visually inspect a couple of rendered HTML outputs to confirm the new brand reads as bordeaux in the snapshot (the snapshot contains the raw inline CSS).
 5. **Dark mode is not applicable to email templates** — most clients don't honor `prefers-color-scheme` reliably. The single light palette is the only one shipped.
 
-**Document in `design-system.md`** alongside §7: the email palette is a hex-mirror of the OKLCH palette. If the admin palette changes, regenerate `_tokens.ts` by converting the new OKLCH primary/foreground to hex. No build-time check; this is a maintenance convention, not a compile-time guarantee.
+**Document in `design-system/README.md`** alongside §7: the email palette is a hex-mirror of the OKLCH palette. If the admin palette changes, regenerate `_tokens.ts` by converting the new OKLCH primary/foreground to hex. No build-time check; this is a maintenance convention, not a compile-time guarantee.
 
 ## Out of scope
 
@@ -480,7 +480,7 @@ So instead of trying to share tokens at runtime, share them at **compile time** 
 - [x] No hardcoded color leak introduced (no new `bg-zinc-*` / `text-neutral-*` etc. classes outside the state-banner allowlist).
 - [ ] Existing state banners (amber/green/red) audited and confirmed legible on the new background in both light and dark mode. *(Code unchanged; no visual audit performed in this PR.)*
 - [ ] Visual regression baseline screenshots committed under `kb/screenshots/iter-32-bordeaux/`. *(Not committed — autonomous loop didn't capture them; deferred to a manual pre-deploy smoke pass.)*
-- [x] `kb/admin-architecture/design-system.md` rewritten per §7: stale `event`/`EVENT_*`/`EventsTable`/`@shadcn/theme-neutral`/iter-16i references removed; new "Brand palette" + "Theme management" sections added; tooling note expanded into the MCP + Skill + CLI matrix; §16 root-layout snippet includes the CSP nonce.
+- [x] `kb/admin-architecture/design-system/README.md` rewritten per §7: stale `event`/`EVENT_*`/`EventsTable`/`@shadcn/theme-neutral`/iter-16i references removed; new "Brand palette" + "Theme management" sections added; tooling note expanded into the MCP + Skill + CLI matrix; §16 root-layout snippet includes the CSP nonce.
 - [x] `npm run format` clean; `npm run verify` green; no Biome `lint/correctness` regressions from any newly-introduced token references.
 - [ ] Manual smoke on a preview deploy: log in → toggle dark mode → every page in §5 renders coherently in both modes → focus rings visible → destructive buttons still read as "danger" against the bordeaux primary. *(Manual step; can't be automated from the PR.)*
 - [x] PWA `manifest.ts` `theme_color` and `background_color` updated to the new sRGB-hex equivalents; preview install on iOS/Android shows the brand on the splash and chrome.
@@ -491,7 +491,7 @@ So instead of trying to share tokens at runtime, share them at **compile time** 
 - [x] `apps/admin/src/lib/email-templates/_tokens.ts` exists and exports `brand`, `brandForeground`, `mutedForeground`, `border`, `background`.
 - [x] `_cta.tsx` imports `brand` and `brandForeground` from `_tokens.ts`; every email template imports `brand` from `_tokens.ts` instead of declaring it locally.
 - [x] Snapshot tests updated; sample HTML output visually inspected — bordeaux reads through to the CTA buttons.
-- [x] `design-system.md` documents the hex-bridge convention and instructs maintainers to re-derive `_tokens.ts` whenever the OKLCH primary changes.
+- [x] `design-system/README.md` documents the hex-bridge convention and instructs maintainers to re-derive `_tokens.ts` whenever the OKLCH primary changes.
 
 ## Heads-up for follow-ups
 

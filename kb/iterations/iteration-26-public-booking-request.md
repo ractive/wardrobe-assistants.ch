@@ -138,7 +138,7 @@ export async function notifyAdmins<K extends NotifiableTemplateKey>(
 
 ### 8. Admin booking list — "from public form" indicator
 
-Booking list rows where `createdBy IS NULL` show a small "Public" pill (visual treatment matches existing badges; consult `kb/admin-architecture/design-system.md`).
+Booking list rows where `createdBy IS NULL` show a small "Public" pill (visual treatment matches existing badges; consult `kb/admin-architecture/design-system/README.md`).
 
 ### 9. CORS allowlist constant
 

@@ -21,7 +21,7 @@ The Next.js 16 caveat from `CLAUDE.md` applies: read `node_modules/next/dist/doc
 - **Output is one report file**, not many. `kb/audits/iter-33-monorepo-audit.md` follows the existing `kb/audits/findings-index.md` pattern: each finding has `ID, area, severity, disposition, evidence, recommendation`.
 - **Inline fixes are small commits, each with a one-line message** so the user can revert any individually. Group only when fixes are mechanically identical (e.g. "drop unused imports across 12 files").
 - **No major version bumps.** Bumping TypeScript / React / Next.js / Biome / Vitest is reported with a per-package risk note, not executed. Minor and patch bumps within the existing major *may* be applied if `npm run verify` stays green — but only one package at a time per commit, and only after a quick changelog skim.
-- **No design-system rewrite.** That's iter-32 §7. This iteration cross-checks the design system against actual code usage and flags drift, but doesn't edit `design-system.md` directly.
+- **No design-system rewrite.** That's iter-32 §7. This iteration cross-checks the design system against actual code usage and flags drift, but doesn't edit `design-system/README.md` directly.
 - **No shadcn registry changes.** Don't `npx shadcn@latest add` anything. Don't update existing primitives. The MCP server is for *discovery only* in this iteration.
 - **Test surface stays green.** Every inline fix is followed by `npm run verify`. If anything turns red, revert that fix and convert it to a finding.
 - **The report is the deliverable**, not the diff. A clean run could be "0 inline fixes, 40 findings" and still be a successful iteration.
@@ -114,7 +114,7 @@ Run `npm outdated --workspaces` (or the equivalent for our setup). For each non-
 
 ### 5. Shadcn usage audit (cross-check iter-32 design-system rewrite)
 
-iter-32 rewrites `design-system.md`. This iteration verifies *the code matches the new doc*:
+iter-32 rewrites `design-system/README.md`. This iteration verifies *the code matches the new doc*:
 
 - Every component in `apps/admin/src/components/ui/` is referenced in the design-system "Blocks adopted" / primitive list. List unreferenced ones.
 - Hardcoded colour literals (`#...`, `bg-zinc-*`, `text-neutral-*`, etc.) under `apps/admin/src/` outside `components/ui/` and the audited state-banner allowlist.
@@ -228,5 +228,5 @@ End with a **"Recommended next iterations"** section: 3-5 candidate iteration ti
 
 1. **The user wants to discuss the report before iter-34 is chosen.** Don't pre-queue any of the recommendations as auto-launched iterations.
 2. **Major-version bumps are explicitly user-decisions.** Even if every test passes after a TypeScript 5.x→6.0 attempt, don't commit. Write up the risk and propose it.
-3. **The audit may surface design-system drift between code and `design-system.md` after iter-32.** If iter-32 hasn't merged yet, defer the cross-check; if it has, treat any drift as a finding (probably nice-to-have, since iter-32 itself just rewrote the doc).
+3. **The audit may surface design-system drift between code and `design-system/README.md` after iter-32.** If iter-32 hasn't merged yet, defer the cross-check; if it has, treat any drift as a finding (probably nice-to-have, since iter-32 itself just rewrote the doc).
 4. **Lighthouse baseline scores** captured in §6 should be checked into the report verbatim. A future iteration can use them as a regression baseline.

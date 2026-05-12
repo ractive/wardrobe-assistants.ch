@@ -9,7 +9,7 @@ type LinkButtonProps = Omit<ComponentProps<"a">, "href"> & {
 
 // Anchor styled as a button. The homepage has no `<button>` elements today —
 // every CTA is a link (mailto, anchor jump, route). The `Button` name is
-// reserved for a future actual `<button>`; see kb/admin-architecture/design-system.md.
+// reserved for a future actual `<button>`; see kb/admin-architecture/design-system/forms.md.
 export function LinkButton({
   variant = "primary",
   className,

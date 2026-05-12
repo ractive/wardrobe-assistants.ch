@@ -180,7 +180,7 @@ If the state file is lost, every resource has documented import commands in [`kb
 
 ## Admin theme
 
-The admin app uses a shadcn-style design-token system anchored on a bordeaux primary (chosen in iter-32 via [TweakCN](https://tweakcn.com)). The full palette lives in `apps/admin/src/app/globals.css` as two blocks of OKLCH CSS variables: `:root` (light mode) and `.dark` (dark mode). Tokens follow the shadcn theming contract — see [`https://ui.shadcn.com/docs/theming`](https://ui.shadcn.com/docs/theming) for the catalog. The brand identity is pinned in [`kb/admin-architecture/design-system.md`](kb/admin-architecture/design-system.md).
+The admin app uses a shadcn-style design-token system anchored on a bordeaux primary (chosen in iter-32 via [TweakCN](https://tweakcn.com)). The full palette lives in `apps/admin/src/app/globals.css` as two blocks of OKLCH CSS variables: `:root` (light mode) and `.dark` (dark mode). Tokens follow the shadcn theming contract — see [`https://ui.shadcn.com/docs/theming`](https://ui.shadcn.com/docs/theming) for the catalog. The brand identity is pinned in [`kb/admin-architecture/design-system/tokens.md`](kb/admin-architecture/design-system/tokens.md).
 
 To change the theme:
 
@@ -192,7 +192,7 @@ To change the theme:
 6. Run `npm run verify` and visually smoke-check every page in both light and dark mode (focus rings, destructive buttons, status badges, sidebar).
 7. Optionally update the PWA manifest's `theme_color` and `background_color` in `apps/admin/src/app/manifest.ts` to match the new brand.
 
-The list of CSS tokens (`--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--card`, `--popover`, `--sidebar*`, `--chart-1..5`) is the shadcn standard — don't add bespoke ones; if you need a new color slot, propose extending the design system in `design-system.md` first.
+The list of CSS tokens (`--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--card`, `--popover`, `--sidebar*`, `--chart-1..5`) is the shadcn standard — don't add bespoke ones; if you need a new color slot, propose extending the design system in [`kb/admin-architecture/design-system/tokens.md`](kb/admin-architecture/design-system/tokens.md) first.
 
 ## Performance auditing
 

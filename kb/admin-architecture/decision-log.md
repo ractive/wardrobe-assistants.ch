@@ -207,7 +207,7 @@ Plus `assertPermission` at page-route tops for guarded pages.
 - Apply Bordeaux override on top of `@shadcn/theme-neutral` in the same iteration (rejected: the neutral baseline hadn't been validated under light + dark + system; adding brand colour on top of an unvalidated baseline risks regressions in the full semantic token set).
 - Keep the hand-rolled hex palette (rejected: undeclared tokens kept surfacing visual gaps as more shadcn primitives were adopted).
 
-**Consequences.** Every iteration after this tracks `@shadcn/theme-neutral` upstream rather than maintaining a parallel design system. shadcn screenshots, examples, and blocks render as-shipped — no surprise divergence. Loss: admin no longer carries the Bordeaux brand. Mitigation: **iter-16i** (planned) re-applies Bordeaux as a five-line override on `--primary` and derivatives if the brand-loss proves to matter — easy to add, easy to revert. See `design-system.md §1` for the exact override surface.
+**Consequences.** Every iteration after this tracks `@shadcn/theme-neutral` upstream rather than maintaining a parallel design system. shadcn screenshots, examples, and blocks render as-shipped — no surprise divergence. Loss: admin no longer carries the Bordeaux brand. Mitigation: **iter-16i** (planned) re-applies Bordeaux as a five-line override on `--primary` and derivatives if the brand-loss proves to matter — easy to add, easy to revert. See [`design-system/tokens.md`](design-system/tokens.md) for the exact override surface.
 
 ---
 

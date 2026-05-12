@@ -234,17 +234,17 @@ Recommendation: none.
 
 ### shadcn usage (`A-SHADCN-*`)
 
-#### A-SHADCN-01 — Primitive inventory matches design-system.md
+#### A-SHADCN-01 — Primitive inventory matches the design system
 Area: shadcn  ·  Severity: nice-to-have  ·  Disposition: no-action
 
-Evidence: 22 primitives in `apps/admin/src/components/ui/` (badge, button, calendar, card, checkbox, command, dialog, dropdown-menu, empty, form, input, label, popover, select, separator, sheet, sidebar, skeleton, sonner, table, textarea, tooltip). All match `kb/admin-architecture/design-system.md`'s primitive list.
+Evidence: 22 primitives in `apps/admin/src/components/ui/` (badge, button, calendar, card, checkbox, command, dialog, dropdown-menu, empty, form, input, label, popover, select, separator, sheet, sidebar, skeleton, sonner, table, textarea, tooltip). All match the primitive list in `kb/admin-architecture/design-system/` (audit predates the iter-36 wiki split; primitive inventory is unchanged).
 
 Recommendation: none.
 
 #### A-SHADCN-02 — Hex literals in email templates / manifest are intentional
 Area: shadcn  ·  Severity: nice-to-have  ·  Disposition: no-action
 
-Evidence: hex literals appear in `apps/admin/src/lib/email-templates/*.tsx` (email clients don't grok CSS variables) and `apps/admin/src/app/manifest.ts` (PWA spec requires hex). Both are explicitly allowed per `design-system.md` §1.
+Evidence: hex literals appear in `apps/admin/src/lib/email-templates/*.tsx` (email clients don't grok CSS variables) and `apps/admin/src/app/manifest.ts` (PWA spec requires hex). Both are explicitly allowed per [`design-system/tokens.md`](../admin-architecture/design-system/tokens.md).
 
 Recommendation: none.
 
@@ -376,7 +376,7 @@ Recommendation: none.
 #### A-KB-04 — CLAUDE.md rules + paths all current
 Area: Knowledgebase  ·  Severity: nice-to-have  ·  Disposition: no-action
 
-Evidence: all CLAUDE.md path references (`kb/admin-architecture/overview.md`, `decision-log.md`, `design-system.md`, `feature-slice-template.md`, `kb/audits/findings-index.md`) exist.
+Evidence: all CLAUDE.md path references (`kb/admin-architecture/overview.md`, `decision-log.md`, `design-system/README.md`, `feature-slice-template.md`, `kb/audits/findings-index.md`) exist.
 
 Recommendation: none.
 

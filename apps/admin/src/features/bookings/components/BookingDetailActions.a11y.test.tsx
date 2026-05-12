@@ -1,4 +1,4 @@
-// a11y smoke test for BookingDetailActions — uses vitest-axe per the design-system.md baseline.
+// a11y smoke test for BookingDetailActions — uses vitest-axe per the design-system/a11y.md baseline.
 //
 // BookingDetailActions has its own interactive a11y surface: it renders Edit,
 // "Message assignees", and Delete buttons directly, plus a TooltipProvider

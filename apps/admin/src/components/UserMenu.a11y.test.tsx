@@ -1,4 +1,4 @@
-// a11y smoke test for UserMenu — uses vitest-axe per the design-system.md baseline.
+// a11y smoke test for UserMenu — uses vitest-axe per the design-system/a11y.md baseline.
 // UserMenu calls useSidebar, so it must be wrapped in SidebarProvider.
 
 import { render } from "@testing-library/react";

@@ -1,5 +1,5 @@
 // a11y tests for iter-23 PWA components — PushSubscribeToggle and
-// InstallPrompt. Uses vitest-axe per the design-system.md a11y baseline.
+// InstallPrompt. Uses vitest-axe per the design-system/a11y.md a11y baseline.
 
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";

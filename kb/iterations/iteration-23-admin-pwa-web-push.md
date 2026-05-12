@@ -248,7 +248,7 @@ These are server actions, not API routes — keep with the iter-15+ feature-slic
   - `GET /manifest.webmanifest` returns 200 + correct `Content-Type: application/manifest+json` (Next emits this automatically).
   - `GET /sw.js` returns 200 + `Service-Worker-Allowed: /` + `Cache-Control: no-store`.
   - `subscribePush` server action persists a row when called by an authed user; rejects unauthed calls.
-- **a11y**: `PushSubscribeToggle` and `InstallPrompt` get the standard `vitest-axe` smoke per `kb/admin-architecture/design-system.md`.
+- **a11y**: `PushSubscribeToggle` and `InstallPrompt` get the standard `vitest-axe` smoke per `kb/admin-architecture/design-system/README.md`.
 
 ## Out of scope
 

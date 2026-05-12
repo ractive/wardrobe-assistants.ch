@@ -121,7 +121,7 @@ Research summary (May 2026 landscape):
 
 ## 7. The design-system "rules of the road" we should write down
 
-To make iter-17/18 (services, squad-views) feel coherent without thinking, we need a one-page DS reference inside `kb/admin-architecture/`. Proposed file: `kb/admin-architecture/design-system.md`. Contents:
+To make iter-17/18 (services, squad-views) feel coherent without thinking, we need a one-page DS reference inside `kb/admin-architecture/`. Proposed file: `kb/admin-architecture/design-system/README.md`. Contents:
 
 1. **Tokens** (semantic): list every CSS variable in `globals.css` with what it's for. Forbid hex literals in app code; only `var(--...)` or named Tailwind tokens.
 2. **Spacing**: page padding, section gap, card padding — pick one set and document. (e.g., `px-6 py-8` for page; `gap-4` for stacks; `gap-2` for inline.)
@@ -169,7 +169,7 @@ Ordered by **risk reduction × inverse effort**, scoped to land in one focused f
 
 20. **F-FE-01** (login page → shadcn `<Form>`/`<Input>`/`<Button>`) + **F-FE-26** (split into `<CredentialsStep>` / `<TotpStep>`) + **F-FE-11** (focus management on step transition) — 2-3 hours. **Block before iter-19 (auth-mfa).**
 21. **F-FE-09** + **F-FE-16** (first three component tests with `vitest-axe`: LoginPage, EventForm, AssigneesPicker; consolidate StatusBadge across events/users) — 4-6 hours
-22. **Design-system doc** (`kb/admin-architecture/design-system.md`) — 1 hour
+22. **Design-system doc** (`kb/admin-architecture/design-system/README.md`) — 1 hour
 23. **F-FE-24** (centralize shared tokens in `packages/ui-tokens/` or similar — only if homepage starts to grow) — defer
 24. **F-FE-14** (mobile-nav from CSS-hack to small client component) — defer; not blocking
 

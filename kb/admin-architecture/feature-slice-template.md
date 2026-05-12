@@ -95,7 +95,7 @@ Action body shape:
 
 ## UI components (`apps/admin/src/features/<f>/components/`)
 
-UI conventions: see [`design-system.md`](design-system.md) — tokens, breakpoints, forms, tables, dialogs, a11y baseline (mobile-first). The points below are the slice-specific bits the design system doesn't cover.
+UI conventions: see [`design-system/`](design-system/README.md) — the wiki hub indexes per-topic pages (`tokens.md`, `breakpoints.md`, `forms.md`, `tables.md`, `dialogs-and-sheets.md`, `a11y.md`, …) so you read only what you need. Mobile-first. The points below are the slice-specific bits the design system doesn't cover.
 
 shadcn/ui primitives in `components/ui/` are global. Feature-specific components (forms, tables, dialogs, badges) live here. RHF + zodResolver wires forms to the same Zod input schema the server action uses — the types stay aligned.
 

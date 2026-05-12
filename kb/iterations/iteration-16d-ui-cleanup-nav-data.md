@@ -13,7 +13,7 @@ Mobile responsiveness lands here for the navigation surface (sidebar offcanvas) 
 
 ## Pre-flight
 
-- [x] iter-16c (design system foundation) merged. `design-system.md` is the contract; vendored `Sidebar`, `Sheet`, `Skeleton` exist; `vitest-axe` installed.
+- [x] iter-16c (design system foundation) merged. `design-system/README.md` is the contract; vendored `Sidebar`, `Sheet`, `Skeleton` exist; `vitest-axe` installed.
 - [ ] iter-16b merged (security headers in place; CSP shape known).
 
 ## Scope — adopt official shadcn `Sidebar` [3/4]
@@ -54,7 +54,7 @@ Each item is mechanical, ≤30 min.
 - [x] **F-FE-19**: Delete `<Check className="mr-2 size-4 opacity-0" />` at `AssigneesPicker.tsx:132`.
 - [x] **F-FE-23**: Replace Unicode `← All events` at `events/[id]/page.tsx:50` with `<ArrowLeft className="size-4" aria-hidden="true" /> All events`.
 - [x] **F-FE-29**: Refactor `apps/homepage/src/components/EyebrowBadge.tsx` to use `cn()` instead of string-template ternary.
-- [x] **F-FE-22**: Decide on `--radius-m: 16px` per the design-system doc — **adopted** (kept as defined in `globals.css`; `design-system.md` already documents it).
+- [x] **F-FE-22**: Decide on `--radius-m: 16px` per the design-system doc — **adopted** (kept as defined in `globals.css`; `design-system/README.md` already documents it).
 - [x] **F-FE-08 + EVENT_VIEW**: Add `EVENT_VIEW` to `lib/permissions.ts` (granted to ADMIN and SQUAD_MEMBER); replace the `EVENT_CREATE` gate at `events/[id]/page.tsx:26` with `EVENT_VIEW`. Module-load self-check in `permissions.ts` will catch missing role grants.
 - [x] **F-FE-10**: Drop `useMemo` from `EventsTable.tsx:25`, `UsersTable.tsx:31`, `AssigneesPicker.tsx:38,42`. (EventsTable / UsersTable's `useMemo` goes away when they become server components anyway; AssigneesPicker keeps its client logic but loses the wrapper.)
 - [x] **F-FE-17**: Add `toast.error` on signout failure in `app/(dashboard)/sign-out-button.tsx` so failures aren't silent (was the audit's substantive concern). The plan's secondary "migrate to `useTransition()`" was attempted then reverted to `useState(pending)` after Copilot + CodeRabbit flagged that `startTransition` doesn't reliably keep `pending` true through an async callback (double-submit risk).
