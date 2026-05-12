@@ -81,7 +81,7 @@ describe("BookingForm — create mode", () => {
       venue: "Stadttheater",
       startTime: "18:00",
       durationHours: 8,
-      venueCity: "Zurich",
+      city: "Zurich",
     });
     expect(callArg.date).toBeInstanceOf(Date);
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));

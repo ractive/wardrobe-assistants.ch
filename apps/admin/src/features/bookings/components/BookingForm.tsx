@@ -43,8 +43,7 @@ export interface EditDefaults {
   customerPhone?: string | null;
   startTime?: string | null;
   durationHours?: number | null;
-  venueName?: string | null;
-  venueCity?: string | null;
+  city?: string | null;
   comment?: string | null;
 }
 
@@ -65,14 +64,13 @@ type FormValues = {
   customerPhone?: string;
   startTime?: string;
   durationHours?: number;
-  venueName?: string;
-  venueCity?: string;
+  city?: string;
   comment?: string;
 };
 
 // iter-37 §C.1–C.5: create and edit modes use different schemas.
 // Create: future-only date (via Calendar disabled prop), 5h min duration,
-//         startTime/durationHours/venueCity required, email validated.
+//         startTime/durationHours/city required, email validated.
 // Edit:   no date restriction (admins fix typos on past bookings), relaxed
 //         duration (min 1 so legacy sub-5h rows can still be edited).
 export function BookingForm(props: Props) {
@@ -101,8 +99,7 @@ export function BookingForm(props: Props) {
       customerPhone: defaults?.customerPhone ?? "",
       startTime: defaults?.startTime ?? "",
       durationHours: defaults?.durationHours ?? undefined,
-      venueName: defaults?.venueName ?? "",
-      venueCity: defaults?.venueCity ?? "",
+      city: defaults?.city ?? "",
       comment: defaults?.comment ?? "",
     },
   });
@@ -292,7 +289,7 @@ export function BookingForm(props: Props) {
           />
           <FormField
             control={form.control}
-            name="venueCity"
+            name="city"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
@@ -306,19 +303,6 @@ export function BookingForm(props: Props) {
                     </span>
                   )}
                 </FormLabel>
-                <FormControl>
-                  <Input autoComplete="off" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="venueName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Venue name (optional)</FormLabel>
                 <FormControl>
                   <Input autoComplete="off" {...field} />
                 </FormControl>

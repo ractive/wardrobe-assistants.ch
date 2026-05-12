@@ -89,8 +89,7 @@ export async function GET(
       name: bookings.name,
       date: bookings.date,
       venue: bookings.venue,
-      venueName: bookings.venueName,
-      venueCity: bookings.venueCity,
+      city: bookings.city,
       comment: bookings.comment,
       startTime: bookings.startTime,
       durationHours: bookings.durationHours,
@@ -152,8 +151,8 @@ export async function GET(
   const dtStart = toLocalIcsDate(startDate, startHour, startMin);
   const dtEnd = toLocalIcsDate(endDate, endHour, endMin);
 
-  const venueParts = [row.venueName ?? row.venue, row.venueCity].filter(
-    (s): s is string => Boolean(s),
+  const venueParts = [row.venue, row.city].filter((s): s is string =>
+    Boolean(s),
   );
   const location = escapeIcsText(venueParts.join(", "));
   const summary = escapeIcsText(`Wardrobe Assistants — ${row.name}`);

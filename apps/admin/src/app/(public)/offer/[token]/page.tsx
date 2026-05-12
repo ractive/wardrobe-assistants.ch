@@ -140,13 +140,11 @@ export default async function OfferPage({
                 </dd>
               </>
             )}
-            {(booking.venueName || booking.venueCity) && (
+            {(booking.venue || booking.city) && (
               <>
                 <dt className="text-[var(--muted-foreground)]">Venue</dt>
                 <dd>
-                  {[booking.venueName, booking.venueCity]
-                    .filter(Boolean)
-                    .join(", ")}
+                  {[booking.venue, booking.city].filter(Boolean).join(", ")}
                 </dd>
               </>
             )}

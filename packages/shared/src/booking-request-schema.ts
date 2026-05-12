@@ -34,8 +34,8 @@ export const bookingRequestInputSchema = z
       .int()
       .min(5, "Minimum duty is 5 hours.")
       .max(24, "Maximum duration is 24 hours."),
-    venueName: z.string().trim().min(1, "Venue name is required.").max(200),
-    venueCity: z.string().trim().min(1, "City is required.").max(200),
+    venue: z.string().trim().min(1, "Venue name is required.").max(200),
+    city: z.string().trim().min(1, "City is required.").max(200),
     serviceSelections: z
       .array(
         z.object({

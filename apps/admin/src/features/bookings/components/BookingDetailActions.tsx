@@ -96,8 +96,7 @@ export function BookingDetailActions({
           customerPhone: booking.customerPhone,
           startTime: booking.startTime,
           durationHours: booking.durationHours,
-          venueName: booking.venueName,
-          venueCity: booking.venueCity,
+          city: booking.city,
           comment: booking.comment,
         }}
         open={editOpen}

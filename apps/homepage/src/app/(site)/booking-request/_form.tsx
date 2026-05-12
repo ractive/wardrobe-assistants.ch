@@ -37,7 +37,7 @@ type Status = "idle" | "submitting" | "success" | "error" | "rate_limited";
 
 const TOKEN_VALUE = "wa-booking-v1";
 
-// Lowercase + strip diacritics. Used to compare venueCity against "zurich"
+// Lowercase + strip diacritics. Used to compare city against "zurich"
 // for the call-out-fee hint without tripping on "Zürich" vs "zurich".
 function normalize(input: string): string {
   return input
@@ -72,8 +72,8 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
   const [submittedDate, setSubmittedDate] = useState<string>("");
   const [submittedTime, setSubmittedTime] = useState<string>("");
   const [submittedDuration, setSubmittedDuration] = useState<number>(5);
-  const [submittedVenueName, setSubmittedVenueName] = useState<string>("");
-  const [submittedVenueCity, setSubmittedVenueCity] = useState<string>("");
+  const [submittedVenue, setSubmittedVenue] = useState<string>("");
+  const [submittedCity, setSubmittedCity] = useState<string>("");
 
   const formId = useId();
 
@@ -110,16 +110,15 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
       date: "",
       startTime: "",
       durationHours: 5,
-      venueName: "",
-      venueCity: "",
+      venue: "",
+      city: "",
       serviceSelections: [],
       comment: "",
     },
   });
 
-  const venueCity = watch("venueCity");
-  const showCallOutNotice =
-    venueCity.trim() !== "" && normalize(venueCity) !== "zurich";
+  const city = watch("city");
+  const showCallOutNotice = city.trim() !== "" && normalize(city) !== "zurich";
 
   async function onValidSubmit(data: BookingRequestInput) {
     setStatus("submitting");
@@ -139,8 +138,8 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
     setSubmittedDate(data.date);
     setSubmittedTime(data.startTime);
     setSubmittedDuration(data.durationHours);
-    setSubmittedVenueName(data.venueName);
-    setSubmittedVenueCity(data.venueCity);
+    setSubmittedVenue(data.venue);
+    setSubmittedCity(data.city);
 
     try {
       const res = await fetch(submitUrl, {
@@ -196,7 +195,7 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
           </dd>
           <dt className="text-[var(--muted-foreground)]">Where</dt>
           <dd>
-            {submittedVenueName}, {submittedVenueCity}
+            {submittedVenue}, {submittedCity}
           </dd>
         </dl>
         <button
@@ -348,14 +347,14 @@ export function BookingRequestForm({ services, submitUrl }: Props) {
           <Field
             label="Venue name"
             id={`${formId}-venue-name`}
-            error={errors.venueName?.message}
-            {...register("venueName")}
+            error={errors.venue?.message}
+            {...register("venue")}
           />
           <Field
             label="City"
             id={`${formId}-venue-city`}
-            error={errors.venueCity?.message}
-            {...register("venueCity")}
+            error={errors.city?.message}
+            {...register("city")}
           />
         </div>
         {showCallOutNotice && (

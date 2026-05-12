@@ -15,7 +15,7 @@ import {
 } from "./schema";
 
 describe("createBookingInput", () => {
-  // iter-37 §C.2+C.3: startTime, durationHours (≥5), venueCity are now
+  // iter-37 §C.2+C.3: startTime, durationHours (≥5), city are now
   // required for new bookings at the app layer.
   const valid = {
     name: "Spring kickoff",
@@ -23,7 +23,7 @@ describe("createBookingInput", () => {
     venue: "Studio A",
     startTime: "18:00",
     durationHours: 8,
-    venueCity: "Zurich",
+    city: "Zurich",
   };
 
   it("accepts a minimal valid booking with required fields", () => {
@@ -95,13 +95,13 @@ describe("createBookingInput", () => {
     ).toBe(false);
   });
 
-  // iter-37 §C.3: venueCity required for new bookings.
-  it("rejects missing or empty venueCity", () => {
+  // iter-37 §C.3: city required for new bookings.
+  it("rejects missing or empty city", () => {
+    expect(createBookingInput.safeParse({ ...valid, city: "" }).success).toBe(
+      false,
+    );
     expect(
-      createBookingInput.safeParse({ ...valid, venueCity: "" }).success,
-    ).toBe(false);
-    expect(
-      createBookingInput.safeParse({ ...valid, venueCity: undefined }).success,
+      createBookingInput.safeParse({ ...valid, city: undefined }).success,
     ).toBe(false);
   });
 
@@ -162,12 +162,12 @@ describe("updateBookingInput — relaxed validation for edits", () => {
     expect(r.success).toBe(true);
   });
 
-  // iter-37 §C.3: edit allows missing startTime/venueCity (legacy rows).
-  it("accepts missing startTime and venueCity on edit", () => {
+  // iter-37 §C.3: edit allows missing startTime/city (legacy rows).
+  it("accepts missing startTime and city on edit", () => {
     const r = updateBookingInput.safeParse({
       ...validUpdate,
       startTime: undefined,
-      venueCity: undefined,
+      city: undefined,
     });
     expect(r.success).toBe(true);
   });

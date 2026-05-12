@@ -38,8 +38,7 @@ export const bookings = sqliteTable("bookings", {
 
   startTime: text("start_time"), // "HH:MM"
   durationHours: integer("duration_hours"),
-  venueName: text("venue_name"),
-  venueCity: text("venue_city"),
+  city: text("city"),
   comment: text("comment"),
 
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),

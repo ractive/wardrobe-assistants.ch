@@ -82,9 +82,8 @@ export const createBookingInput = z.object({
   startTime: startTimeFieldRequired,
   // iter-37 §C.2+C.3: 5h minimum, required for new bookings.
   durationHours: durationHoursCreateRequired,
-  venueName: optionalTrimmedText(200),
-  // iter-37 §C.3: venueCity required for new bookings.
-  venueCity: z.string().trim().min(1, "City is required").max(200),
+  // iter-37 §C.3: city required for new bookings.
+  city: z.string().trim().min(1, "City is required").max(200),
   comment: optionalTrimmedText(10_000),
 });
 export type CreateBookingInput = z.infer<typeof createBookingInput>;
@@ -118,8 +117,7 @@ export const updateBookingInput = z.object({
         ? undefined
         : v,
     ),
-  venueName: optionalTrimmedText(200),
-  venueCity: optionalTrimmedText(200),
+  city: optionalTrimmedText(200),
   comment: optionalTrimmedText(10_000),
 });
 export type UpdateBookingInput = z.infer<typeof updateBookingInput>;
@@ -127,6 +125,7 @@ export type UpdateBookingInput = z.infer<typeof updateBookingInput>;
 // iter-37 §C.1–C.3: RHF resolver schema for edit mode — same as
 // updateBookingInput but without bookingId (the form never renders a bookingId
 // input; it's injected via closure when calling the server action).
+// iter-37 §F: venueName dropped, venueCity renamed to city.
 export const editBookingFormInput = updateBookingInput.omit({
   bookingId: true,
 });
@@ -276,8 +275,7 @@ export const bookingDetail = z.object({
   customerPhone: z.string().nullable(),
   startTime: z.string().nullable(),
   durationHours: z.number().int().nullable(),
-  venueName: z.string().nullable(),
-  venueCity: z.string().nullable(),
+  city: z.string().nullable(),
   comment: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),

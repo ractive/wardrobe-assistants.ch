@@ -105,11 +105,11 @@ export default async function BookingDetailPage({
   const isPublicRequest = booking.createdBy === null;
 
   // iter-37 §C.3: "Needs completion" badge for legacy rows missing required
-  // fields (startTime, durationHours, venueCity). These fields are enforced at
+  // fields (startTime, durationHours, city). These fields are enforced at
   // app-layer for new submissions but were optional in earlier iterations, so
   // legacy rows may lack them. DB NOT NULL is deferred.
   const needsCompletion =
-    !booking.startTime || !booking.durationHours || !booking.venueCity;
+    !booking.startTime || !booking.durationHours || !booking.city;
 
   return (
     <section className="flex flex-col gap-6">
@@ -232,10 +232,7 @@ export default async function BookingDetailPage({
       )}
 
       {/* Schedule & venue details */}
-      {(booking.startTime ||
-        booking.durationHours ||
-        booking.venueName ||
-        booking.venueCity) && (
+      {(booking.startTime || booking.durationHours || booking.city) && (
         <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
           <h2 className="font-medium text-sm">Schedule &amp; venue</h2>
           <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
@@ -254,16 +251,10 @@ export default async function BookingDetailPage({
                 </dd>
               </>
             )}
-            {booking.venueName && (
-              <>
-                <dt className="text-[var(--muted-foreground)]">Venue name</dt>
-                <dd>{booking.venueName}</dd>
-              </>
-            )}
-            {booking.venueCity && (
+            {booking.city && (
               <>
                 <dt className="text-[var(--muted-foreground)]">City</dt>
-                <dd>{booking.venueCity}</dd>
+                <dd>{booking.city}</dd>
               </>
             )}
           </dl>

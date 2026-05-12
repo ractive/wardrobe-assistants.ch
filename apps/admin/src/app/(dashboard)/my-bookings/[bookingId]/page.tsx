@@ -135,8 +135,8 @@ export default async function MyBookingDetailPage({
           ) : null}
           <dt className="text-[var(--muted-foreground)]">Venue</dt>
           <dd>
-            {booking.venueName ?? booking.venue}
-            {booking.venueCity ? `, ${booking.venueCity}` : null}
+            {booking.venue}
+            {booking.city ? `, ${booking.city}` : null}
           </dd>
           {booking.comment ? (
             <>

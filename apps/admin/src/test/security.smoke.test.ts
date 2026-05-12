@@ -128,8 +128,7 @@ describe("iter-16f security — cross-feature smoke", () => {
           // iter-37 §C.3: required fields for new bookings (app-layer).
           startTime: "18:00",
           durationHours: 8,
-          venueName: undefined,
-          venueCity: "Zurich",
+          city: "Zurich",
           comment: undefined,
         }),
       ),
