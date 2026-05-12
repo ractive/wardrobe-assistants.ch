@@ -1,7 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useFormAction } from "@/hooks/use-form-action";
 import {
   type CreateServiceInput,
   PRICE_TYPES,
@@ -42,8 +44,12 @@ type Props =
 export function ServiceForm(props: Props) {
   const isEdit = props.mode === "edit";
   const defaults = isEdit ? props.defaults : undefined;
+  const router = useRouter();
 
   const form = useForm({
+    // `as never` suppresses the RHF/Zod generic mismatch: zodResolver's inferred
+    // output type conflicts with useForm's generic when the schema has branded/union
+    // types; the resolver enforces the correct shape at runtime.
     resolver: zodResolver(serviceInput) as never,
     defaultValues: {
       name: defaults?.name ?? "",
@@ -53,24 +59,36 @@ export function ServiceForm(props: Props) {
     },
   });
 
-  const submit = useFormAction(
-    async (data: CreateServiceInput) =>
+  const fallbackErrorMessage = isEdit
+    ? "Could not update service."
+    : "Could not create service.";
+
+  const [state, actionDispatch] = useActionState(
+    async (
+      _prevState: { error?: unknown; message?: string } | null,
+      data: CreateServiceInput,
+    ) =>
       defaults
         ? updateService({ ...data, serviceId: defaults.serviceId })
         : createService(data),
-    {
-      onSuccess: () => {
-        if (!isEdit) form.reset();
-        props.onSuccess?.();
-      },
-      fallbackErrorMessage: isEdit
-        ? "Could not update service."
-        : "Could not create service.",
-    },
+    null,
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form/props.onSuccess are stable references that do not need to trigger re-runs
+  useEffect(() => {
+    if (!state) return;
+    if (state.error) {
+      toast.error(state.message ?? fallbackErrorMessage);
+    } else {
+      toast.success(state.message ?? "Done.");
+      if (!isEdit) form.reset();
+      props.onSuccess?.();
+      router.refresh();
+    }
+  }, [state]);
+
   const onSubmit = form.handleSubmit((data) =>
-    submit(serviceInput.parse(data)),
+    actionDispatch(serviceInput.parse(data)),
   );
 
   const submitLabel = isEdit ? "Save changes" : "Create service";
@@ -182,6 +200,8 @@ export function ServiceForm(props: Props) {
           className="w-full"
           disabled={form.formState.isSubmitting}
         >
+          {/* isSubmitting reflects RHF's async handleSubmit state — correct here
+              because the form uses react-hook-form, not a native action attribute */}
           {form.formState.isSubmitting ? "Saving…" : submitLabel}
         </Button>
       </form>

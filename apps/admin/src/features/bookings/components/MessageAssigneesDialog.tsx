@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useActionState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useFormAction } from "@/hooks/use-form-action";
 import { messageBookingAssigneesInput } from "../schema";
 import { messageBookingAssignees } from "../server/actions";
 
@@ -51,13 +51,26 @@ export function MessageAssigneesDialog({
     if (open) form.reset({ bookingId, subject: "", body: "" });
   }, [open, bookingId]);
 
-  const submit = useFormAction(messageBookingAssignees, {
-    onSuccess: () => onOpenChange(false),
-    refresh: false,
-    fallbackErrorMessage: "Could not send.",
-  });
+  const [state, actionDispatch] = useActionState(
+    async (
+      _prevState: { error?: unknown; message?: string } | null,
+      data: Parameters<typeof messageBookingAssignees>[0],
+    ) => messageBookingAssignees(data),
+    null,
+  );
 
-  const onSubmit = form.handleSubmit((data) => submit(data));
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; onOpenChange is a stable prop reference that does not need to trigger re-runs
+  useEffect(() => {
+    if (!state) return;
+    if (state.error) {
+      toast.error(state.message ?? "Could not send.");
+    } else {
+      toast.success(state.message ?? "Done.");
+      onOpenChange(false);
+    }
+  }, [state]);
+
+  const onSubmit = form.handleSubmit((data) => actionDispatch(data));
 
   return (
     <Dialog
