@@ -2,7 +2,7 @@
 title: Iteration 33 — Monorepo audit + obvious cleanups
 type: iteration
 order: 34
-status: planned
+status: done
 ---
 
 # Iteration 33 — Monorepo audit + obvious cleanups
@@ -29,11 +29,11 @@ The Next.js 16 caveat from `CLAUDE.md` applies: read `node_modules/next/dist/doc
 
 ## Pre-flight
 
-- [ ] iter-30, iter-31, iter-32 merged on `main` and deployed.
-- [ ] `npm run verify` green on `main`.
-- [ ] `npm run verify:tf` green on `main` (if TF changed in iter-30..32).
-- [ ] No uncommitted changes anywhere.
-- [ ] Local docs are present under `node_modules/next/dist/docs/` — if absent, run `npm ci` first.
+- [x] iter-30, iter-31, iter-32 merged on `main` and deployed.
+- [x] `npm run verify` green on `main`.
+- [x] `npm run verify:tf` green on `main` (if TF changed in iter-30..32).
+- [x] No uncommitted changes anywhere.
+- [x] Local docs are present under `node_modules/next/dist/docs/` — if absent, run `npm ci` first.
 
 ## Scope
 
@@ -216,13 +216,13 @@ End with a **"Recommended next iterations"** section: 3-5 candidate iteration ti
 
 ## Done when
 
-- [ ] `kb/audits/iter-33-monorepo-audit.md` exists with sections per §§1-9 and the summary header from §10.
-- [ ] Every finding has `area, severity, disposition, evidence, recommendation`.
-- [ ] Inline fixes are each in their own commit with a one-line message; `npm run verify` is green at HEAD.
-- [ ] No major-version bumps committed.
-- [ ] Minor / patch bumps committed are listed in the report with their changelog skim.
-- [ ] "Recommended next iterations" section at the bottom of the report names 3-5 candidates.
-- [ ] `npm run format` clean; `npm run verify` green; `npm run verify:tf` green (if any TF changed).
+- [x] `kb/audits/iter-33-monorepo-audit.md` exists with sections per §§1-9 and the summary header from §10.
+- [x] Every finding has `area, severity, disposition, evidence, recommendation`. (A-DEPS-02 cross-references A-TS-08 instead of duplicating fields.)
+- [x] Inline fixes are each in their own commit with a one-line message; `npm run verify` is green at HEAD.
+- [x] No major-version bumps committed.
+- [x] Minor / patch bumps committed are listed in the report with their changelog skim.
+- [x] "Recommended next iterations" section at the bottom of the report names 3-5 candidates.
+- [x] `npm run format` clean; `npm run verify` green; `npm run verify:tf` green (if any TF changed).
 
 ## Heads-up for follow-ups
 
