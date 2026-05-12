@@ -126,3 +126,25 @@ Replace the two consecutive casts in `apps/admin/src/hooks/use-has-permission.ts
   - **`kb/admin-architecture/` wiki restructure.** Pending memory note (`project_kb_restructure_pending`) — split `design-system.md` into per-topic pages linked from `overview.md`. Worth doing soon to shrink agent context usage, but doc-only and parallel-safe; can land any time post iter-32.
 
 - **What's *truly* closed by this iteration:** every audit finding with `Disposition: queued` except the four above. After merge, `findings-index.md` and the iter-33 audit doc both need a status pass to mark items as resolved.
+
+## 8. Conditional-UPDATE audit findings (§4)
+
+Walked every `update(bookings | bookingAssignments).set(...).where(...)` in `apps/admin/src/features/bookings/server/actions.ts` and `apps/admin/src/features/bookings/server/assignment-actions.ts`.
+
+**Already correct (status guard + `.returning()` in place):**
+- `approveRequest` — `bookingAssignments` UPDATE: WHERE includes `status = 'requested'`, returns `userId`.
+- `rejectRequest` — `bookingAssignments` UPDATE: WHERE includes `status = 'requested'`, returns `userId`.
+- `sendOffer` — `bookings` UPDATE: WHERE includes `status = 'created' AND offerVersion = ?`, returns `id`.
+- `sendRevisedOffer` — both branches (accepted→offered and offered→offered): WHERE includes `status = ? AND offerVersion = ?`, returns `id`.
+- `confirmAssignment`, `declineAssignment`, `withdrawAssignment` (assignment-actions.ts) — each loops the valid prior states with `status = ?` guard + `.returning()`.
+
+**Fixed in place (§4 of this iteration):**
+- `adminAcceptOffer` — `bookings` UPDATE inside the snapshot tx was `WHERE id = ?` only, no `.returning()`. Added `AND status = fromStatus` guard + `.returning({ id })` + race-detected error path. Moved the conditional UPDATE before the snapshot insert so a race rolls back without orphan `booking_service_item` rows.
+- `rejectBooking` — `bookings` UPDATE was `WHERE id = ?` only, no `.returning()`. Added `AND status = fromStatus` (created or offered) + `.returning({ id })` + "changed during reject" error path.
+- `cancelBooking` — `bookings` UPDATE was `WHERE id = ?` only, no `.returning()`. Added `AND status = 'accepted'` + `.returning({ id })` + "changed during cancel" error path.
+- `assignUser` — the re-assign branch (`bookingAssignments` UPDATE for an existing row) was `WHERE bookingId = ? AND userId = ?` only, no `.returning()` and no prior-status guard. Added `AND status = existing.status` + `.returning({ userId })` + race-aware error path so a concurrent confirm/decline/withdraw can't be silently overwritten.
+
+**Out of scope per the §4 rule (non-status UPDATEs):**
+- `updateBooking` — updates name/date/venue/notes etc. only, not `status`. Already has `.returning()` for not-found detection. Terminal-state guard is a pre-read, not the race-safety mechanism this audit targets.
+
+**Race-case smoke test:** added `cancelBooking: two concurrent cancels — second observes the race` to `apps/admin/src/features/bookings/server/bookings.smoke.test.ts`. Fires `Promise.all` of two `cancelBooking` calls against the same accepted booking and asserts exactly one success + one error (with the error message coming from either the zero-row UPDATE path or the pre-tx guard — both correctly detect the conflict).

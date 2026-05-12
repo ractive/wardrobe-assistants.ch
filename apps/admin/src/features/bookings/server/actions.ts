@@ -257,15 +257,27 @@ export const assignUser = withPermission(
     }
 
     if (existing) {
-      await db
+      // Conditional UPDATE: guard on the pre-tx assignment status so a
+      // concurrent confirm/decline/withdraw can't race us into an unintended
+      // status transition.
+      const updated = await db
         .update(bookingAssignments)
         .set({ status: "assigned", assignedAt: new Date() })
         .where(
           and(
             eq(bookingAssignments.bookingId, bookingId),
             eq(bookingAssignments.userId, userId),
+            eq(bookingAssignments.status, existing.status),
           ),
-        );
+        )
+        .returning({ userId: bookingAssignments.userId });
+      if (updated.length === 0) {
+        return {
+          error: true,
+          message:
+            "Assignment changed during update. Please refresh and try again.",
+        };
+      }
     } else {
       await db.insert(bookingAssignments).values({
         bookingId,
@@ -1122,8 +1134,27 @@ export const adminAcceptOffer = withPermission(
     // Snapshot writes and the status update must commit atomically — otherwise
     // a partial failure leaves orphaned booking_service_item rows.
     let snapshotTotal: number | null = null;
+    let raced = false;
     const newOfferVersion = fromStatus === "created" ? 1 : booking.offerVersion;
     await db.transaction(async (tx) => {
+      // Conditional UPDATE: guard on the pre-tx status so a concurrent
+      // accept/reject/cancel can't race us into a duplicate transition.
+      // Run before the snapshot so a race rolls back without orphan items.
+      const updated = await tx
+        .update(bookings)
+        .set({
+          status: "accepted",
+          acceptedAt: now,
+          offerVersion: newOfferVersion,
+          updatedAt: now,
+        })
+        .where(and(eq(bookings.id, bookingId), eq(bookings.status, fromStatus)))
+        .returning({ id: bookings.id });
+      if (updated.length === 0) {
+        raced = true;
+        return;
+      }
+
       if (fromStatus === "created") {
         const result = await snapshotSelectionsToItems(
           tx,
@@ -1133,17 +1164,13 @@ export const adminAcceptOffer = withPermission(
         );
         snapshotTotal = result.total;
       }
-
-      await tx
-        .update(bookings)
-        .set({
-          status: "accepted",
-          acceptedAt: now,
-          offerVersion: newOfferVersion,
-          updatedAt: now,
-        })
-        .where(eq(bookings.id, bookingId));
     });
+    if (raced) {
+      return {
+        error: true,
+        message: "Booking changed during accept. Please refresh and try again.",
+      };
+    }
 
     await recordAudit({
       actorUserId: actorId,
@@ -1234,10 +1261,19 @@ export const rejectBooking = withPermission(
 
     const fromStatus = booking.status;
     const now = new Date();
-    await db
+    // Conditional UPDATE: guard on the pre-tx status so a concurrent transition
+    // can't race us into rejecting an already-changed booking.
+    const updated = await db
       .update(bookings)
       .set({ status: "rejected", updatedAt: now })
-      .where(eq(bookings.id, bookingId));
+      .where(and(eq(bookings.id, bookingId), eq(bookings.status, fromStatus)))
+      .returning({ id: bookings.id });
+    if (updated.length === 0) {
+      return {
+        error: true,
+        message: "Booking changed during reject. Please refresh and try again.",
+      };
+    }
 
     await recordAudit({
       actorUserId: actorId,
@@ -1300,10 +1336,20 @@ export const cancelBooking = withPermission(
     }
 
     const now = new Date();
-    await db
+    // Conditional UPDATE: guard on status="accepted" so a concurrent cancel or
+    // status change can't race us into cancelling twice (or cancelling something
+    // that already moved out of "accepted").
+    const updated = await db
       .update(bookings)
       .set({ status: "cancelled", updatedAt: now })
-      .where(eq(bookings.id, bookingId));
+      .where(and(eq(bookings.id, bookingId), eq(bookings.status, "accepted")))
+      .returning({ id: bookings.id });
+    if (updated.length === 0) {
+      return {
+        error: true,
+        message: "Booking changed during cancel. Please refresh and try again.",
+      };
+    }
 
     await recordAudit({
       actorUserId: actorId,
