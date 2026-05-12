@@ -59,7 +59,6 @@ export function MessageAssigneesDialog({
     null,
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; onOpenChange is a stable prop reference that does not need to trigger re-runs
   useEffect(() => {
     if (!state) return;
     if (state.error) {
@@ -68,7 +67,7 @@ export function MessageAssigneesDialog({
       toast.success(state.message ?? "Done.");
       onOpenChange(false);
     }
-  }, [state]);
+  }, [state, onOpenChange]);
 
   const onSubmit = form.handleSubmit((data) => actionDispatch(data));
 

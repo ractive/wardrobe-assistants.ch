@@ -19,10 +19,14 @@ export default function SegmentError({ error, reset }: SegmentErrorProps) {
         Something went wrong
       </h2>
       <p className="text-[var(--muted-foreground)] text-sm md:text-base">
-        {error.message
-          ? error.message
-          : "We couldn’t load this section. Try again, and if the problem persists contact an admin."}
+        We couldn’t load this section. Try again, and if the problem persists
+        contact an admin.
       </p>
+      {error.digest ? (
+        <p className="font-mono text-[var(--muted-foreground)] text-xs">
+          Error ID: {error.digest}
+        </p>
+      ) : null}
       <Button type="button" onClick={reset}>
         Try again
       </Button>

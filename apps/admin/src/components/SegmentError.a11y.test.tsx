@@ -13,10 +13,21 @@ describe("SegmentError a11y", () => {
     expect(results).toHaveNoViolations();
   });
 
-  it("renders with generic message when error.message is empty", async () => {
+  it("renders without axe violations when error.message is empty", async () => {
     const emptyError = new Error("");
     const { container } = render(
       <SegmentError error={emptyError} reset={vi.fn()} />,
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("renders without axe violations when error.digest is present", async () => {
+    const errorWithDigest = Object.assign(new Error("boom"), {
+      digest: "abc123",
+    });
+    const { container } = render(
+      <SegmentError error={errorWithDigest} reset={vi.fn()} />,
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();

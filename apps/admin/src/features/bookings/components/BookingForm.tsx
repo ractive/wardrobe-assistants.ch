@@ -112,7 +112,7 @@ export function BookingForm(props: Props) {
     null,
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form/props.onSuccess are stable references that do not need to trigger re-runs
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form/props are stable references that do not need to trigger re-runs
   useEffect(() => {
     if (!state) return;
     if (state.error) {
@@ -123,7 +123,7 @@ export function BookingForm(props: Props) {
       props.onSuccess?.();
       router.refresh();
     }
-  }, [state]);
+  }, [state, fallbackErrorMessage, isEdit]);
 
   // The resolver guarantees a real Date when handleSubmit fires, so parsing
   // is just the type-safe boundary — narrows `FormValues` (date optional) to
@@ -362,8 +362,8 @@ export function BookingForm(props: Props) {
           className="w-full"
           disabled={form.formState.isSubmitting}
         >
-          {/* isSubmitting reflects RHF's async handleSubmit state — correct here
-              because the form uses react-hook-form, not a native action attribute */}
+          {/* RHF's isSubmitting tracks the awaited useActionState dispatch
+              (its returned promise resolves when the server action settles). */}
           {form.formState.isSubmitting ? "Saving…" : submitLabel}
         </Button>
       </form>

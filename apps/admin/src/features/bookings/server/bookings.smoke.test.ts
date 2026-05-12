@@ -989,11 +989,14 @@ describe("bookings feature — smoke", () => {
       // biome-ignore lint/suspicious/noExplicitAny: drizzle's UpdateFn return is structurally compatible.
     }) as any);
 
-    const r = await harness.runAs(admin.cookies, () =>
-      cancelBooking({ bookingId: booking.id, reason: undefined }),
-    );
-
-    spy.mockRestore();
+    let r: Awaited<ReturnType<typeof cancelBooking>>;
+    try {
+      r = await harness.runAs(admin.cookies, () =>
+        cancelBooking({ bookingId: booking.id, reason: undefined }),
+      );
+    } finally {
+      spy.mockRestore();
+    }
 
     expect(r.error, JSON.stringify(r)).toBe(true);
     expect(r.message).toMatch(/changed during cancel/i);

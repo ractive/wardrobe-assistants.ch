@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export const publicServiceEntrySchema = z.object({
   id: z.string().min(1).max(64),
-  name: z.string(),
+  name: z.string().min(1),
   description: z.string().nullable(),
   priceType: z.enum(["fixed", "hourly"]),
   price: z.number().int().nonnegative(),

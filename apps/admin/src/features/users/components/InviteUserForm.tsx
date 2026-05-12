@@ -48,7 +48,7 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
     null,
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form/onSuccess are stable references that do not need to trigger re-runs
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally fires only when state changes; router/form are stable references that do not need to trigger re-runs
   useEffect(() => {
     if (!state) return;
     if (state.error) {
@@ -59,7 +59,7 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
       onSuccess?.();
       router.refresh();
     }
-  }, [state]);
+  }, [state, onSuccess]);
 
   const onSubmit = form.handleSubmit((data) => actionDispatch(data));
 
@@ -171,8 +171,8 @@ export function InviteUserForm({ onSuccess }: { onSuccess?: () => void }) {
           className="w-full"
           disabled={form.formState.isSubmitting}
         >
-          {/* isSubmitting reflects RHF's async handleSubmit state — correct here
-              because the form uses react-hook-form, not a native action attribute */}
+          {/* RHF's isSubmitting tracks the awaited useActionState dispatch
+              (its returned promise resolves when the server action settles). */}
           {form.formState.isSubmitting ? "Sending invite…" : "Send invite"}
         </Button>
       </form>
