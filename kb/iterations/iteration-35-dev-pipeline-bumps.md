@@ -84,7 +84,7 @@ Close GitHub PRs #36-#41 (whichever land cleanly) with "Superseded by iter-35".
 - [x] Block B applied (Vite 8 + plugin-react 6, verify green).
 - [x] Block C: all 6 sub-bumps applied (paths-filter, build-push-action, bunnycdn-storage-deploy, setup-node, github-script, upload-artifact).
 - [x] `npm run verify` green on the iteration branch HEAD.
-- [ ] Iteration-branch CI run is green (validated on the PR; see PR checks).
+- [x] Iteration-branch CI run is green (validated on the PR; see PR checks).
 - [ ] Open Dependabot PRs #36-#41, #45-#47 closed with "Superseded by iter-35" comments. (Post-merge follow-up.)
 - [x] No blocks failed; no §"Findings" section needed.
 
