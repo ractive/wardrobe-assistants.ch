@@ -2,6 +2,10 @@
 title: iter-33 monorepo audit
 type: audit
 status: current
+reviewers: [claude-opus-4-7]
+created: 2026-05-12
+tags: [audit, monorepo, nextjs, react, typescript, dependencies, shadcn, admin, homepage, kb]
+related: [../iterations/iteration-33-monorepo-audit.md, findings-index.md]
 ---
 
 # iter-33 monorepo audit (2026-05-12)
@@ -10,13 +14,13 @@ A wide, mostly-read-only sweep across the monorepo: Next.js 16 / React 19 confor
 
 ## Summary
 
-- **30 findings** (0 blockers, 8 coherence, 22 nice-to-have).
+- **50 findings** (0 blockers, 9 coherence, 41 nice-to-have).
 - **4 inline fixes** committed (one per concern):
   - `fe8f1b6` — normalize iter-15 / iter-25 status frontmatter from `implemented` → `done`.
   - `840b70f` — bump `libphonenumber-js` 1.13.0 → 1.13.1 (patch).
   - `e630bbd` — bump `tailwind-merge` 3.5.0 → 3.6.0 (minor).
-  - `9471ac7` — bump `@types/node` 25.6.2 → 25.7.0 and `vitest` 4.1.5 → 4.1.6.
-- **4 major-version bumps queued** for user decision (TypeScript 6, Vite 8, `@vitejs/plugin-react` 6, `react-day-picker` 10 already current). See §4.
+  - `9471ac7` — bump `@types/node` 25.6.0 → 25.7.0 and `vitest` 4.1.5 → 4.1.6.
+- **3 major-version bumps queued** for user decision (TypeScript 6, Vite 8, `@vitejs/plugin-react` 6). See A-TS-08 and A-DEPS-03.
 - **Quality gates green at HEAD**: `npm run verify` → 51 test files / 422 tests passing, 3 Biome infos pre-existing.
 
 The repo is in a healthy state. The most useful follow-ups are stylistic/coherence: error.tsx coverage, `useFormAction` → `useActionState` migration, and a vitest-axe gap closure.
@@ -189,7 +193,7 @@ Evidence: `npm outdated --workspaces` listed:
 |---|---|---|---|---|
 | `libphonenumber-js` | 1.13.0 | 1.13.1 | 1.13.1 | bumped (`840b70f`) |
 | `tailwind-merge` | 3.5.0 | 3.6.0 | 3.6.0 | bumped (`e630bbd`) |
-| `@types/node` | 25.6.2 | 25.7.0 | 25.7.0 | bumped (`9471ac7`) |
+| `@types/node` | 25.6.0 | 25.7.0 | 25.7.0 | bumped (`9471ac7`) |
 | `vitest` | 4.1.5 | 4.1.6 | 4.1.6 | bumped (`9471ac7`) |
 
 Changelog skim:
