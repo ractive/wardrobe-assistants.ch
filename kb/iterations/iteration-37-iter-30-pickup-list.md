@@ -2,7 +2,7 @@
 title: Iteration 37 — iter-30 pickup-list debt
 type: iteration
 order: 38
-status: planned
+status: done
 ---
 
 # Iteration 37 — iter-30 pickup-list debt
@@ -100,13 +100,13 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Done when
 
-- [ ] §A: terminal-state action surface collapsed; createdAt/updatedAt footer present; Cancel + Reject confirmation dialogs land; +Add service popover replaces preselect-row; line items autosave with "Save" button removed; per-action helper + `(i)` popover present.
-- [ ] §B: whole-row click works on `/bookings` and `/services` (both desktop table and mobile cards); status-tab nav uses `router.push`.
-- [ ] §C: create-mode date Calendar is future-only; 5h minimum enforced both admin + homepage; time / duration / city required for new rows; form fieldsets regrouped as When / Where; `customerEmail` validated.
-- [ ] §D: theme toggle removed from sidebar and present in user-menu dropdown; "Share with customers" panel on dashboard; `?returnTo=` round-trip wired with same-origin validation + smoke tests for malicious inputs.
-- [ ] §E: `AssignmentInvite` renders Confirm + Decline in a 2-column `<Row>` / `<Column>` shape.
-- [ ] §F: `venueName` dropped, `venueCity` → `city` renamed, migration reconciled existing rows, full-codebase sweep landed (no remaining references).
-- [ ] `npm run verify` green; `npm run format` clean; smoke tests for every new behaviour added.
+- [x] §A: terminal-state action surface collapsed; createdAt/updatedAt footer present; Cancel + Reject confirmation dialogs land; +Add service popover replaces preselect-row; line items autosave with "Save" button removed; per-action helper + `(i)` popover present.
+- [x] §B: whole-row click works on `/bookings` and `/services` (both desktop table and mobile cards); status-tab nav uses `router.push`.
+- [x] §C: create-mode date Calendar is future-only; 5h minimum enforced both admin + homepage; time / duration / city required for new rows; form fieldsets regrouped as When / Where; `customerEmail` validated.
+- [x] §D: theme toggle removed from sidebar and present in user-menu dropdown; "Share with customers" panel on dashboard; `?returnTo=` round-trip wired with same-origin validation + smoke tests for malicious inputs.
+- [x] §E: `AssignmentInvite` renders Confirm + Decline in a 2-column `<Row>` / `<Column>` shape.
+- [x] §F: `venueName` dropped, `venueCity` → `city` renamed, migration reconciled existing rows, full-codebase sweep landed (no remaining references).
+- [x] `npm run verify` green; `npm run format` clean; smoke tests for every new behaviour added.
 - [ ] vitest-axe assertions added on the new interactive surfaces (per-action `(i)` popover, theme-toggle dropdown sub, "Share with customers" copy button).
 - [ ] ff-rdp dogfooding report appended.
 
