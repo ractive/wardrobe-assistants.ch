@@ -360,7 +360,7 @@ export function LineItemsEditor({
 
       {selections.length > 0 && (
         <div className="rounded-md bg-[var(--muted)] px-3 py-2 text-sm">
-          <span className="font-medium">
+          <span className="font-medium tabular-nums">
             Estimated total: {formatSubtotal(selections, durationHours)}
           </span>
           {hasHourly && durationHours === null && (
@@ -388,11 +388,14 @@ export function LineItemsReadOnly({
   return (
     <ul className="space-y-1 text-sm">
       {selections.map((s) => (
-        <li key={s.id} className="flex items-center justify-between gap-4">
-          <span className={s.serviceArchived ? "line-through opacity-60" : ""}>
+        <li key={s.id} className="flex items-center gap-4">
+          <span
+            className={`flex-1 ${s.serviceArchived ? "line-through opacity-60" : ""}`}
+          >
             {s.serviceName}
           </span>
-          <span className="text-[var(--muted-foreground)]">
+          {/* tabular-nums keeps digit columns aligned when scanning multiple rows */}
+          <span className="tabular-nums text-[var(--muted-foreground)] pr-1">
             &times;{s.quantity}
           </span>
         </li>

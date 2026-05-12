@@ -46,6 +46,7 @@ export const createService = withPermission(
       targetType: "service",
       targetId: id,
     });
+    console.log(`[evt=service.create userId=${actorId} serviceId=${id}]`);
     revalidatePath("/services");
     return { error: false, message: "Service created." };
   },
@@ -114,6 +115,9 @@ export const archiveService = withPermission(
       targetType: "service",
       targetId: parsed.data.serviceId,
     });
+    console.log(
+      `[evt=service.archive userId=${actorId} serviceId=${parsed.data.serviceId}]`,
+    );
     revalidatePath("/services");
     return { error: false, message: "Service archived." };
   },

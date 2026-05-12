@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { subscribePush, unsubscribePush } from "@/app/(dashboard)/actions/push";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -145,25 +146,24 @@ export function PushSubscribeToggle() {
 
   if (!hasVapid || !isSupported) return null;
 
-  return subscription ? (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => void unsubscribe()}
-      disabled={loading}
-      aria-label="Disable push notifications"
-    >
-      {loading ? "..." : "Notifications on"}
-    </Button>
-  ) : (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => void subscribe()}
-      disabled={loading}
-      aria-label="Enable push notifications"
-    >
-      {loading ? "..." : "Enable notifications"}
-    </Button>
+  return (
+    <div className="flex items-center gap-2">
+      <Switch
+        id="notifications-toggle"
+        checked={subscription !== null}
+        onCheckedChange={(checked) => {
+          if (checked) void subscribe();
+          else void unsubscribe();
+        }}
+        disabled={loading}
+        aria-label="Notifications"
+      />
+      <Label
+        htmlFor="notifications-toggle"
+        className="cursor-pointer select-none text-sm"
+      >
+        Notifications
+      </Label>
+    </div>
   );
 }

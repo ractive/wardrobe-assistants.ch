@@ -66,6 +66,8 @@ export const auth = betterAuth({
         });
         return;
       }
+      // §C: log password-reset request. userId is privacy-safe; email omitted.
+      console.log(`[evt=auth.password_reset.requested userId=${user.id}]`);
       await sendTemplated("passwordReset", user.email, { resetUrl: url });
     },
   },
@@ -111,7 +113,17 @@ export const auth = betterAuth({
               err,
             );
           }
+          // §C: log successful sign-in. Session creation == sign-in success.
+          console.log(`[evt=auth.signin.ok userId=${session.userId}]`);
           return { data: session };
+        },
+      },
+    },
+    user: {
+      create: {
+        after: async (user) => {
+          // §C: log successful sign-up (new user row created by Better Auth).
+          console.log(`[evt=auth.signup.ok userId=${user.id}]`);
         },
       },
     },

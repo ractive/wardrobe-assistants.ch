@@ -1,5 +1,6 @@
 "use client";
 
+import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -12,12 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   adminAcceptOffer,
   cancelBooking,
@@ -37,27 +39,14 @@ const STATUS_HELPER: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// A.6: (i) info popover — Popover (not Tooltip) so it works on touch and
-// keyboard without screen-reader gaps.
+// A.1: (i) icon rendered inside the action button.
+// The icon is aria-hidden — the button's accessible label covers the action.
+// A Tooltip wraps the whole button so hover + keyboard-focus reveal the hint.
 // ---------------------------------------------------------------------------
 
-function InfoPopover({ title, children }: { title: string; children: string }) {
+function InfoIcon() {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Info: ${title}`}
-          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted-foreground)] text-xs leading-none hover:bg-[var(--accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ring)]"
-        >
-          i
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 text-sm" side="top" aria-label={title}>
-        <p className="font-medium">{title}</p>
-        <p className="mt-1 text-[var(--muted-foreground)]">{children}</p>
-      </PopoverContent>
-    </Popover>
+    <Info aria-hidden="true" className="ml-1.5 size-3.5 shrink-0 opacity-60" />
   );
 }
 
@@ -660,95 +649,125 @@ export function BookingLifecycleButtons({
   return (
     <>
       <div className="flex flex-col gap-2">
-        {/* Action buttons — 2-col grid on narrow screens, wrapping row on wider */}
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {showSendOffer && (
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => setSendOfferOpen(true)}
-                disabled={selectionCount === 0}
-                title={
-                  selectionCount === 0
-                    ? "Add line items before sending the offer"
-                    : undefined
-                }
-              >
-                Send offer
-              </Button>
-              <InfoPopover title="Send offer">
-                Snapshots the current line items and emails the offer to the
-                customer. The booking moves to &apos;offered&apos; status.
-              </InfoPopover>
-            </div>
-          )}
-          {showSendRevised && (
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant={status === "accepted" ? "destructive" : "default"}
-                onClick={() => setSendRevisedOpen(true)}
-              >
-                Send revised offer
-              </Button>
-              <InfoPopover title="Send revised offer">
-                Emails an updated quote to the customer. If the booking is
-                already accepted, the customer must re-confirm. Status returns
-                to &apos;offered&apos;.
-              </InfoPopover>
-            </div>
-          )}
-          {showAccept && (
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant={status === "offered" ? "outline" : "default"}
-                onClick={() => setAcceptOpen(true)}
-              >
-                {status === "offered"
-                  ? "Accept on customer's behalf"
-                  : "Accept booking"}
-              </Button>
-              <InfoPopover title="Accept booking">
-                Marks the booking as accepted. Use when the customer confirms
-                outside the offer link (e.g. by phone). Status moves to
-                &apos;accepted&apos;.
-              </InfoPopover>
-            </div>
-          )}
-          {showReject && (
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setRejectOpen(true)}
-              >
-                Reject booking
-              </Button>
-              <InfoPopover title="Reject booking">
-                Declines the booking request and emails the customer. This is a
-                terminal action and cannot be undone.
-              </InfoPopover>
-            </div>
-          )}
-          {showCancel && (
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setCancelOpen(true)}
-              >
-                Cancel booking
-              </Button>
-              <InfoPopover title="Cancel booking">
-                Cancels the accepted booking, notifies all assigned squad
-                members via push + email, and emails the customer. This is a
-                terminal action and cannot be undone.
-              </InfoPopover>
-            </div>
-          )}
-        </div>
+        {/* Action buttons — 2-col grid on narrow screens, wrapping row on wider.
+            Each button has an inline (i) icon; a Tooltip reveals the hint on
+            hover and keyboard focus. Clicking the button opens the action
+            dialog — the icon is decorative and does not intercept clicks. */}
+        <TooltipProvider>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            {showSendOffer && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    tabIndex={selectionCount === 0 ? 0 : -1}
+                    className="inline-flex"
+                  >
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={() => {
+                        if (selectionCount === 0) return;
+                        setSendOfferOpen(true);
+                      }}
+                      aria-disabled={selectionCount === 0}
+                      data-disabled={selectionCount === 0 ? "" : undefined}
+                      style={
+                        selectionCount === 0
+                          ? { pointerEvents: "none", opacity: 0.5 }
+                          : undefined
+                      }
+                    >
+                      Send offer
+                      <InfoIcon />
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  {selectionCount === 0
+                    ? "Add line items before sending the offer."
+                    : "Snapshots the current line items and emails the offer to the customer. The booking moves to 'offered' status."}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {showSendRevised && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={status === "accepted" ? "destructive" : "default"}
+                    onClick={() => setSendRevisedOpen(true)}
+                  >
+                    Send revised offer
+                    <InfoIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  Emails an updated quote to the customer. If the booking is
+                  already accepted, the customer must re-confirm. Status returns
+                  to &apos;offered&apos;.
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {showAccept && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={status === "offered" ? "outline" : "default"}
+                    onClick={() => setAcceptOpen(true)}
+                  >
+                    {status === "offered"
+                      ? "Accept on customer's behalf"
+                      : "Accept booking"}
+                    <InfoIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  Marks the booking as accepted. Use when the customer confirms
+                  outside the offer link (e.g. by phone). Status moves to
+                  &apos;accepted&apos;.
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {showReject && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setRejectOpen(true)}
+                  >
+                    Reject booking
+                    <InfoIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  Declines the booking request and emails the customer. This is
+                  a terminal action and cannot be undone.
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {showCancel && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setCancelOpen(true)}
+                  >
+                    Cancel booking
+                    <InfoIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  Cancels the accepted booking, notifies all assigned squad
+                  members via push + email, and emails the customer. This is a
+                  terminal action and cannot be undone.
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </TooltipProvider>
 
         {/* A.6: contextual helper line, one sentence per non-terminal status */}
         {helperText && (

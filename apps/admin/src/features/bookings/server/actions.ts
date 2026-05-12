@@ -119,6 +119,7 @@ export const createBooking = withPermission(
       targetType: "booking",
       targetId: id,
     });
+    console.log(`[evt=booking.create userId=${actorId} bookingId=${id}]`);
     revalidatePath("/bookings");
     return { error: false, message: "Booking created." };
   },
@@ -178,6 +179,9 @@ export const updateBooking = withPermission(
       targetType: "booking",
       targetId: input.bookingId,
     });
+    console.log(
+      `[evt=booking.update userId=${actorId} bookingId=${input.bookingId}]`,
+    );
     revalidatePath("/bookings");
     revalidatePath(`/bookings/${input.bookingId}`);
     return { error: false, message: "Booking updated." };
@@ -204,6 +208,9 @@ export const deleteBooking = withPermission(
       targetType: "booking",
       targetId: parsed.data.bookingId,
     });
+    console.log(
+      `[evt=booking.delete userId=${actorId} bookingId=${parsed.data.bookingId}]`,
+    );
     revalidatePath("/bookings");
     return { error: false, message: "Booking deleted." };
   },
@@ -1144,6 +1151,9 @@ export const sendOffer = withPermission(
       }
     }
 
+    console.log(
+      `[evt=booking.send_offer userId=${actorId} bookingId=${bookingId}]`,
+    );
     revalidatePath("/bookings");
     revalidatePath(`/bookings/${bookingId}`);
     return { error: false, message: "Offer sent." };
@@ -1308,6 +1318,9 @@ export const sendRevisedOffer = withPermission(
       }
     }
 
+    console.log(
+      `[evt=booking.send_revised_offer userId=${actorId} bookingId=${bookingId}]`,
+    );
     revalidatePath("/bookings");
     revalidatePath(`/bookings/${bookingId}`);
     return { error: false, message: "Revised offer sent." };
@@ -1437,6 +1450,9 @@ export const adminAcceptOffer = withPermission(
       }
     }
 
+    console.log(
+      `[evt=booking.accept userId=${actorId} bookingId=${bookingId}]`,
+    );
     revalidatePath("/bookings");
     revalidatePath(`/bookings/${bookingId}`);
     return { error: false, message: "Booking accepted." };
@@ -1514,6 +1530,9 @@ export const rejectBooking = withPermission(
       }
     }
 
+    console.log(
+      `[evt=booking.reject userId=${actorId} bookingId=${bookingId}]`,
+    );
     revalidatePath("/bookings");
     revalidatePath(`/bookings/${bookingId}`);
     return { error: false, message: "Booking rejected." };
@@ -1623,6 +1642,9 @@ export const cancelBooking = withPermission(
       }
     }
 
+    console.log(
+      `[evt=booking.cancel userId=${actorId} bookingId=${bookingId}]`,
+    );
     revalidatePath("/bookings");
     revalidatePath(`/bookings/${bookingId}`);
     return { error: false, message: "Booking cancelled." };

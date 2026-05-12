@@ -1,5 +1,5 @@
-// A.6 a11y smoke test — verifies the (i) InfoPopover surface (and the
-// surrounding lifecycle buttons) are axe-clean in both closed and open states.
+// A.6 / A.1 a11y smoke test — verifies the lifecycle buttons with inline (i)
+// icon + Tooltip are axe-clean in both closed and open states.
 //
 // All server actions are mocked; this is a pure rendering test.
 
@@ -38,7 +38,7 @@ const BASE_PROPS = {
   squadMemberNames: ["Alice", "Bob"],
 };
 
-describe("BookingLifecycleButtons a11y — (i) InfoPopover", () => {
+describe("BookingLifecycleButtons a11y — inline (i) icon + Tooltip", () => {
   it("renders created status without axe violations (buttons closed)", async () => {
     const { container } = render(
       <BookingLifecycleButtons
@@ -81,7 +81,27 @@ describe("BookingLifecycleButtons a11y — (i) InfoPopover", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("opens (i) popover on click and the open surface is axe-clean", async () => {
+  it("renders the Send offer button with an inline info icon (no separate i-button)", async () => {
+    render(
+      <BookingLifecycleButtons
+        {...BASE_PROPS}
+        status="created"
+        canSendOffer={true}
+        canAccept={false}
+        canReject={false}
+        canCancel={false}
+      />,
+    );
+    // The action button is present; there is no longer a separate (i) button.
+    const sendBtn = screen.getByRole("button", { name: /Send offer/i });
+    expect(sendBtn).toBeDefined();
+    // The old standalone info button is gone.
+    expect(
+      screen.queryByRole("button", { name: /Info: Send offer/i }),
+    ).toBeNull();
+  });
+
+  it("tooltip is axe-clean when the Send offer button is focused", async () => {
     const user = userEvent.setup();
     const { baseElement } = render(
       <BookingLifecycleButtons
@@ -93,14 +113,8 @@ describe("BookingLifecycleButtons a11y — (i) InfoPopover", () => {
         canCancel={false}
       />,
     );
-    // Click the (i) button next to "Send offer"
-    const infoBtn = screen.getByRole("button", { name: /Info: Send offer/i });
-    await user.click(infoBtn);
-
-    // Popover content appears in a portal under document.body — use baseElement
-    // so axe walks the full tree. Disable region (content outside landmark)
-    // because the test renders an isolated fragment, not a full page layout;
-    // and aria-hidden-focus because Radix focus-trap guards are intentional.
+    // Tab to the button so the tooltip becomes visible.
+    await user.tab();
     expect(
       await axe(baseElement, {
         rules: {

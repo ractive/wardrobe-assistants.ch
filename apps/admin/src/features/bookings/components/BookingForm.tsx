@@ -151,7 +151,9 @@ export function BookingForm(props: Props) {
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input autoComplete="off" {...field} />
+                {/* autoFocus: moves focus to the first field when the dialog
+                    opens so keyboard users can start typing immediately. */}
+                <Input autoComplete="off" autoFocus {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
