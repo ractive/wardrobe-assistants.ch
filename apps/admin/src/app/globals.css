@@ -10,6 +10,9 @@
  * per iter-32, with the following deliberate deviations (commented inline):
  *  - --radius kept at 0.625rem (admin convention; supersedes generator's 0.5rem).
  *  - --font-sans pinned to Inter (typography refresh is out of scope, iter-32 §0).
+ *  - --chart-2..--chart-5 overridden with a bordeaux-anchored palette (iter-38
+ *    §B): the generator's defaults clashed visually with the primary; preserve
+ *    these overrides on any future palette swap.
  * To swap palettes: open TweakCN, export, replace both blocks. See README
  * "Admin theme" for the full 7-step procedure.
  */

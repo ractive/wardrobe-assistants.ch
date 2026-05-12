@@ -78,6 +78,8 @@ const PAIRS = [
   ["--foreground", "--background", 4.5],
   ["--card-foreground", "--card", 4.5],
   ["--popover-foreground", "--popover", 4.5],
+  ["--muted-foreground", "--background", 4.5],
+  ["--muted-foreground", "--sidebar", 4.5],
   ["--primary-foreground", "--primary", 4.5],
   ["--secondary-foreground", "--secondary", 4.5],
   ["--muted-foreground", "--muted", 4.5],
@@ -112,11 +114,12 @@ function runMode(label, tokens) {
     if (!fgVal || !bgVal) {
       rows.push({
         label: customLabel ?? `${fgKey} on ${bgKey}`,
-        status: "SKIP",
+        status: "FAIL",
         ratio: "-",
         threshold,
-        note: `missing token (${!fgVal ? fgKey : bgKey})`,
+        note: `missing required token: ${!fgVal ? fgKey : bgKey}`,
       });
+      hardFail = true;
       continue;
     }
     const fg = oklchToRgb(fgVal);

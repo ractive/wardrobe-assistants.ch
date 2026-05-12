@@ -7,25 +7,27 @@
 # Allows 429 (rate-limit) with a warning and continues. Any other non-200
 # result fails the script.
 #
-# Usage: BASE_URL=https://admin.wardrobe-assistants.ch scripts/smoke/proxy-public-paths.sh
+# Only non-mutating GETs against existing public routes are exercised. A
+# POST to /api/public/booking-requests would either always reject (Origin /
+# payload gating) or, with a valid payload, create a real booking and
+# dispatch notifications — neither is appropriate for a smoke. The
+# 307-vs-200 proxy behaviour is sufficiently proven by the GET below.
+#
+# Usage: ADMIN_BASE_URL=https://admin.wardrobe-assistants.ch \
+#        scripts/smoke/proxy-public-paths.sh
+#   (Legacy fallback: BASE_URL is accepted if ADMIN_BASE_URL is unset.)
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-https://admin.wardrobe-assistants.ch}"
+BASE_URL="${ADMIN_BASE_URL:-${BASE_URL:-https://admin.wardrobe-assistants.ch}}"
 
 fail=0
 
 check() {
   local method="$1"
   local path="$2"
-  local body="${3:-}"
-
-  local args=(-sS -o /dev/null -w "%{http_code}" -X "$method" "$BASE_URL$path")
-  if [[ -n "$body" ]]; then
-    args+=(-H "Content-Type: application/json" --data "$body")
-  fi
 
   local code
-  code=$(curl "${args[@]}" || echo "000")
+  code=$(curl -sS --max-time 15 -o /dev/null -w "%{http_code}" -X "$method" "$BASE_URL$path" || echo "000")
 
   if [[ "$code" == "200" ]]; then
     echo "PASS  $method $path -> $code"
@@ -38,10 +40,5 @@ check() {
 }
 
 check GET /api/public/services
-check GET /api/public/health
-# Minimal throwaway payload — server should validate and either accept (200)
-# or reject with a 4xx. 307 indicates the proxy is sending us to login first,
-# which is the failure mode we're guarding against.
-check POST /api/public/booking-requests '{"smoke":"iter-38-smoke","_intent":"healthcheck"}'
 
 exit "$fail"
