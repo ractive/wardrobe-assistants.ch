@@ -40,6 +40,7 @@ export function BookingsStatusTabs({
     <>
       {/* Mobile: Select (<640px) */}
       <div className="sm:hidden">
+        {/* router.push (not replace) so each tab switch adds a history entry */}
         <Select
           value={activeFilter}
           onValueChange={(val) => {
