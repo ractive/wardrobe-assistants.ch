@@ -2,7 +2,7 @@
 title: Iteration 40 — Admin UI polish + observability
 type: iteration
 order: 41
-status: planned
+status: done
 ---
 
 # Iteration 40 — Admin UI polish + observability
