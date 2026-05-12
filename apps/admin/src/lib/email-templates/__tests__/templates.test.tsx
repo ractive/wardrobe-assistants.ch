@@ -31,6 +31,15 @@ describe("assignmentInvite template", () => {
     });
     expect(text).toMatchSnapshot();
   });
+
+  it("renders Confirm and Decline buttons in a 2-column table", async () => {
+    const html = await render(<AssignmentInvite {...params} />);
+    // React Email Row renders as <table>, Column as <td>.
+    // Assert both buttons appear inside td siblings of the same table row.
+    const tableWithTwoTd =
+      /<table[^>]*>.*?<td[^>]*>.*?Confirm.*?<\/td>.*?<td[^>]*>.*?Decline.*?<\/td>.*?<\/table>/s;
+    expect(html).toMatch(tableWithTwoTd);
+  });
 });
 
 describe("bookingBroadcast template", () => {

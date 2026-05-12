@@ -1,10 +1,12 @@
 import {
   Body,
+  Column,
   Container,
   Head,
   Heading,
   Html,
   Preview,
+  Row,
   Text,
 } from "@react-email/components";
 import type { PushPayload } from "../push";
@@ -61,16 +63,18 @@ export default function AssignmentInvite(p: AssignmentInviteParams) {
               <strong>Notes:</strong> {p.bookingNotes}
             </Text>
           ) : null}
-          <Text style={{ margin: "24px 0 8px" }}>
-            <CtaButton href={p.confirmUrl} variant="primary">
-              Confirm
-            </CtaButton>
-          </Text>
-          <Text style={{ margin: "0 0 24px" }}>
-            <CtaButton href={p.declineUrl} variant="secondary">
-              Decline
-            </CtaButton>
-          </Text>
+          <Row style={{ margin: "24px 0" }}>
+            <Column style={{ paddingRight: "8px" }}>
+              <CtaButton href={p.confirmUrl} variant="primary">
+                Confirm
+              </CtaButton>
+            </Column>
+            <Column>
+              <CtaButton href={p.declineUrl} variant="secondary">
+                Decline
+              </CtaButton>
+            </Column>
+          </Row>
           <Text style={{ color: "#777777", fontSize: "13px" }}>
             You'll be asked to sign in. Both buttons take you to your booking
             page where you can confirm or decline.
