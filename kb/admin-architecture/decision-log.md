@@ -304,6 +304,34 @@ Plus `assertPermission` at page-route tops for guarded pages.
 
 ---
 
+## ADR-023 — Admin `_next/static/` chunks served from a separate storage-backed pull zone, not the Magic Container
+
+**Status:** accepted | **Date:** 2026-05-13
+
+**Decision:** The admin app's content-hashed `_next/static/` chunks are served from a dedicated bunny.net pull zone (`bunnynet_pullzone.admin_static`) fronting a storage zone (`bunnynet_storage_zone.admin_static`), not from the Magic Container origin behind `admin.wardrobe-assistants.ch`. The deploy pipeline:
+
+1. Builds the admin image once (`docker build`).
+2. Extracts `/app/apps/admin/.next/static/` from that image via `docker create` + `docker cp` — same `BUILD_ID` by construction.
+3. Uploads the tree to the static-asset storage zone **additively** (`remove: false`).
+4. Rolls the Magic Container *after* the upload completes.
+
+`apps/admin/next.config.ts` reads `ADMIN_ASSET_PREFIX` at `next build` time; the Dockerfile threads it through as a build-arg. CI sets it to the static-asset pull zone's b-cdn.net hostname. The setting is unset in `npm run dev:admin` and CI verify, so the Next dev server keeps serving chunks from localhost. See [iter-41](../iterations/iteration-41-admin-asset-prefix.md).
+
+**Alternatives considered:**
+- **Post-deploy `hoppy pull-zone purge` of the admin CDN** (rejected: old + new container instances serve concurrently during rolling deploy. A purge in that window immediately repopulates the cache with the same stale 404 the *other* instance is still emitting — the failure mode reappears within seconds).
+- **`generateBuildId = <git-sha>`** (rejected: chunk filenames are already content-hashed; the failure isn't filename collision but missing-on-origin during rollover. `generateBuildId` would only matter if the pipeline built twice and had to reconcile two `BUILD_ID`s. We build once and extract from the same image, so `BUILD_ID` parity is automatic).
+- **Disable 404 caching at the edge only** (kept as defense-in-depth via `cache_errors = false` on the admin CDN; not the structural fix because users actively reloading during rollover still hit the ChunkLoadError even if the cache self-heals seconds later).
+- **Custom hostname (`admin-static.wardrobe-assistants.ch`)** (deferred: needs DNS + TLS cert provisioning. b-cdn.net is one fewer moving part for v1).
+- **`COPY` host-built static into the image** (Vercel's self-host pattern — viable, but requires the host's `next build` to match the runtime image hermetically. Image-extraction avoids that constraint and is the de-facto standard for this case).
+
+**Rationale:** Symptom on 2026-05-13: a normal page reload on `/my-bookings/<id>` returned a `ChunkLoadError` because the edge had cached an immutable `Cache-Control: max-age=31536000, immutable` 404 from one container instance that had been asked for a chunk that only existed on the other instance. The only recovery was a manual pull-zone purge.
+
+Decoupling solves the root cause structurally: both old and new container instances reference chunk URLs at the same external CDN, the CDN has every chunk either instance has ever needed (because uploads are additive), and chunk URLs are content-hashed so old and new builds never collide. The deploy ordering — upload before roll — guarantees the CDN is ready before any container can emit HTML referencing new chunks. Rejected alternatives (purge, `generateBuildId`) either address symptoms or guard against a process invariant our single-build pipeline already preserves.
+
+Storage growth from never-deleted chunks is negligible at our volume (low-traffic admin app, small content-hashed JS chunks); a TTL sweep is queued as a follow-up if it ever matters.
+
+---
+
 ## How to add an ADR
 
 When making a new architectural decision:

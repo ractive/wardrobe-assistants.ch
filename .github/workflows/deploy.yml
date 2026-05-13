@@ -145,8 +145,17 @@ jobs:
           # NEXT_PUBLIC_VAPID_PUBLIC_KEY must be present at `next build` time
           # because Next inlines NEXT_PUBLIC_* into the client bundle.
           # Public half of the VAPID keypair — safe to bake into the image.
+          #
+          # ADMIN_ASSET_PREFIX (iter-41): serves `_next/static/` from the
+          # bunny pull-zone in front of the `admin_static` storage zone.
+          # `assetPrefix` is inlined into HTML + chunk manifest at build
+          # time, so this is a build-arg, not a runtime env var. The upload
+          # step below ships the matching chunks to the storage zone *before*
+          # the container roll, so HTML emitted by the new image can resolve
+          # them, and old container instances' chunks are never deleted.
           build-args: |
             NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.VAPID_PUBLIC_KEY }}
+            ADMIN_ASSET_PREFIX=${{ vars.ADMIN_ASSET_PREFIX }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:latest
@@ -167,6 +176,42 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: HIGH,CRITICAL
+
+      # iter-41 §B — extract the freshly-built `_next/static/` tree from the
+      # image so we can upload it to the static-asset storage zone. We use
+      # `docker create` + `docker cp` (no `docker run`) so we never start the
+      # container; the layer is read straight off the filesystem. This keeps
+      # the BUILD_ID in lockstep with the image: the HTML rolled into the
+      # container references the exact chunks we're about to upload.
+      - name: Extract _next/static/ from admin image
+        if: steps.changes.outputs.app == 'true'
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${{ github.repository_owner }}/wardrobe-assistants-admin:${{ github.sha }}"
+          cid=$(docker create "$image")
+          # Standalone build copies static to apps/admin/.next/static; the
+          # Dockerfile mirrors that exact path on the runtime layer.
+          mkdir -p ./admin-static/_next/static
+          docker cp "$cid:/app/apps/admin/.next/static/." ./admin-static/_next/static/
+          docker rm "$cid" >/dev/null
+          ls -lah ./admin-static/_next/static | head -20
+
+      # iter-41 §B — upload to the admin static-asset storage zone BEFORE the
+      # container roll. Additive: `remove: false` so old container instances
+      # can still resolve their chunk URLs during a rolling deploy. No
+      # `purgePullZone`: chunks are content-hashed and `immutable`-cached, so
+      # there's nothing to invalidate.
+      - name: Upload _next/static/ to bunny storage zone
+        if: steps.changes.outputs.app == 'true'
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
+        with:
+          source: "admin-static"
+          destination: "/"
+          storageZoneName: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_ZONE_NAME }}
+          storagePassword: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_PASSWORD }}
+          accessKey: ${{ secrets.BUNNYNET_API_KEY }}
+          upload: "true"
+          remove: "false"
 
       - name: Roll admin Magic Container to new image
         if: steps.changes.outputs.app == 'true'

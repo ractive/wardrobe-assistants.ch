@@ -13,6 +13,16 @@ output "admin_pullzone_cdn_hostname" {
   value       = "mc-r6f39iacv2.b-cdn.net"
 }
 
+output "admin_static_pullzone_cdn_hostname" {
+  description = "System CDN hostname for the admin static-asset pull zone (iter-41 — used as ADMIN_ASSET_PREFIX origin)"
+  value       = "${bunnynet_pullzone.admin_static.name}.b-cdn.net"
+}
+
+output "admin_static_storage_endpoint" {
+  description = "Bunny Storage Zone endpoint for the admin _next/static/ uploads (iter-41)"
+  value       = "https://storage.bunnycdn.com/${bunnynet_storage_zone.admin_static.name}/"
+}
+
 output "homepage_storage_endpoint" {
   description = "Bunny Storage Zone storage endpoint for the homepage build artefacts"
   value       = "https://storage.bunnycdn.com/wardrobe-assistants-ch-homepage/"
