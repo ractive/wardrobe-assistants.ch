@@ -927,6 +927,151 @@ describe("bookings feature — smoke", () => {
   // action would overwrite "rejected" with "cancelled" silently; without
   // `.returning()` the zero-row case would still report success. Both
   // halves are required and both are asserted here.
+  // iter-42 §C: bell badge queries ------------------------------------------
+
+  it("listBellItems — admin sees unassigned created bookings", async () => {
+    const admin = await harness.seedAdmin({
+      email: "bell-admin@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const member = await harness.seedSquadMember({
+      email: "bell-member@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, assignUser } = await import("./actions");
+    const { listBookings, listBellItems } = await import("./queries");
+
+    // Booking A — unassigned (should appear in admin bell).
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Bell unassigned A",
+        date: new Date("2027-05-01T18:00:00.000Z"),
+        venue: "Bell Venue A",
+        ...optionalBookingFields,
+      }),
+    );
+
+    // Booking B — assigned (should NOT appear in admin bell).
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Bell assigned B",
+        date: new Date("2027-05-02T18:00:00.000Z"),
+        venue: "Bell Venue B",
+        ...optionalBookingFields,
+      }),
+    );
+    const bookingList = await harness.runAs(admin.cookies, () =>
+      listBookings(),
+    );
+    const bookingB = bookingList.find((b) => b.name === "Bell assigned B");
+    expect(bookingB).toBeDefined();
+    if (!bookingB) return;
+
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ bookingId: bookingB.id, userId: member.userId }),
+    );
+
+    const bellItems = await harness.runAs(admin.cookies, () =>
+      listBellItems(admin.userId, "ADMIN"),
+    );
+    const bellIds = bellItems.map((i) => i.id);
+
+    // Unassigned booking appears.
+    const bookingA = bookingList.find((b) => b.name === "Bell unassigned A");
+    expect(bookingA).toBeDefined();
+    if (!bookingA) return;
+    expect(bellIds).toContain(bookingA.id);
+
+    // Assigned booking does NOT appear.
+    expect(bellIds).not.toContain(bookingB.id);
+  });
+
+  it("listBellItems — squad member sees their assigned (pending confirmation) bookings", async () => {
+    const admin = await harness.seedAdmin({
+      email: "bell-admin2@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const member = await harness.seedSquadMember({
+      email: "bell-member2@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, assignUser } = await import("./actions");
+    const { listBookings, listBellItems } = await import("./queries");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Bell squad booking",
+        date: new Date("2027-06-01T18:00:00.000Z"),
+        venue: "Bell Squad Venue",
+        ...optionalBookingFields,
+      }),
+    );
+    const bookingList = await harness.runAs(admin.cookies, () =>
+      listBookings(),
+    );
+    const booking = bookingList.find((b) => b.name === "Bell squad booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ bookingId: booking.id, userId: member.userId }),
+    );
+
+    // Member should see it (assignment status = 'assigned', pending confirmation).
+    const bellItems = await harness.runAs(member.cookies, () =>
+      listBellItems(member.userId, "SQUAD_MEMBER"),
+    );
+    expect(bellItems.map((i) => i.id)).toContain(booking.id);
+  });
+
+  it("listBellItems — squad member bell clears after confirming assignment", async () => {
+    const admin = await harness.seedAdmin({
+      email: "bell-admin3@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+    const member = await harness.seedSquadMember({
+      email: "bell-member3@bookings-smoke.local",
+      password: "Sup3rSecure!Pass",
+    });
+
+    const { createBooking, assignUser } = await import("./actions");
+    const { listBookings, listBellItems } = await import("./queries");
+    const { confirmAssignment } = await import("./assignment-actions");
+
+    await harness.runAs(admin.cookies, () =>
+      createBooking({
+        name: "Bell confirm booking",
+        date: new Date("2027-07-01T18:00:00.000Z"),
+        venue: "Bell Confirm Venue",
+        ...optionalBookingFields,
+      }),
+    );
+    const bookingList = await harness.runAs(admin.cookies, () =>
+      listBookings(),
+    );
+    const booking = bookingList.find((b) => b.name === "Bell confirm booking");
+    expect(booking).toBeDefined();
+    if (!booking) return;
+
+    await harness.runAs(admin.cookies, () =>
+      assignUser({ bookingId: booking.id, userId: member.userId }),
+    );
+
+    // Confirm the assignment.
+    const confirmResult = await harness.runAs(member.cookies, () =>
+      confirmAssignment({ bookingId: booking.id }),
+    );
+    expect(confirmResult.error, JSON.stringify(confirmResult)).toBe(false);
+
+    // Bell should now be empty for this member.
+    const bellItems = await harness.runAs(member.cookies, () =>
+      listBellItems(member.userId, "SQUAD_MEMBER"),
+    );
+    expect(bellItems.map((i) => i.id)).not.toContain(booking.id);
+  });
+
   it("cancelBooking: concurrent transition between pre-read and UPDATE — zero-row error path", async () => {
     const admin = await harness.seedAdmin({
       email: "lifecycle-admin9@bookings-smoke.local",

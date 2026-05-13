@@ -89,7 +89,16 @@ export async function userHasPermission(perm: Permission): Promise<boolean> {
 export async function assertPermission(perm: Permission): Promise<void> {
   const role = await getCurrentUserRole();
   if (role === null) throw new UnauthenticatedError();
-  if (!ROLE_PERMISSIONS[role].has(perm)) throw new PermissionError(perm);
+  if (!ROLE_PERMISSIONS[role].has(perm)) {
+    // iter-42 §B: log permission denials. getCachedSession is react-cached so
+    // the second call in this request is free. Email is logged (not userId)
+    // so log lines are readable without a DB lookup.
+    const { getCachedSession } = await import("./auth");
+    const session = await getCachedSession();
+    const who = session?.user.email ?? `role:${role}`;
+    console.warn(`perm: denied ${perm} for ${who}`);
+    throw new PermissionError(perm);
+  }
 }
 
 // Wrapper for server actions: removes auth + permission boilerplate and
@@ -111,6 +120,8 @@ export function withPermission<TArgs extends unknown[], TResult>(
     const role = await roleForUserId(session.user.id);
     if (!role) throw new PermissionError(perm);
     if (!ROLE_PERMISSIONS[role].has(perm)) {
+      // iter-42 §B: log permission denials with actor email for readability.
+      console.warn(`perm: denied ${perm} for ${session.user.email}`);
       throw new PermissionError(perm);
     }
     return action(session.user.id, ...args);

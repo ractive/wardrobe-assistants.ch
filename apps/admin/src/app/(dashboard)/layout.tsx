@@ -10,6 +10,7 @@ import {
 } from "@/components/DashboardSidebar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { PushSubscribeToggle } from "@/components/PushSubscribeToggle";
+import { UnreadBookingsBell } from "@/components/UnreadBookingsBell";
 import {
   SidebarInset,
   SidebarProvider,
@@ -60,7 +61,8 @@ export default async function DashboardLayout({
           <span className="font-semibold text-sm md:text-base">
             Wardrobe Assistants — Admin
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <UnreadBookingsBell />
             <PushSubscribeToggle />
           </div>
         </header>

@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./auth", () => ({
   getCurrentUserRole: vi.fn(),
+  // getCachedSession is dynamically imported by assertPermission when logging
+  // permission denials (iter-42 §B). Return a null session so tests that call
+  // into the denial path get a stable fallback rather than an unresolved export.
+  getCachedSession: vi.fn().mockResolvedValue(null),
 }));
 
 import { getCurrentUserRole } from "./auth";

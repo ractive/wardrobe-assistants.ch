@@ -1,10 +1,17 @@
 "use client";
 
+import { Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { subscribePush, unsubscribePush } from "@/app/(dashboard)/actions/push";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -164,6 +171,25 @@ export function PushSubscribeToggle() {
       >
         Notifications
       </Label>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="About notifications"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Info className="h-4 w-4" aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            Get a browser notification when a booking needs your attention — a
+            new request for admins, or a new assignment to confirm for squad
+            members. Notifications work even when the tab is closed. You can
+            turn them off again any time.
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

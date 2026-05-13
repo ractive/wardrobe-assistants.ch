@@ -24,7 +24,9 @@ import { assertPermission } from "@/lib/permissions";
 import {
   type AssignableUser,
   assignableUser,
+  type BellItem,
   type BookingDetail,
+  bellItem,
   bookingDetail,
   bookingListItem,
   type MyBookingListItem,
@@ -380,6 +382,71 @@ export async function listUpcomingBookingsForRequest(
       createdAt: r.createdAt,
     }),
   );
+}
+
+// ─── Bell badge queries (iter-42 §C) ─────────────────────────────────────────
+//
+// Derivation rules:
+//   Admin      — unassigned pending bookings (status=created, no assigned/confirmed row).
+//   Squad      — bookings assigned to me in `assigned` status (pending my confirmation).
+
+/**
+ * Items the bell badge should list for the current session user.
+ * Caller must pass userId + role resolved from the session.
+ */
+export async function listBellItems(
+  userId: string,
+  role: "ADMIN" | "SQUAD_MEMBER",
+): Promise<BellItem[]> {
+  if (role === "ADMIN") {
+    await assertPermission("BOOKING_VIEW");
+    const rows = await db
+      .select({
+        id: bookings.id,
+        name: bookings.name,
+        date: bookings.date,
+        venue: bookings.venue,
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.status, "created"),
+          notExists(
+            db
+              .select({ _: sql`1` })
+              .from(bookingAssignments)
+              .where(
+                and(
+                  eq(bookingAssignments.bookingId, bookings.id),
+                  inArray(bookingAssignments.status, ["assigned", "confirmed"]),
+                ),
+              ),
+          ),
+        ),
+      )
+      .orderBy(asc(bookings.date));
+    return rows.map((r) => bellItem.parse(r));
+  }
+
+  // Squad member: bookings assigned to me awaiting my confirmation.
+  await assertPermission("SQUAD_VIEW_ASSIGNED");
+  const rows = await db
+    .select({
+      id: bookings.id,
+      name: bookings.name,
+      date: bookings.date,
+      venue: bookings.venue,
+    })
+    .from(bookingAssignments)
+    .innerJoin(bookings, eq(bookings.id, bookingAssignments.bookingId))
+    .where(
+      and(
+        eq(bookingAssignments.userId, userId),
+        eq(bookingAssignments.status, "assigned"),
+      ),
+    )
+    .orderBy(asc(bookings.date));
+  return rows.map((r) => bellItem.parse(r));
 }
 
 export async function listPendingRequestsCountByBooking(): Promise<

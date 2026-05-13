@@ -39,14 +39,24 @@ const STATUS_HELPER: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// A.1: (i) icon rendered inside the action button.
-// The icon is aria-hidden — the button's accessible label covers the action.
-// A Tooltip wraps the whole button so hover + keyboard-focus reveal the hint.
+// A.1 / §E: (i) icon rendered as a standalone focusable button beside the
+// action button. The Tooltip is triggered from this icon only — not from the
+// whole action button — so the action button's own hover/focus styles are
+// unaffected. The icon button carries an aria-label; the action button copy
+// is not duplicated here.
 // ---------------------------------------------------------------------------
 
-function InfoIcon() {
+function InfoTrigger({ label }: { label: string }) {
   return (
-    <Info aria-hidden="true" className="ml-1.5 size-3.5 shrink-0 opacity-60" />
+    <TooltipTrigger asChild>
+      <button
+        type="button"
+        aria-label={label}
+        className="ml-1.5 inline-flex shrink-0 cursor-default items-center opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+      >
+        <Info aria-hidden="true" className="size-3.5" />
+      </button>
+    </TooltipTrigger>
   );
 }
 
@@ -657,31 +667,29 @@ export function BookingLifecycleButtons({
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {showSendOffer && (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    tabIndex={selectionCount === 0 ? 0 : -1}
-                    className="inline-flex"
+                {/* §E: button and (i) icon are siblings. TooltipTrigger wraps
+                    only the icon so the tooltip fires from the icon, not the
+                    full button. */}
+                <span className="inline-flex items-center">
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => {
+                      if (selectionCount === 0) return;
+                      setSendOfferOpen(true);
+                    }}
+                    aria-disabled={selectionCount === 0}
+                    data-disabled={selectionCount === 0 ? "" : undefined}
+                    style={
+                      selectionCount === 0
+                        ? { pointerEvents: "none", opacity: 0.5 }
+                        : undefined
+                    }
                   >
-                    <Button
-                      type="button"
-                      variant="default"
-                      onClick={() => {
-                        if (selectionCount === 0) return;
-                        setSendOfferOpen(true);
-                      }}
-                      aria-disabled={selectionCount === 0}
-                      data-disabled={selectionCount === 0 ? "" : undefined}
-                      style={
-                        selectionCount === 0
-                          ? { pointerEvents: "none", opacity: 0.5 }
-                          : undefined
-                      }
-                    >
-                      Send offer
-                      <InfoIcon />
-                    </Button>
-                  </span>
-                </TooltipTrigger>
+                    Send offer
+                  </Button>
+                  <InfoTrigger label="Info: Send offer" />
+                </span>
                 <TooltipContent side="top" className="max-w-xs">
                   {selectionCount === 0
                     ? "Add line items before sending the offer."
@@ -691,16 +699,16 @@ export function BookingLifecycleButtons({
             )}
             {showSendRevised && (
               <Tooltip>
-                <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
                   <Button
                     type="button"
                     variant={status === "accepted" ? "destructive" : "default"}
                     onClick={() => setSendRevisedOpen(true)}
                   >
                     Send revised offer
-                    <InfoIcon />
                   </Button>
-                </TooltipTrigger>
+                  <InfoTrigger label="Info: Send revised offer" />
+                </span>
                 <TooltipContent side="top" className="max-w-xs">
                   Emails an updated quote to the customer. If the booking is
                   already accepted, the customer must re-confirm. Status returns
@@ -710,7 +718,7 @@ export function BookingLifecycleButtons({
             )}
             {showAccept && (
               <Tooltip>
-                <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
                   <Button
                     type="button"
                     variant={status === "offered" ? "outline" : "default"}
@@ -719,9 +727,15 @@ export function BookingLifecycleButtons({
                     {status === "offered"
                       ? "Accept on customer's behalf"
                       : "Accept booking"}
-                    <InfoIcon />
                   </Button>
-                </TooltipTrigger>
+                  <InfoTrigger
+                    label={
+                      status === "offered"
+                        ? "Info: Accept on customer's behalf"
+                        : "Info: Accept booking"
+                    }
+                  />
+                </span>
                 <TooltipContent side="top" className="max-w-xs">
                   Marks the booking as accepted. Use when the customer confirms
                   outside the offer link (e.g. by phone). Status moves to
@@ -731,16 +745,16 @@ export function BookingLifecycleButtons({
             )}
             {showReject && (
               <Tooltip>
-                <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setRejectOpen(true)}
                   >
                     Reject booking
-                    <InfoIcon />
                   </Button>
-                </TooltipTrigger>
+                  <InfoTrigger label="Info: Reject booking" />
+                </span>
                 <TooltipContent side="top" className="max-w-xs">
                   Declines the booking request and emails the customer. This is
                   a terminal action and cannot be undone.
@@ -749,16 +763,16 @@ export function BookingLifecycleButtons({
             )}
             {showCancel && (
               <Tooltip>
-                <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
                   <Button
                     type="button"
                     variant="destructive"
                     onClick={() => setCancelOpen(true)}
                   >
                     Cancel booking
-                    <InfoIcon />
                   </Button>
-                </TooltipTrigger>
+                  <InfoTrigger label="Info: Cancel booking" />
+                </span>
                 <TooltipContent side="top" className="max-w-xs">
                   Cancels the accepted booking, notifies all assigned squad
                   members via push + email, and emails the customer. This is a

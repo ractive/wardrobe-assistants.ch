@@ -4,13 +4,32 @@
 //
 // Why here (not Dockerfile CMD or CI):
 //   - The standalone bundle has its own minimal node_modules tree under
-//     apps/admin/.next/standalone/. Calling drizzle-orm/libsql/migrator from
+//     apps/admin/.next/standalone/. Calling drizzle-om/libsql/migrator from
 //     a CMD wrapper script (iter-09's attempt) can't resolve those deps; an
 //     instrumentation hook resolves through the bundle's own resolver.
 //   - No new CI secret needed. Runtime container env already has
 //     DATABASE_URL + DATABASE_AUTH_TOKEN.
 //   - Failure crashes the boot, so a failed migration surfaces as the new
 //     pod refusing to come up while the previous pod keeps serving.
+
+import type { Instrumentation } from "next";
+
+// iter-42 §B: log every unhandled server error to stdout so it appears in
+// `bunny logs`. Runs server-side only; client-side boundary renders go to
+// the browser console instead. The digest is Next.js's correlation ID — pair
+// it with the browser's "Error ID:" display (SegmentError.tsx) for triage.
+export const onRequestError: Instrumentation.onRequestError = (
+  err,
+  request,
+  context,
+) => {
+  const digest = (err as { digest?: string }).digest ?? "no-digest";
+  const stack =
+    err instanceof Error && err.stack ? `\n${err.stack}` : ` ${String(err)}`;
+  console.error(
+    `error: unhandled ${context.routeType} ${request.method} ${request.path} digest=${digest}${stack}`,
+  );
+};
 
 export async function register(): Promise<void> {
   // Edge runtime can't run drizzle/libsql; only run on the Node server.

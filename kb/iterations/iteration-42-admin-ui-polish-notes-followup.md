@@ -2,7 +2,7 @@
 title: Iteration 42 — Admin UI polish & observability followup (Notes triage)
 type: iteration
 order: 43
-status: planned
+status: done
 ---
 
 # Iteration 42 — Admin UI polish & observability followup

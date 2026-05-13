@@ -81,7 +81,7 @@ describe("BookingLifecycleButtons a11y — inline (i) icon + Tooltip", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("renders the Send offer button with an inline info icon (no separate i-button)", async () => {
+  it("renders the Send offer button alongside a separate focusable (i) info button", async () => {
     render(
       <BookingLifecycleButtons
         {...BASE_PROPS}
@@ -92,13 +92,13 @@ describe("BookingLifecycleButtons a11y — inline (i) icon + Tooltip", () => {
         canCancel={false}
       />,
     );
-    // The action button is present; there is no longer a separate (i) button.
-    const sendBtn = screen.getByRole("button", { name: /Send offer/i });
+    // The action button is present (exact match to avoid hitting the info button).
+    const sendBtn = screen.getByRole("button", { name: "Send offer" });
     expect(sendBtn).toBeDefined();
-    // The old standalone info button is gone.
-    expect(
-      screen.queryByRole("button", { name: /Info: Send offer/i }),
-    ).toBeNull();
+    // §E: the (i) icon is now a separate focusable button — tooltip triggers
+    // from it only, not from the action button.
+    const infoBtn = screen.getByRole("button", { name: "Info: Send offer" });
+    expect(infoBtn).toBeDefined();
   });
 
   it("tooltip is axe-clean when the Send offer button is focused", async () => {

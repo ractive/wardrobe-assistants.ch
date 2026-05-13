@@ -10,7 +10,13 @@ interface SegmentErrorProps {
 
 export default function SegmentError({ error, reset }: SegmentErrorProps) {
   useEffect(() => {
-    console.error(error);
+    // iter-42 §B: one readable line for triage. Digest pairs with the
+    // server-side onRequestError log (instrumentation.ts).
+    const digest = error.digest ?? "no-digest";
+    console.error(
+      `error: client boundary digest=${digest} ${error.message}`,
+      error,
+    );
   }, [error]);
 
   return (
