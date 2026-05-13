@@ -126,3 +126,32 @@ New secrets:
 - [x] ADR-023 added to `kb/admin-architecture/decision-log.md` documenting the structural fix and rejected alternatives.
 - [x] `npm run verify` green; `npm run verify:tf` green (re-run post-review-fixes 2026-05-13).
 - [ ] Post-deploy: no manual `hoppy pull-zone purge` required for at least one full week / N deploys. **Deferred — measurable only after merge + at least one production deploy cycle; tracked outside this PR.**
+
+## §F — Pivot to same-origin edge rule (2026-05-13, post-merge)
+
+The §A–E architecture above ships `assetPrefix` pointing at the static-asset pull-zone's b-cdn.net hostname. In production this immediately tripped CSP: admin's `style-src 'self' 'unsafe-inline'`, `font-src 'self'`, and `img-src 'self'` blocked every CSS/font/image asset on the CDN host. `'strict-dynamic'` only propagates trust within `script-src`; stylesheets, fonts, and images still need explicit host allowlists.
+
+### What changed
+
+- `apps/admin/next.config.ts` — dropped `ADMIN_ASSET_PREFIX` env-var read and the `assetPrefix` config entry. HTML emits relative `/_next/static/...` URLs.
+- `apps/admin/Dockerfile` — dropped `ARG ADMIN_ASSET_PREFIX` + ENV passthrough.
+- `.github/workflows/deploy.yml` — dropped the `ADMIN_ASSET_PREFIX` build-arg. Upload step retained (chunks still need to land in storage).
+- `infra/terraform/pullzones.tf` — added `bunnynet_pullzone_edgerule.admin_static_assets` on the admin pull-zone. Trigger: `Url MatchAny https://admin.wardrobe-assistants.ch/_next/static/*`. Action: `OriginUrl` rewriting origin to `https://wardrobe-assistants-admin-static.b-cdn.net`. Bunny appends the request path, so every `_next/static/*` request transparently fetches from the admin-static pull-zone (which fronts the storage zone).
+- `apps/admin/src/components/ZodClientInit.tsx` — new client component that calls `z.config({ jitless: true })` at module-load time, mounted in `app/layout.tsx`. Suppresses Zod v4's `new Function("")` JIT probe under the unchanged CSP. Caught throw is non-fatal but pollutes the console; jitless mode skips the probe entirely per Zod 4.4.0+ (PR `colinhacks/zod#5864`).
+- GH variable `ADMIN_ASSET_PREFIX` deleted (unused).
+
+### Why `OriginUrl` not `OriginStorage`
+
+The bunny API rejects `OriginStorage` edge rules against pull-zones whose origin is a `ComputeContainer` (error: "Storage zone not valid"). Using `OriginUrl` pointed at the admin-static pull-zone's b-cdn.net hostname works — one extra bunny-internal hop, both edge layers cache, negligible cost.
+
+### What the §A–E structural fix retained
+
+The rolling-deploy cache-poisoning fix is unaffected. Chunks are still uploaded additively to the storage zone before each container roll. The admin-static pull-zone fronts that storage. The edge rule's effective origin always has the chunk regardless of which container instance is active. The original `ChunkLoadError` failure mode is structurally unreachable.
+
+### Implementation surprises documented elsewhere
+
+See [iteration-41-notes.md](./iteration-41-notes.md) for the full set of bugs we encountered during the same-day implementation (jq newline → 401, `--body -` literal → 1-char secret, turbopack red herring, the Zod JIT followup).
+
+### Updates to ADR-023
+
+`kb/admin-architecture/decision-log.md` ADR-023 has a "2026-05-13 update — §F pivot" subsection covering the same pivot with full rationale and rejected alternatives.

@@ -330,6 +330,24 @@ Decoupling solves the root cause structurally: both old and new container instan
 
 Storage growth from never-deleted chunks is negligible at our volume (low-traffic admin app, small content-hashed JS chunks); a TTL sweep is queued as a follow-up if it ever matters.
 
+### 2026-05-13 update — §F pivot from cross-origin `assetPrefix` to same-origin edge rule
+
+The original §A–E architecture (described above) had `assetPrefix` set to the static-asset pull-zone hostname (`https://wardrobe-assistants-admin-static.b-cdn.net`). HTML therefore emitted **cross-origin** chunk URLs. In production this immediately tripped CSP: the admin's `style-src 'self' 'unsafe-inline'`, `font-src 'self'`, and `img-src 'self'` blocked every CSS/font/image asset on the CDN host. `'strict-dynamic'` only propagates trust within `script-src`, so scripts loaded but stylesheets did not, leaving an unstyled page.
+
+The pivot:
+
+- **Drop `assetPrefix` entirely.** HTML emits relative `/_next/static/...` URLs. Browser fetches them from `admin.wardrobe-assistants.ch` — same origin from CSP's perspective; the existing `'self'` directives now cover every asset class.
+- **Add `bunnynet_pullzone_edgerule.admin_static_assets`** on the admin pull-zone. Trigger: `Url MatchAny https://admin.wardrobe-assistants.ch/_next/static/*`. Action: `OriginUrl` rewriting the origin to `https://wardrobe-assistants-admin-static.b-cdn.net`. Bunny appends the request path, so an effective fetch from the admin pull-zone to the admin-static pull-zone fires for every `_next/static/*` request. The admin-static pull-zone (storage-zone-backed) returns the chunk. Browser sees the response as same-origin admin content.
+- **Bunny rejects `OriginStorage` for ComputeContainer-backed pull-zones** (error: "Storage zone not valid"). `OriginUrl` to the admin-static pull-zone's b-cdn.net hostname is the workaround. One extra bunny-internal hop; both edge layers cache; negligible cost.
+
+**The structural rolling-deploy fix from §A–E still holds.** Chunks are still uploaded additively to the admin-static storage zone before each container roll. The admin-static pull-zone fronts that storage, so the edge rule's effective origin always has the chunk regardless of which container instance is active. The original `ChunkLoadError` failure mode is structurally unreachable.
+
+**Why not extend CSP to allow the CDN host?** Considered. Would require carving out `style-src`, `font-src`, `img-src` (and possibly `connect-src`) for the cross-origin host. Possible but multiplies CSP review surface and pulls cross-origin into security audit scope. Same-origin via edge-rule is cleaner.
+
+**Side effect: Zod v4 JIT probe**. Once styles loaded, the page initialised fully and Zod v4's first-use JIT probe (`try { new Function(""), true } catch { false }`) fired in the browser, emitting a (caught, non-fatal) `unsafe-eval` CSP violation. Suppressed via a client-side `z.config({ jitless: true })` in `apps/admin/src/components/ZodClientInit.tsx`, mounted in `app/layout.tsx`. The Zod source documents this as the supported escape hatch (`node_modules/zod/v4/core/util.js`: "Skip the probe under `jitless`: strict CSPs report the caught `new Function`"). PR `colinhacks/zod#5864` (in 4.4.0+) made `jitless: true` actually skip the probe; we're on 4.4.3.
+
+The GH variable `ADMIN_ASSET_PREFIX` was deleted post-pivot.
+
 ---
 
 ## How to add an ADR
