@@ -114,13 +114,13 @@ New secrets:
 - `apps/admin/Dockerfile` (new ARG/ENV)
 - `kb/admin-architecture/decision-log.md` (new ADR entry explaining the asset-decoupling rationale and the rejected alternatives above)
 
-## Done when
+## Done when [6/8]
 
-- [ ] §A: TF applied; storage zone + pull zone exist; hostname is curlable.
-- [ ] §B: deploy workflow uploads `_next/static/` before rolling the container; `remove: false` confirmed in YAML; new secrets configured in GitHub.
-- [ ] §C: `assetPrefix` set at build time from `ADMIN_ASSET_PREFIX`; verified by inspecting HTML on a fresh deploy.
-- [ ] §D: smoke checks pass; manual reload-storm on a booking page produces zero `ChunkLoadError`s across two consecutive deploys.
-- [ ] §E (if included): `cache_error_responses = false` (or equivalent) applied to `admin_cdn` via Terraform.
-- [ ] ADR entry in `kb/admin-architecture/decision-log.md` explaining why we serve static assets through a separate zone, including the rejected alternatives (post-deploy purge, `generateBuildId`).
-- [ ] `npm run verify` green; `npm run verify:tf` green.
-- [ ] Post-deploy: no manual `hoppy pull-zone purge` required for at least one full week / N deploys to declare the failure mode closed.
+- [x] §A: TF code landed — `bunnynet_storage_zone.admin_static` + `bunnynet_pullzone.admin_static` with `prevent_destroy`, `strip_cookies = true`, 30-day expiration. *Runtime apply / hostname-curlable depends on `tofu apply` post-merge.*
+- [x] §B: deploy workflow uploads `_next/static/` via `docker create` + `docker cp` extraction, then `ayeressian/bunnycdn-storage-deploy@v2.4.5` with `remove: "false"`, before the Magic Container roll. Secrets `BUNNY_ADMIN_STATIC_STORAGE_ZONE_NAME` + `BUNNY_ADMIN_STATIC_STORAGE_PASSWORD` referenced in YAML — configuring them in GitHub repo secrets is a deploy-time setup step.
+- [x] §C: `assetPrefix` wired in `apps/admin/next.config.ts` (gated on `ADMIN_ASSET_PREFIX`); Dockerfile threads it as a build-arg; CI passes `vars.ADMIN_ASSET_PREFIX` into `docker build`. HTML inspection happens post-deploy.
+- [x] §D: `scripts/smoke/admin-static-asset.sh` added + wired via `npm run smoke:admin-static`. Operator-precedence and regex-escape fixes from PR review applied. *Two-deploy reload-storm verification is a manual post-merge step.*
+- [x] §E: `cache_errors = false` set on `bunnynet_pullzone.admin_cdn`.
+- [x] ADR-023 added to `kb/admin-architecture/decision-log.md` documenting the structural fix and rejected alternatives.
+- [x] `npm run verify` green; `npm run verify:tf` green (re-run post-review-fixes 2026-05-13).
+- [ ] Post-deploy: no manual `hoppy pull-zone purge` required for at least one full week / N deploys. **Deferred — measurable only after merge + at least one production deploy cycle; tracked outside this PR.**

@@ -21,7 +21,8 @@
     "lighthouse:homepage": "node scripts/lighthouse.mjs homepage",
     "lighthouse:services": "node scripts/lighthouse.mjs services",
     "check:contrast": "node scripts/check-contrast.mjs",
-    "smoke:public": "scripts/smoke/proxy-public-paths.sh && scripts/smoke/homepage-catalog-non-empty.sh"
+    "smoke:public": "scripts/smoke/proxy-public-paths.sh && scripts/smoke/homepage-catalog-non-empty.sh",
+    "smoke:admin-static": "scripts/smoke/admin-static-asset.sh"
   },
   "engines": {
     "node": ">=24.0.0"

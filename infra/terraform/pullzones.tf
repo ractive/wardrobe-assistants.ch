@@ -69,6 +69,13 @@ resource "bunnynet_pullzone" "admin_cdn" {
   name          = "mc-r6f39iacv2"
   cache_enabled = true
   strip_cookies = false
+  // iter-41 §E (defense in depth): never cache origin error responses at the
+  // edge. Belt-and-braces alongside the structural fix in §A–C (serving
+  // `_next/static/` from a separate storage-backed zone). If a stray asset
+  // path ever reaches the app pull zone during rollover, a transient 404
+  // self-heals in seconds rather than pinning for a year against an
+  // `immutable` Cache-Control.
+  cache_errors = false
 
   origin {
     type                  = "ComputeContainer"
@@ -92,6 +99,42 @@ resource "bunnynet_pullzone_hostname" "admin_cdn" {
   name        = "admin.wardrobe-assistants.ch"
   force_ssl   = true
   tls_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+// iter-41 §A — admin static-asset pull zone.
+//
+// Fronts `bunnynet_storage_zone.admin_static`. Content is immutable,
+// content-hashed `_next/static/` chunks emitted by `next build`. Uploads
+// from the deploy pipeline are additive (`remove: false`) so chunk URLs
+// referenced by an older container instance keep resolving across a rolling
+// container roll.
+//
+// Caching posture: cache aggressively at the edge (30 days, immutable
+// assets), strip cookies (the static surface is anonymous), don't cache
+// error responses (so a transient 404 during deploy doesn't pin).
+//
+// Hostname: bunny system hostname `wardrobe-assistants-admin-static.b-cdn.net`
+// for v1 — no custom hostname / DNS record / TLS cert provisioning. Wired to
+// the admin build via `ADMIN_ASSET_PREFIX` (see `.github/workflows/deploy.yml`
+// and `apps/admin/Dockerfile`).
+resource "bunnynet_pullzone" "admin_static" {
+  name                  = "wardrobe-assistants-admin-static"
+  cache_enabled         = true
+  cache_chunked         = true
+  cache_expiration_time = 2592000 // 30 days
+  strip_cookies         = true
+  cache_errors          = false
+
+  origin {
+    type        = "StorageZone"
+    storagezone = bunnynet_storage_zone.admin_static.id
+  }
+
+  routing {}
 
   lifecycle {
     prevent_destroy = true

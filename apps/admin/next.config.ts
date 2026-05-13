@@ -50,11 +50,21 @@ const securityHeaders = [
   // at the top of this file. Emitted from `src/proxy.ts` per request.
 ];
 
+// iter-41: serve `_next/static/` from a CDN-backed storage zone instead of
+// the Magic Container origin. `assetPrefix` is inlined into the build at
+// `next build` time (HTML + chunk-manifest references), so the env var must
+// be present in the Docker build step — see `apps/admin/Dockerfile` ARG.
+// Unset in `npm run dev:admin` and CI verify so the Next dev server / CI
+// builds keep serving chunks from localhost. Empty string is treated as
+// unset for ergonomic parity with the Docker default.
+const ADMIN_ASSET_PREFIX = process.env.ADMIN_ASSET_PREFIX?.trim() || undefined;
+
 const nextConfig: NextConfig = {
   // Standalone output: emits a self-contained server.js + minimal node_modules
   // under .next/standalone, suitable for the admin Magic Container image.
   output: "standalone",
   reactCompiler: true,
+  ...(ADMIN_ASSET_PREFIX ? { assetPrefix: ADMIN_ASSET_PREFIX } : {}),
   // Trace from the workspace root so standalone packs @wardrobe-assistants/db
   // alongside the admin app.
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
