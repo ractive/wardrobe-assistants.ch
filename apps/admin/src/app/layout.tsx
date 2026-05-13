@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ZodClientInit } from "@/components/ZodClientInit";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <ZodClientInit />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
