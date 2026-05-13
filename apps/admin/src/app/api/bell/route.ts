@@ -9,6 +9,9 @@
 import { listBellItems } from "@/features/bookings/server/queries";
 import { getCachedSession, roleForUserId } from "@/lib/auth";
 
+// Per-user response — never cache at the edge or in the Next data cache.
+export const dynamic = "force-dynamic";
+
 export async function GET(): Promise<Response> {
   const session = await getCachedSession();
   if (!session) {
@@ -27,7 +30,10 @@ export async function GET(): Promise<Response> {
     return Response.json({
       items: items.map((i) => ({ ...i, date: i.date.toISOString() })),
     });
-  } catch {
+  } catch (err) {
+    // iter-42 §B: surface bell errors in `bunny logs` instead of swallowing.
+    // onRequestError won't see this because we caught it here.
+    console.error("bell: failed to list items", err);
     return Response.json({ error: "internal" }, { status: 500 });
   }
 }

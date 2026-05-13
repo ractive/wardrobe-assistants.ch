@@ -4,7 +4,7 @@
 //
 // Why here (not Dockerfile CMD or CI):
 //   - The standalone bundle has its own minimal node_modules tree under
-//     apps/admin/.next/standalone/. Calling drizzle-om/libsql/migrator from
+//     apps/admin/.next/standalone/. Calling drizzle-orm/libsql/migrator from
 //     a CMD wrapper script (iter-09's attempt) can't resolve those deps; an
 //     instrumentation hook resolves through the bundle's own resolver.
 //   - No new CI secret needed. Runtime container env already has

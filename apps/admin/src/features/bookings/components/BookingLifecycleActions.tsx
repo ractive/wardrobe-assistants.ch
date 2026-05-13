@@ -675,16 +675,9 @@ export function BookingLifecycleButtons({
                     type="button"
                     variant="default"
                     onClick={() => {
-                      if (selectionCount === 0) return;
                       setSendOfferOpen(true);
                     }}
-                    aria-disabled={selectionCount === 0}
-                    data-disabled={selectionCount === 0 ? "" : undefined}
-                    style={
-                      selectionCount === 0
-                        ? { pointerEvents: "none", opacity: 0.5 }
-                        : undefined
-                    }
+                    disabled={selectionCount === 0}
                   >
                     Send offer
                   </Button>

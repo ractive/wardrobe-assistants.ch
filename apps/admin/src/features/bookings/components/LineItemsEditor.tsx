@@ -405,12 +405,20 @@ export function LineItemsReadOnly({
 }) {
   if (selections.length === 0) return null;
 
-  const total = selections.reduce((sum, s) => {
-    if (s.priceType === "hourly") {
-      return sum + s.unitPrice * s.quantity * (durationHours ?? 0);
-    }
-    return sum + s.unitPrice * s.quantity;
-  }, 0);
+  // If any hourly line lacks a duration, the per-line amount renders as "—"
+  // (see formatLineAmount) — so the total must match instead of silently
+  // treating the missing duration as zero.
+  const hasUnpricedHourly = selections.some(
+    (s) => s.priceType === "hourly" && durationHours === null,
+  );
+  const total = hasUnpricedHourly
+    ? null
+    : selections.reduce((sum, s) => {
+        if (s.priceType === "hourly") {
+          return sum + s.unitPrice * s.quantity * (durationHours ?? 0);
+        }
+        return sum + s.unitPrice * s.quantity;
+      }, 0);
 
   return (
     <div className="space-y-1 text-sm">
@@ -440,7 +448,9 @@ export function LineItemsReadOnly({
       </ul>
       {/* Total row — right-aligned to anchor the column visually as a footer */}
       <div className="mt-2 flex justify-end border-t border-[var(--border)] pt-1">
-        <span className="tabular-nums font-medium">Total: CHF {total}.-</span>
+        <span className="tabular-nums font-medium">
+          Total: {total === null ? "—" : `CHF ${total}.-`}
+        </span>
       </div>
     </div>
   );

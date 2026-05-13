@@ -91,11 +91,12 @@ export async function assertPermission(perm: Permission): Promise<void> {
   if (role === null) throw new UnauthenticatedError();
   if (!ROLE_PERMISSIONS[role].has(perm)) {
     // iter-42 §B: log permission denials. getCachedSession is react-cached so
-    // the second call in this request is free. Email is logged (not userId)
-    // so log lines are readable without a DB lookup.
+    // the second call in this request is free. We log userId (not email) so
+    // log lines stay free of PII — operators can join to user_profile if a
+    // human-readable identity is needed.
     const { getCachedSession } = await import("./auth");
     const session = await getCachedSession();
-    const who = session?.user.email ?? `role:${role}`;
+    const who = session?.user.id ?? `role:${role}`;
     console.warn(`perm: denied ${perm} for ${who}`);
     throw new PermissionError(perm);
   }
@@ -118,10 +119,15 @@ export function withPermission<TArgs extends unknown[], TResult>(
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) throw new UnauthenticatedError();
     const role = await roleForUserId(session.user.id);
-    if (!role) throw new PermissionError(perm);
+    if (!role) {
+      // iter-42 §B: log denials caused by a missing user_profile row, so
+      // operators see "authed but no role" cases in `bunny logs`.
+      console.warn(`perm: denied ${perm} for ${session.user.id} (no role)`);
+      throw new PermissionError(perm);
+    }
     if (!ROLE_PERMISSIONS[role].has(perm)) {
-      // iter-42 §B: log permission denials with actor email for readability.
-      console.warn(`perm: denied ${perm} for ${session.user.email}`);
+      // iter-42 §B: log permission denials by userId (no PII).
+      console.warn(`perm: denied ${perm} for ${session.user.id}`);
       throw new PermissionError(perm);
     }
     return action(session.user.id, ...args);

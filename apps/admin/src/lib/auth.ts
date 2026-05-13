@@ -12,6 +12,17 @@ import { sendTemplated } from "./email";
 import { env } from "./env";
 import type { Role } from "./permissions";
 
+// SHA-256 hex of the lowercased email — used to correlate repeated login
+// failures in logs without persisting raw addresses (iter-42 §B). Edge and
+// Node both expose Web Crypto via globalThis.crypto.subtle.
+async function hashEmail(email: string): Promise<string> {
+  const data = new TextEncoder().encode(email.toLowerCase());
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
   secret: env.betterAuthSecret,
@@ -63,21 +74,24 @@ export const auth = betterAuth({
         return;
       }
 
-      // Login fail: the returned value is an APIError with status UNAUTHORIZED.
+      // Login fail: any non-success APIError on /sign-in/email — UNAUTHORIZED
+      // covers bad password / unknown user, TOO_MANY_REQUESTS covers rate
+      // limiting, etc. Logging every status keeps operators from being blind
+      // to rate-limit-driven failures (iter-42 §B). We log the status and a
+      // hashed email (not the raw address) — operators can correlate repeated
+      // failures from the same address without leaking PII into bunny logs.
       if (path === "/sign-in/email" && isAPIError(returned)) {
-        if (returned.status === "UNAUTHORIZED") {
-          // Body is available on the raw request; read email from ctx.body.
-          const bodyEmail =
-            ctx.body &&
-            typeof ctx.body === "object" &&
-            "email" in (ctx.body as Record<string, unknown>) &&
-            typeof (ctx.body as Record<string, unknown>).email === "string"
-              ? (ctx.body as Record<string, unknown>).email
-              : "unknown";
-          console.warn(
-            `auth: login fail (bad-credentials) ${String(bodyEmail)}`,
-          );
-        }
+        const rawEmail =
+          ctx.body &&
+          typeof ctx.body === "object" &&
+          "email" in (ctx.body as Record<string, unknown>) &&
+          typeof (ctx.body as Record<string, unknown>).email === "string"
+            ? ((ctx.body as Record<string, unknown>).email as string)
+            : null;
+        const emailHash = rawEmail
+          ? `email#${(await hashEmail(rawEmail)).slice(0, 12)}`
+          : "email#unknown";
+        console.warn(`auth: login fail status=${returned.status} ${emailHash}`);
       }
     }),
   },

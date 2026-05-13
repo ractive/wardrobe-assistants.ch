@@ -26,12 +26,22 @@ interface BellItemResponse {
   venue: string;
 }
 
-interface BellApiResponse {
-  items?: BellItemResponse[];
-  error?: string;
+const POLL_INTERVAL_MS = 60_000;
+
+function isBellItem(value: unknown): value is BellItemResponse {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === "string" &&
+    typeof v.name === "string" &&
+    typeof v.date === "string" &&
+    typeof v.venue === "string"
+  );
 }
 
-const POLL_INTERVAL_MS = 60_000;
+function isBellItemArray(value: unknown): value is BellItemResponse[] {
+  return Array.isArray(value) && value.every(isBellItem);
+}
 
 export function UnreadBookingsBell() {
   const [items, setItems] = useState<BellItemResponse[]>([]);
@@ -41,11 +51,28 @@ export function UnreadBookingsBell() {
   const fetchBell = useCallback(async () => {
     try {
       const res = await fetch("/api/bell", { credentials: "same-origin" });
-      if (!res.ok) return;
-      const data: BellApiResponse = (await res.json()) as BellApiResponse;
-      setItems(data.items ?? []);
-    } catch {
-      // Network error — keep the last-known count so the badge doesn't flicker.
+      if (res.status === 401) {
+        // Session expired (e.g. signed out in another tab) — clear the badge
+        // so it doesn't keep showing a stale count.
+        setItems([]);
+        return;
+      }
+      if (!res.ok) {
+        console.warn(`bell: fetch failed status=${res.status}`);
+        return;
+      }
+      const raw: unknown = await res.json();
+      // Defensive parse — only accept items: BellItemResponse[] with the
+      // expected fields. Anything else falls back to empty so a misshaped
+      // response can't crash the render.
+      const items = isBellItemArray((raw as { items?: unknown } | null)?.items)
+        ? (raw as { items: BellItemResponse[] }).items
+        : [];
+      setItems(items);
+    } catch (err) {
+      // Network error — keep the last-known count so the badge doesn't
+      // flicker, but surface the error so dev tools see it.
+      console.warn("bell: fetch error", err);
     }
   }, []);
 
@@ -87,7 +114,7 @@ export function UnreadBookingsBell() {
           {count > 0 && (
             <span
               aria-hidden="true"
-              className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground"
+              className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground"
             >
               {count > 99 ? "99+" : count}
             </span>
