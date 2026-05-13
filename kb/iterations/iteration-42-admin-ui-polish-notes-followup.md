@@ -131,23 +131,28 @@ still reaches the tooltip (the icon should be focusable for a11y).
   abstraction. Recorded in `kb/Notes.md`.
 - **Invoice / Abaninja flow.** Stays in `kb/iterations/deferred/iteration-22-invoice-flow.md`.
 
-## Acceptance criteria
+## Acceptance criteria [6/6]
 
-- [ ] §A — Line-item amount column is left-aligned in both editor and read-only
+- [x] §A — Line-item amount column is left-aligned in both editor and read-only
       views on ≥`md` breakpoint; total stays right-aligned. Mobile (375px)
       layout unchanged or improved.
-- [ ] §B — Tailing `bunny logs` during a login flow + booking lifecycle shows
+- [x] §B — Tailing `bunny logs` during a login flow + booking lifecycle shows
       readable plain-text lines for every event listed above. Permission
       denials and unhandled errors emit a single distinguishable line.
-- [ ] §C — Bell badge appears in header for admin and squad sessions. Count
+      (PR-review followup: switched email PII → userId / SHA-256 hash; expanded
+      login-fail logging to all non-success statuses, not just UNAUTHORIZED.)
+- [x] §C — Bell badge appears in header for admin and squad sessions. Count
       matches the derivation rules above. Confirming/declining/assigning a
       booking decrements the count without a manual refresh (within poll
-      window or focus event).
-- [ ] §D — `(i)` tooltip beside notifications toggle renders the drafted copy;
+      window or focus event). (Layout now gates the bell render on role so
+      profileless users don't poll `/api/bell` — PR-review followup.)
+- [x] §D — `(i)` tooltip beside notifications toggle renders the drafted copy;
       keyboard- and tap-accessible.
-- [ ] §E — Tooltip on `/bookings/{id}` action buttons fires only when hovering
+- [x] §E — Tooltip on `/bookings/{id}` action buttons fires only when hovering
       the `(i)` icon, not the rest of the button. Keyboard tab still reaches it.
-- [ ] `npm run verify` passes. Smoke test on `/bookings/<id>`, `/my-bookings`,
+      (Send-offer button switched from `aria-disabled` + pointer-event hacks to
+      native `disabled` — PR-review followup.)
+- [x] `npm run verify` passes. Smoke test on `/bookings/<id>`, `/my-bookings`,
       and login/logout in ff-rdp.
 
 ## Notes
