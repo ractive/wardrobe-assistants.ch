@@ -47,6 +47,9 @@ ENV DATABASE_URL=libsql://build-placeholder.invalid \
     NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY \
     ADMIN_ASSET_PREFIX=$ADMIN_ASSET_PREFIX \
     NEXT_TELEMETRY_DISABLED=1
+# iter-41 triage: print length so we can see at build time whether the
+# build-arg propagated. Remove once confirmed.
+RUN echo "ADMIN_ASSET_PREFIX length: ${#ADMIN_ASSET_PREFIX}; first10=$(echo "$ADMIN_ASSET_PREFIX" | cut -c1-10)"
 RUN npm -w apps/admin run build
 
 # Distroless runtime: no shell, no apk, no npm — just a pinned Node binary
