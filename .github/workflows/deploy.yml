@@ -197,21 +197,42 @@ jobs:
           ls -lah ./admin-static/_next/static | head -20
 
       # iter-41 §B — upload to the admin static-asset storage zone BEFORE the
-      # container roll. Additive: `remove: false` so old container instances
+      # container roll. Additive: never delete, so old container instances
       # can still resolve their chunk URLs during a rolling deploy. No
-      # `purgePullZone`: chunks are content-hashed and `immutable`-cached, so
+      # pull-zone purge: chunks are content-hashed and `immutable`-cached, so
       # there's nothing to invalidate.
+      #
+      # Implemented as a curl loop rather than `ayeressian/bunnycdn-storage-deploy`
+      # because that action does not await its parallel uploads correctly with
+      # Node 24's undici (it fires the entire fileset in one tick and then
+      # retry-storms with "expected non-null body source"). The bunny Storage
+      # API is trivial — PUT with an AccessKey header — so we run curl directly
+      # with bounded parallelism (xargs -P 8). Halt-on-error via exit 255.
       - name: Upload _next/static/ to bunny storage zone
         if: steps.changes.outputs.app == 'true'
-        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
-        with:
-          source: "admin-static"
-          destination: "/"
-          storageZoneName: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_ZONE_NAME }}
-          storagePassword: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_PASSWORD }}
-          accessKey: ${{ secrets.BUNNYNET_API_KEY }}
-          upload: "true"
-          remove: "false"
+        env:
+          STORAGE_ZONE: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_ZONE_NAME }}
+          STORAGE_KEY: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cd admin-static
+          total=$(find . -type f | wc -l | tr -d ' ')
+          echo "Uploading $total files to bunny storage zone..."
+          find . -type f -print0 \
+            | xargs -0 -P 8 -n 1 sh -c '
+              rel="${1#./}"
+              if curl -fsS -X PUT \
+                -H "AccessKey: $STORAGE_KEY" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary "@$1" \
+                "https://storage.bunnycdn.com/$STORAGE_ZONE/$rel" > /dev/null; then
+                printf "  OK  %s\n" "$rel"
+              else
+                printf "FAIL  %s\n" "$rel" >&2
+                exit 255
+              fi
+            ' _
+          echo "Uploaded $total files."
 
       - name: Roll admin Magic Container to new image
         if: steps.changes.outputs.app == 'true'
