@@ -83,8 +83,16 @@ export default async function MyBookingDetailPage({
     );
   }
 
+  // isTerminal: assignment-level terminal states OR booking itself in a
+  // terminal state (cancelled or rejected). Neither has a valid
+  // confirm/decline path, so suppress the AssignmentActionPrompt even when
+  // ?action= is present in the URL. Mirrors the (cancelled || rejected) pair
+  // used in features/bookings/server/actions.ts.
   const isTerminal =
-    assignment.status === "rejected" || assignment.status === "withdrawn";
+    assignment.status === "rejected" ||
+    assignment.status === "withdrawn" ||
+    booking.status === "cancelled" ||
+    booking.status === "rejected";
   const isConfirmed = assignment.status === "confirmed";
 
   return (
