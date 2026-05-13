@@ -215,26 +215,18 @@ jobs:
           STORAGE_KEY: ${{ secrets.BUNNY_ADMIN_STATIC_STORAGE_PASSWORD }}
         run: |
           set -euo pipefail
-          # iter-41 — temporary diagnostic: confirm secret lengths and shape.
-          # Expected: STORAGE_ZONE=32 chars (wardrobe-assistants-admin-static),
-          # STORAGE_KEY=41 chars. Trailing newline would show as 33/42.
-          echo "STORAGE_ZONE len: ${#STORAGE_ZONE}"
-          echo "STORAGE_KEY  len: ${#STORAGE_KEY}"
-          # Single verbose curl to surface the bunny response body for triage.
-          echo "hello" > /tmp/probe.txt
-          curl -v -X PUT \
-            -H "AccessKey: $STORAGE_KEY" \
-            -H "Content-Type: application/octet-stream" \
-            --data-binary @/tmp/probe.txt \
-            "https://storage.bunnycdn.com/$STORAGE_ZONE/_probe/ci-probe.txt" || true
-          echo "---end probe---"
           cd admin-static
           total=$(find . -type f | wc -l | tr -d ' ')
           echo "Uploading $total files to bunny storage zone..."
+          # --globoff: webpack chunk filenames contain `[param]` and `(group)`
+          # from App Router route groups, which curl otherwise interprets as
+          # URL globbing ranges and rejects with "bad range in URL position N".
+          # Turbopack chunk filenames are URL-safe (`~ . _ -` only) and don't
+          # need this, but keeping it on costs nothing.
           find . -type f -print0 \
             | xargs -0 -P 8 -n 1 sh -c '
               rel="${1#./}"
-              if curl -fsS -X PUT \
+              if curl --globoff -fsS -X PUT \
                 -H "AccessKey: $STORAGE_KEY" \
                 -H "Content-Type: application/octet-stream" \
                 --data-binary "@$1" \

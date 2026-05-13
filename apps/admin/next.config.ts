@@ -57,14 +57,6 @@ const securityHeaders = [
 // Unset in `npm run dev:admin` and CI verify so the Next dev server / CI
 // builds keep serving chunks from localhost. Empty string is treated as
 // unset for ergonomic parity with the Docker default.
-//
-// IMPORTANT: this only works under the webpack builder. As of Next 16.2.6,
-// the Turbopack builder (now the default for `next build`) emits relative
-// `/_next/` paths in HTML and RSC chunk manifests regardless of
-// `assetPrefix`. Verified empirically: a webpack build with assetPrefix set
-// emits `"moduleLoading":{"prefix":"https://<cdn>/_next/"}` in RSC
-// manifests; a Turbopack build of the same code emits relative paths only.
-// Hence `apps/admin/package.json` "build" pins `--webpack`.
 const ADMIN_ASSET_PREFIX = process.env.ADMIN_ASSET_PREFIX?.trim() || undefined;
 
 const nextConfig: NextConfig = {
