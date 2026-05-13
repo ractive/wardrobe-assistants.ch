@@ -1,8 +1,10 @@
 ---
-title: Iteration 41 — Decouple admin static assets from app server (assetPrefix + storage zone)
+title: >-
+  Iteration 41 — Decouple admin static assets from app server (assetPrefix +
+  storage zone)
 type: iteration
 order: 42
-status: planned
+status: done
 ---
 
 # Iteration 41 — Decouple admin static assets from app server
