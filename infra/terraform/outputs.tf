@@ -14,7 +14,7 @@ output "admin_pullzone_cdn_hostname" {
 }
 
 output "admin_static_pullzone_cdn_hostname" {
-  description = "System CDN URL for the admin static-asset pull zone (iter-41 — copy verbatim into the ADMIN_ASSET_PREFIX repo variable; Next.js `assetPrefix` requires a full URL incl. scheme)"
+  description = "System CDN URL for the admin static-asset pull zone (iter-41 — debug-only direct surface; the admin app reaches the same content same-origin via the OriginStorage edge rule on the admin pull-zone, see bunnynet_pullzone_edgerule.admin_static_assets)"
   value       = "https://${bunnynet_pullzone.admin_static.name}.b-cdn.net"
 }
 

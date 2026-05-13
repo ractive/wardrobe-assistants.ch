@@ -33,19 +33,12 @@ COPY . .
 # safe to bake in because the public half of a VAPID keypair is meant to be
 # public; the private half stays in container runtime env only.
 ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=""
-# iter-41: serve `_next/static/` from a CDN-backed storage zone. `assetPrefix`
-# is inlined at `next build` time (it bakes into the chunk manifest and the
-# HTML emitted by SSR), so this MUST be a build-arg, not a runtime ENV. Empty
-# default = no prefix (chunks served from origin) so local `docker build` and
-# `npm run dev` keep working. CI sets it to the bunny pull-zone hostname.
-ARG ADMIN_ASSET_PREFIX=""
 ENV DATABASE_URL=libsql://build-placeholder.invalid \
     BETTER_AUTH_SECRET=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
     BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch \
     RESEND_API_KEY=build-placeholder \
     EMAIL_FROM=admin@wardrobe-assistants.ch \
     NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY \
-    ADMIN_ASSET_PREFIX=$ADMIN_ASSET_PREFIX \
     NEXT_TELEMETRY_DISABLED=1
 RUN npm -w apps/admin run build
 

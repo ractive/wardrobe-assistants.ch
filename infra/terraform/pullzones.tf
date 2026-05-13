@@ -105,6 +105,59 @@ resource "bunnynet_pullzone_hostname" "admin_cdn" {
   }
 }
 
+// iter-41 §F — Edge rule: route `/_next/static/*` requests on the admin
+// pull-zone to the `admin_static` storage zone instead of the Magic
+// Container origin. With this in place we don't need `assetPrefix` in
+// next.config.ts: chunks are referenced via relative paths like
+// `/_next/static/chunks/foo.js`, the browser hits the same admin origin,
+// and bunny edge rewrites the origin for those paths only.
+//
+// Why this exists: serving chunks cross-origin via `assetPrefix` forced a
+// CSP carve-out for `style-src`, `font-src`, `img-src` because
+// `strict-dynamic` only propagates trust within `script-src`. Keeping
+// chunks same-origin means the existing `'self'` directives Just Work
+// for stylesheets and fonts loaded from `_next/static/`.
+//
+// Why the structural fix from §A–C (the storage-backed admin_static zone)
+// still matters: chunks are uploaded BEFORE the container roll
+// (additive, never deleted). With this edge rule the storage zone is
+// origin for the matched paths, so a chunk URL referenced by old or new
+// HTML resolves regardless of which container instance is active.
+// Rolling-deploy cache-poisoning bug stays fixed.
+resource "bunnynet_pullzone_edgerule" "admin_static_assets" {
+  enabled     = true
+  pullzone    = bunnynet_pullzone.admin_cdn.id
+  description = "Route /_next/static/* to admin_static pull zone"
+
+  match_type = "MatchAny"
+  // `OriginUrl` action overrides the origin for matching requests; bunny
+  // appends the request path to the configured URL. Effective fetch becomes
+  // `https://wardrobe-assistants-admin-static.b-cdn.net/_next/static/<path>`.
+  // We use the admin_static pull-zone hostname (not OriginStorage with the
+  // storage zone id) because the bunny API rejects OriginStorage when the
+  // owning pull-zone's origin is a ComputeContainer ("Storage zone not
+  // valid"). The extra bunny-internal hop through admin_static is
+  // negligible — both layers cache.
+  actions = [
+    {
+      type       = "OriginUrl"
+      parameter1 = "https://${bunnynet_pullzone.admin_static.name}.b-cdn.net"
+      parameter2 = null
+      parameter3 = null
+    }
+  ]
+
+  triggers = [
+    {
+      type       = "Url"
+      match_type = "MatchAny"
+      patterns   = ["https://admin.wardrobe-assistants.ch/_next/static/*"]
+      parameter1 = null
+      parameter2 = null
+    }
+  ]
+}
+
 // iter-41 §A — admin static-asset pull zone.
 //
 // Fronts `bunnynet_storage_zone.admin_static`. Content is immutable,
@@ -118,9 +171,17 @@ resource "bunnynet_pullzone_hostname" "admin_cdn" {
 // error responses (so a transient 404 during deploy doesn't pin).
 //
 // Hostname: bunny system hostname `wardrobe-assistants-admin-static.b-cdn.net`
-// for v1 — no custom hostname / DNS record / TLS cert provisioning. Wired to
-// the admin build via `ADMIN_ASSET_PREFIX` (see `.github/workflows/deploy.yml`
-// and `apps/admin/Dockerfile`).
+// — no custom hostname / DNS record / TLS cert provisioning.
+//
+// iter-41 §F: the admin app does NOT reference this hostname directly from
+// the browser — chunks are served same-origin via
+// `admin.wardrobe-assistants.ch/_next/static/*`. The
+// `bunnynet_pullzone_edgerule.admin_static_assets` rewrites the origin for
+// matched paths to this pull zone's b-cdn.net hostname (via the `OriginUrl`
+// action — bunny rejected `OriginStorage` against the ComputeContainer-backed
+// admin pull-zone). One bunny-internal hop, then this zone serves from the
+// storage zone. This zone also doubles as a direct-access CDN surface for
+// debugging `_next/static/` content and for cache warm-up smoke tests.
 resource "bunnynet_pullzone" "admin_static" {
   name                  = "wardrobe-assistants-admin-static"
   cache_enabled         = true
