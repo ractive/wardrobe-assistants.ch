@@ -21,7 +21,9 @@ IMPORTANT:
 - Findings below should be validated directly in the local development environment and CI.
 
 ==================================================
+
 TOP FINDINGS
+
 ==================================================
 
 [HIGH] Supply-chain risk in GitHub Actions workflows
@@ -204,7 +206,9 @@ Files:
 - tsconfig.base.json
 
 ==================================================
+
 POSITIVE FINDINGS
+
 ==================================================
 
 Strong practices already present:
@@ -223,7 +227,9 @@ Strong practices already present:
 - Server-side auth/session checks exist
 
 ==================================================
+
 OWASP REVIEW SUMMARY
+
 ==================================================
 
 Strong areas:
@@ -245,7 +251,9 @@ Weak areas:
 - Container security scanning
 
 ==================================================
+
 RECOMMENDED NEXT ACTIONS (PRIORITIZED)
+
 ==================================================
 
 1. Pin all GitHub Actions to immutable SHAs
@@ -260,7 +268,9 @@ RECOMMENDED NEXT ACTIONS (PRIORITIZED)
 10. Review Server Actions for CSRF/origin protections
 
 ==================================================
+
 ADDITIONAL THINGS TO REVIEW DEEPLY
+
 ==================================================
 
 Claude should additionally inspect:

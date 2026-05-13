@@ -69,7 +69,7 @@ hoppy pull-zone create --name <NAME>
 - Add the same pair to `hoppy pull-zone update` (currently also only `--origin-url`).
 - Bonus: surface bunny's `Type` enum (Premium/Volume) — not exposed today.
 
-**Reference:** `POST https://api.bunny.net/pullzone` — fields `Name`, `OriginUrl`, `StorageZoneId`, `Type`. Bunny docs: https://docs.bunny.net/reference/pullzonepublic_add
+**Reference:** `POST https://api.bunny.net/pullzone` — fields `Name`, `OriginUrl`, `StorageZoneId`, `Type`. Bunny docs: <https://docs.bunny.net/reference/pullzonepublic_add>
 
 ---
 
@@ -138,9 +138,12 @@ print('keys:', sorted(d.keys()))
 print('Has Password:', 'Password' in d, 'Has ReadOnlyPassword:', 'ReadOnlyPassword' in d)
 "
 # keys: ['Custom404FilePath','DateModified','Deleted','Discount','FilesStored',
-#        'Id','Name','PriceOverride','PullZones','Region','ReplicationChangeInProgress',
-#        'ReplicationRegions','Rewrite404To200','StorageHostname','StorageUsed',
-#        'StorageZoneType','UserId','ZoneTier']
+# 'Id','Name','PriceOverride','PullZones','Region','ReplicationChangeInProgress',
+
+# 'ReplicationRegions','Rewrite404To200','StorageHostname','StorageUsed',
+
+# 'StorageZoneType','UserId','ZoneTier']
+
 # Has Password: False  Has ReadOnlyPassword: False
 ```
 
@@ -189,13 +192,15 @@ The current `--help` output is minimal — flags listed without descriptions. A 
 
 1. **Per-flag long descriptions** (clap's `long_help`) — at minimum for any flag that maps to a bunny-API enum or has non-obvious semantics.
 2. **Examples in `--help`** for the common subcommands. e.g. for `pull-zone create`:
-   ```
+
+   ```bash
    Examples:
      # Pull Zone backed by a Storage Zone (static files)
      hoppy pull-zone create --name my-cdn --storage-zone-id 12345
      # Pull Zone in front of an HTTP origin
      hoppy pull-zone create --name my-cdn --origin-url https://origin.example.com
    ```
+
 3. **Cross-reference related commands** — e.g. after creating a Pull Zone, hint that `hoppy pull-zone hostname add` is the next likely step.
 4. **Document feature gaps** — if a flag/feature isn't yet implemented but the API supports it, a short note in the help (`# not yet exposed: --storage-zone-id, see issue #N`) is far better than the user discovering it via a 400 error.
 

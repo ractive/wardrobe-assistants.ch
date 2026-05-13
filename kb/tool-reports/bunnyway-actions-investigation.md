@@ -27,9 +27,9 @@ iter-9 reported a critical footgun: after a `BunnyWay/actions/container-update-i
 
 ## Test 1 — direct PATCH replicating the BunnyWay action's request
 
-The action source at https://github.com/BunnyWay/actions/blob/main/container-update-image/src/action.ts shows it calls:
+The action source at <https://github.com/BunnyWay/actions/blob/main/container-update-image/src/action.ts> shows it calls:
 
-```
+```http
 PATCH https://api.bunny.net/mc/apps/{appId}/containers/{containerId}
 Headers: Content-Type: application/json, AccessKey: {apiKey}
 Body: { "id": "{containerId}", "imageTag": "{tag}", "imageDigest"?: "{digest}" }

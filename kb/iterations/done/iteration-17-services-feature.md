@@ -100,7 +100,7 @@ Industry-canonical pattern, citations: [Stripe invoice line item](https://docs.s
 ## Scope — Zod schemas [2/2]
 
 - [x] `serviceInput`: `name` (≥1), `description` (≥1), `priceType` (enum `"fixed" | "hourly"`), `price` (positive integer, whole CHF).
-- [x] `serviceListItem` output: `id`, `name`, `description`, `priceType`, `price`, `archived`, `createdAt` + computed `priceFormatted` (e.g. `"CHF 25.-"` / `"CHF 25.-/h"`) via the [type-contract pattern](../admin-architecture/data-layer.md). The `priceFormatted` field is the only thing the UI renders for prices — never read raw `price` in JSX.
+- [x] `serviceListItem` output: `id`, `name`, `description`, `priceType`, `price`, `archived`, `createdAt` + computed `priceFormatted` (e.g. `"CHF 25.-"` / `"CHF 25.-/h"`) via the [type-contract pattern](../../admin-architecture/data-layer.md). The `priceFormatted` field is the only thing the UI renders for prices — never read raw `price` in JSX.
 
 ## Scope — CRUD [4/4]
 

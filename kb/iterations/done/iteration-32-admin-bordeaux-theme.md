@@ -9,14 +9,14 @@ status: done
 
 Replace the admin app's current neutral shadcn theme with a brand palette anchored on bordeaux red. The current theme is shadcn's stock zinc/neutral grays — functional but anonymous. A coherent bordeaux palette gives the admin its own visual identity, distinguishes it from the homepage chrome, and signals "this is internal tooling, not a customer surface".
 
-**Strictly follow shadcn theming conventions.** shadcn does not ship an official visual palette generator (their `/create` page is a project scaffolder; `/themes` is a small set of presets). The community-built **TweakCN** (https://tweakcn.com) is the de facto round-trip tool for shadcn palettes — it emits the exact `:root` + `.dark` CSS-variable blocks in OKLCH that shadcn expects, with a visual editor for hue/lightness/chroma per token. Use it (or shadcn's `/themes` "rose" preset as a starting point, then adjust). Do not hand-roll OKLCH values from scratch — even with a color picker, the cross-token relationships (primary/foreground contrast, accent/muted spread) are easy to get wrong. Every shadcn primitive must keep working without per-component overrides.
+**Strictly follow shadcn theming conventions.** shadcn does not ship an official visual palette generator (their `/create` page is a project scaffolder; `/themes` is a small set of presets). The community-built **TweakCN** (<https://tweakcn.com>) is the de facto round-trip tool for shadcn palettes — it emits the exact `:root` + `.dark` CSS-variable blocks in OKLCH that shadcn expects, with a visual editor for hue/lightness/chroma per token. Use it (or shadcn's `/themes` "rose" preset as a starting point, then adjust). Do not hand-roll OKLCH values from scratch — even with a color picker, the cross-token relationships (primary/foreground contrast, accent/muted spread) are easy to get wrong. Every shadcn primitive must keep working without per-component overrides.
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. Visual regression is in scope (see §5).
 
 ## Decisions
 
 - **Tailwind v4 + OKLCH.** Matches the existing `apps/admin/src/app/globals.css` shape — `:root` block + `.dark` counterpart + `@theme inline` mappings. No move to HSL.
-- **Use TweakCN (https://tweakcn.com) to generate the palette visually**, then paste the resulting `:root` and `.dark` blocks into `globals.css`. TweakCN is the de facto round-trip tool for shadcn palettes; doing this by hand from scratch is the antipattern this iteration exists to avoid. Alternative starting point: copy shadcn's `/themes` "rose" preset and adjust toward bordeaux.
+- **Use TweakCN (<https://tweakcn.com>) to generate the palette visually**, then paste the resulting `:root` and `.dark` blocks into `globals.css`. TweakCN is the de facto round-trip tool for shadcn palettes; doing this by hand from scratch is the antipattern this iteration exists to avoid. Alternative starting point: copy shadcn's `/themes` "rose" preset and adjust toward bordeaux.
 - **Primary anchor is bordeaux red**, in the OKLCH hue range ~12-25° (red with a slight orange lean) at moderate chroma and lightness around `oklch(~0.4 ~0.15 ~18)`. Final value is the generator's output for that anchor, not the placeholder above.
 - **Neutrals lean warm**, not cool. Bordeaux pairs poorly with cool grays — the result reads as "school district website". Warm neutrals (slight orange/red undertone in the gray) make the palette read as one piece. The generator handles this if the primary hue is set first and neutrals are chosen from the same family.
 - **Dark-mode primary stays bordeaux but lightens**, per shadcn convention (`primary` flips lightness with `primary-foreground`). Don't recolor — same hue family, different lightness.
@@ -31,7 +31,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 - [x] iter-30 (admin coherence) and iter-31 (booking-request polish) merged on `main` and deployed.
 - [x] No in-flight branches touching `apps/admin/src/app/globals.css`, `apps/admin/components.json`, or any shadcn primitive in `apps/admin/src/components/ui/`.
-- [x] Visit https://tweakcn.com — verify the editor still exists and produces output in the expected shape (`:root { … } .dark { … }` with OKLCH tokens). If TweakCN is unreachable, fall back to shadcn's `/themes` "rose" preset as a starting point.
+- [x] Visit <https://tweakcn.com> — verify the editor still exists and produces output in the expected shape (`:root { … } .dark { … }` with OKLCH tokens). If TweakCN is unreachable, fall back to shadcn's `/themes` "rose" preset as a starting point.
 - [x] **Human-in-the-loop pre-step**: visit TweakCN, dial in the bordeaux primary, export the CSS, paste both `:root` and `.dark` blocks under "Generator output (pinned for /ralph-loop)" below. **Done** — the pinned theme is [cmnjexv1n000304jse9nq2jra](https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra). The autonomous loop is now self-contained from §2 onwards.
 - [x] `npm run verify` green on `main`.
 
@@ -51,7 +51,7 @@ This step is **not autonomous-agent compatible** — it requires a human operati
 
 ### Generator output (pinned for /ralph-loop)
 
-**Pinned theme:** https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra (TweakCN). Commit the CSS block below into `apps/admin/src/app/globals.css` verbatim per §2. README documents how to swap to a different theme later — see [`README.md`](../../README.md) "Admin theme".
+**Pinned theme:** <https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra> (TweakCN). Commit the CSS block below into `apps/admin/src/app/globals.css` verbatim per §2. README documents how to swap to a different theme later — see [`README.md`](../../../README.md) "Admin theme".
 
 ```css
 @import "tailwindcss";
@@ -237,7 +237,8 @@ This step is **not autonomous-agent compatible** — it requires a human operati
 }
 ```
 
-The layout.tsx from https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra
+The layout.tsx from <https://tweakcn.com/themes/cmnjexv1n000304jse9nq2jra>
+
 ```typescript
 // For adding custom fonts with other frameworks, see:
 // https://tailwindcss.com/docs/font-family
@@ -279,6 +280,7 @@ export default function RootLayout({
   );
 }
 ```
+
 ### 2. Replace `globals.css` tokens
 
 `apps/admin/src/app/globals.css`:
@@ -347,6 +349,7 @@ If any pair fails, adjust the lightness of the lighter token until it passes. Do
 `kb/admin-architecture/design-system/README.md` is partly stale — it predates iter-24 (event→booking rename), references an old iter-16i Bordeaux plan that this iteration supersedes, and doesn't mention the shadcn MCP server. Do a heavy pass, not a tweak. Audit every section against the codebase before editing.
 
 **Staleness to fix (audited):**
+
 - §1 "Tokens" references `@shadcn/theme-neutral` as the source — replace with the bordeaux palette from §1 of this plan (the pinned TweakCN theme).
 - §1 has an "iter-16i Bordeaux" override table — delete; iter-32 (this iteration) lands those overrides.
 - §1 contains the `npx shadcn@latest add @shadcn/theme-neutral` re-sync recipe — replace with the new "open TweakCN → export → paste" procedure (cross-reference README's "Admin theme" section, don't duplicate steps).
@@ -358,6 +361,7 @@ If any pair fails, adjust the lightness of the lighter token until it passes. Do
   …
   <ThemeProvider … nonce={nonce}>{children}</ThemeProvider>
   ```
+
 - §15 "Blocks adopted" is written in iter-16h past-tense — re-cast as "what's vendored today" with current file paths verified.
 - §5 "Layout primitives" describes some primitives as "to be built lazily". Replace with what's actually in `apps/admin/src/components/` today (e.g. `Empty` from `components/ui/empty.tsx` exists, `PageHeader` may or may not — verify each before claiming).
 

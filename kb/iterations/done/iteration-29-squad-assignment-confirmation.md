@@ -28,13 +28,13 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 - **Squad member can change their mind on the detail page.** Both Confirm and Decline buttons are visible inline regardless of `?action`. The prompt component is dismissible.
 - **ICS download appears only when assignment `status === 'confirmed'`.** A single-event `.ics` with date/time/duration/venue.
 - **Withdraw is the post-confirmation reversal**, with optional reason. Status `confirmed → withdrawn`. Admins are notified; the customer is **not** notified directly (operationally, admin reassigns and the customer flow continues opaquely).
-- **No squad-member-initiated participation requests** in this iteration. The `requested` enum value (from [iter-25](iteration-25-booking-domain.md)) remains reserved.
+- **No squad-member-initiated participation requests** in this iteration. The `requested` enum value (from [iter-25](iterations/done/iteration-25-booking-domain.md)) remains reserved.
 - **Edge cases follow the locked spec**: assignment deleted → friendly message; wrong user → 403 with no booking detail leak; terminal state → show current state with inverse action when still valid.
 
 ## Pre-flight
 
-- [x] [iter-28](iteration-28-offer-revisions-cancellation.md) merged on `main` and deployed.
-- [x] `booking_assignments.status` enum supports `confirmed` and `withdrawn` (verified from [iter-25](iteration-25-booking-domain.md) migration).
+- [x] [iter-28](iterations/done/iteration-28-offer-revisions-cancellation.md) merged on `main` and deployed.
+- [x] `booking_assignments.status` enum supports `confirmed` and `withdrawn` (verified from [iter-25](iterations/done/iteration-25-booking-domain.md) migration).
 - [x] At least one squad-role user and one `accepted` booking exist in dev.
 - [x] No in-flight branches touching `features/bookings/` or `app/(dashboard)/my-bookings/`.
 - [x] `npm run verify` green on `main`.
@@ -43,7 +43,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ### 1. Email template — `assignmentInvite`
 
-Replaces the existing `bookingAssigned` template (renamed in [iter-24](iteration-24-rename-event-to-booking.md)) **OR** wraps it — pick the simpler rename. The new template's body includes:
+Replaces the existing `bookingAssigned` template (renamed in [iter-24](iterations/done/iteration-24-rename-event-to-booking.md)) **OR** wraps it — pick the simpler rename. The new template's body includes:
 
 - Booking summary: date + time, venue, duration.
 - Two CTA buttons:
@@ -56,7 +56,7 @@ The previously existing `bookingAssigned` is removed once references are updated
 
 ### 2. Squad-member detail page — `/my-bookings/[bookingId]/page.tsx`
 
-Already exists post-[iter-24](iteration-24-rename-event-to-booking.md). Extend.
+Already exists post-[iter-24](iterations/done/iteration-24-rename-event-to-booking.md). Extend.
 
 Server component path:
 
@@ -163,11 +163,11 @@ Add:
 - **`assignmentDeclined`** (admins; push + email). Notification that the squad member declined.
 - **`assignmentWithdrawn`** (admins; push + email). Notification that the squad member withdrew post-confirmation; includes optional reason.
 
-Push payloads colocated per the [iter-23](iteration-23-admin-pwa-web-push.md) convention.
+Push payloads colocated per the [iter-23](iterations/done/iteration-23-admin-pwa-web-push.md) convention.
 
 ### 9. Wire up `assignSquadMember`
 
-The existing `assignSquadMember` server action (created in earlier iterations and renamed in [iter-24](iteration-24-rename-event-to-booking.md)) currently sends `bookingAssigned`. Update it to send `assignmentInvite` instead. Remove the old template once references are clean.
+The existing `assignSquadMember` server action (created in earlier iterations and renamed in [iter-24](iterations/done/iteration-24-rename-event-to-booking.md)) currently sends `bookingAssigned`. Update it to send `assignmentInvite` instead. Remove the old template once references are clean.
 
 ### 10. Audit logging
 

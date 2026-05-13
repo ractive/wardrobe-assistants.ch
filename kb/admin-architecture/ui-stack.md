@@ -47,6 +47,7 @@ No project-specific token overrides exist yet. Bordeaux brand re-application on 
 > The raw `npx shadcn@latest add …` command is the execution layer; the MCP tools are the research layer. Always research first.
 
 One-time init (already done):
+
 ```bash
 npx shadcn@latest init
 # components.json: new-york style, RSC, "@/" alias, CSS vars
@@ -137,7 +138,7 @@ export function InviteUserForm() {
 
 ## Tables — TanStack Table + shadcn
 
-For lists of users/events/services. shadcn's data-table recipe (https://ui.shadcn.com/docs/components/data-table) wraps `useReactTable` from `@tanstack/react-table`. Headless = we control rendering.
+For lists of users/events/services. shadcn's data-table recipe (<https://ui.shadcn.com/docs/components/data-table>) wraps `useReactTable` from `@tanstack/react-table`. Headless = we control rendering.
 
 Common pattern:
 

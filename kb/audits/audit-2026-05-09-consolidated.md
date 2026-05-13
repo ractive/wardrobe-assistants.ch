@@ -78,10 +78,12 @@ Reviewer score (substantive issues caught, weighted by severity):
 ### C-SEC-04 — Admin CDN caches with cookies (Copilot F-003)
 
 `infra/terraform/pullzones.tf:58-59`:
+
 ```hcl
 cache_enabled = true
 strip_cookies = false
 ```
+
 Comment at lines 49-53 acknowledges the risk and states the app *must* set `Cache-Control: no-store, private` on every authenticated response. Verified by grep: **no `Cache-Control` header is set anywhere in `apps/admin/src`**. This relies entirely on Better Auth's defaults. If Better Auth ever drops a `Cache-Control` header on a session-bearing response, the bunny.net pull-zone will cache it and serve it to the next caller. This is a cross-user data-leak primitive.
 
 **Fix**: belt-and-suspenders. (a) Add `Cache-Control: private, no-store` via `headers()` in `apps/admin/next.config.ts` for `/(.*)` (paired with the security headers below). (b) Flip `strip_cookies = true` on the admin pull zone OR set `cache_enabled = false`. (c) Add a smoke/HTTP-harness test that asserts the header on a sample authenticated response.
@@ -97,6 +99,7 @@ Comment at lines 49-53 acknowledges the risk and states the app *must* set `Cach
 `apps/admin/scripts/seed-temp-admin.ts:1-2` opens with: *"admin user WITHOUT enabling 2FA so the e2e sign-in via ff-rdp can complete"*. No `NODE_ENV !== 'production'` guard, no allow-flag, no DB-URL allowlist. Exposed as `seed:temp-admin` in `apps/admin/package.json:18`. Project memory already records that an iter-15b temp admin (`iter15b-verify-...@wardrobe-assistants.ch`) reached prod and needs deletion — confirming the operational risk is real, not theoretical.
 
 **Fix**: hard-guard the script:
+
 ```typescript
 if (env.nodeEnv === "production") {
   console.error("Refusing to run in production.");
@@ -107,6 +110,7 @@ if (!process.env.ALLOW_TEMP_ADMIN) {
   process.exit(1);
 }
 ```
+
 Also: any temp-admin email should match `*@wardrobe-assistants.ch` so prod cleanup queries are surgical, and rows should auto-expire (or the script should delete on second run).
 
 ### C-CI-01 — CI doesn't run `lint` (ChatGPT)

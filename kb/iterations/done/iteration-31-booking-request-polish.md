@@ -7,13 +7,13 @@ status: done
 
 # Iteration 31 — Booking-request page polish + proxy fix
 
-Fix the customer-facing entry point. The `/booking-request` page on the homepage has shipped since [iter-26](iteration-26-public-booking-request.md) but the path it depends on (`/api/public/*` on admin) is silently auth-gated, so the form has **never** completed a real end-to-end flow in production: the build-time service-catalog fetch returns 307→/login, the form renders with the empty-state copy, and the customer can't submit even if they tried. This iteration also tightens form ergonomics that came out of manual testing: validation feedback, layout, the duration-input bug, and discoverability from the homepage Nav + Hero.
+Fix the customer-facing entry point. The `/booking-request` page on the homepage has shipped since [iter-26](iterations/done/iteration-26-public-booking-request.md) but the path it depends on (`/api/public/*` on admin) is silently auth-gated, so the form has **never** completed a real end-to-end flow in production: the build-time service-catalog fetch returns 307→/login, the form renders with the empty-state copy, and the customer can't submit even if they tried. This iteration also tightens form ergonomics that came out of manual testing: validation feedback, layout, the duration-input bug, and discoverability from the homepage Nav + Hero.
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. After this, a visitor to `https://wardrobe-assistants.ch` sees a clear "Request a booking" CTA, lands on a styled form, fills it in with per-field validation feedback, and submits successfully.
 
 ## Decisions
 
-- **Hot-fix the proxy allowlist inside this iteration**, not as a separate emergency change. The customer flow has been broken since [iter-26](iteration-26-public-booking-request.md) merged; one more deploy cycle is the right cadence to land it alongside the form-side fixes that depend on the catalog being reachable.
+- **Hot-fix the proxy allowlist inside this iteration**, not as a separate emergency change. The customer flow has been broken since [iter-26](iterations/done/iteration-26-public-booking-request.md) merged; one more deploy cycle is the right cadence to land it alongside the form-side fixes that depend on the catalog being reachable.
 - **Adopt `react-hook-form` + `@hookform/resolvers/zod`** for the booking-request form. Same stack as the admin app (`apps/admin/src/features/bookings/components/BookingForm.tsx`). Promote the existing server-side zod schema for `/api/public/booking-requests` to a **shared module** that both the admin route handler and the homepage form import, so client and server agree on the input shape at compile time.
 - **Phone validation is a permissive regex**, not `libphonenumber-js`. Shape check only; the server-side schema mirrors it. The accepted shape is `^\+?[0-9 .\/()-]{7,20}$` with placeholder text `+41 79 123 45 67`. (`libphonenumber-js` would over-reject legitimate Swiss customer inputs and accept alphanumeric vanity numbers like `555-SHOE`.)
 - **Email validation is strict zod `.email()`** with the field marked `required`.
@@ -33,7 +33,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ### 1. Proxy: allow `/api/public/*`
 
-`apps/admin/src/proxy.ts`. The `PUBLIC_PATH_RE` regex currently allowlists `/login`, `/set-password`, and `/api/auth`. The `/api/public/*` namespace was added in [iter-26](iteration-26-public-booking-request.md) but never added to the proxy — so every request to `/api/public/services` and `/api/public/booking-requests` 307-redirects to `/login` and the body of the response is `/login`. Verified against prod with `curl -sS -o - https://admin.wardrobe-assistants.ch/api/public/services` → `HTTP 307 /login`.
+`apps/admin/src/proxy.ts`. The `PUBLIC_PATH_RE` regex currently allowlists `/login`, `/set-password`, and `/api/auth`. The `/api/public/*` namespace was added in [iter-26](iterations/done/iteration-26-public-booking-request.md) but never added to the proxy — so every request to `/api/public/services` and `/api/public/booking-requests` 307-redirects to `/login` and the body of the response is `/login`. Verified against prod with `curl -sS -o - https://admin.wardrobe-assistants.ch/api/public/services` → `HTTP 307 /login`.
 
 - **Fix**: extend `PUBLIC_PATH_RE` with `|api\/public(?:$|[\/?])`. Boundary-anchored so `/api/publicly-evil` cannot slip through.
 - **Test**: add a unit test for the regex covering `/api/public/services`, `/api/public/booking-requests`, `/api/public` (root), `/api/public/`, and rejection of `/api/publicly-evil`.
@@ -110,7 +110,7 @@ The `/booking-request` page is currently reachable only via direct URL or from `
 ## Out of scope
 
 - Customer login or account creation. Booking-request stays unauthenticated.
-- Real-time service catalog (websocket / on-page fetch). Build-time SSG snapshot is the [iter-26](iteration-26-public-booking-request.md) decision and stays.
+- Real-time service catalog (websocket / on-page fetch). Build-time SSG snapshot is the [iter-26](iterations/done/iteration-26-public-booking-request.md) decision and stays.
 - German translation.
 - Customer-visible offer-token retrieval (the customer already gets the offer URL via email; no "look up my offer" page).
 - Cookie consent / GDPR banner work. Unchanged.

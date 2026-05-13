@@ -22,16 +22,16 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Decisions
 
-- **Selection editor unlocks in `offered` state.** Drop the [iter-25](iteration-25-booking-domain.md) restriction that line-item selections are editable only in `created`. Editable also in `offered` and `accepted`. Editing the selections does **not** change the customer-visible snapshot — only the next `sendRevisedOffer` re-snapshots. Document this prominently in the UI.
+- **Selection editor unlocks in `offered` state.** Drop the [iter-25](iterations/done/iteration-25-booking-domain.md) restriction that line-item selections are editable only in `created`. Editable also in `offered` and `accepted`. Editing the selections does **not** change the customer-visible snapshot — only the next `sendRevisedOffer` re-snapshots. Document this prominently in the UI.
 - **Previous snapshot is preserved, not deleted.** `booking_service_item` rows from earlier offer versions stay in the table for audit. The customer-facing page reads `MAX(offerVersion)`. A `booking.offer.snapshot.archived` audit entry records the version delta + a copy of the prior snapshot payload (cheap insurance against future schema drift).
 - **`accepted → offered` re-revision clears `acceptedAt`** and emails the customer with explicit copy: "This offer was updated since your acceptance. Please review and re-confirm." Offer page reflects this state.
 - **`bookingCancelled` is bilateral**: customer-side cancellation is **not** in v1 (the offer page only exposes decline before acceptance and "I have questions" mailto after). Admin-initiated cancel is the only `accepted → cancelled` path.
 - **Customer decline on the offer page** transitions `offered → rejected`. No reason field required; optional textarea.
-- **Admin reject extends to `offered → rejected`** in addition to [iter-25](iteration-25-booking-domain.md)'s `created → rejected`.
+- **Admin reject extends to `offered → rejected`** in addition to [iter-25](iterations/done/iteration-25-booking-domain.md)'s `created → rejected`.
 
 ## Pre-flight
 
-- [x] [iter-27](iteration-27-offer-flow.md) merged on `main` and deployed; offer-send + accept work end-to-end.
+- [x] [iter-27](iterations/done/iteration-27-offer-flow.md) merged on `main` and deployed; offer-send + accept work end-to-end.
 - [x] At least one `bookings` row in status `offered` and one in `accepted` exist in dev for testing.
 - [x] No in-flight branches touching `features/bookings/` or `app/(public)/offer/`.
 - [x] `npm run verify` green on `main`.
@@ -96,7 +96,7 @@ export async function sendRevisedOffer(bookingId: string): Promise<void> {
 }
 ```
 
-- **Refactor**: extract a `snapshotSelections(tx, booking, selections, version)` helper shared with `sendOffer` from [iter-27](iteration-27-offer-flow.md). Same hourly/fixed math.
+- **Refactor**: extract a `snapshotSelections(tx, booking, selections, version)` helper shared with `sendOffer` from [iter-27](iterations/done/iteration-27-offer-flow.md). Same hourly/fixed math.
 - Permission: `BOOKING_OFFER_SEND`.
 
 ### 2. Server action — `rejectOffer(token, reason?)` (customer-side)
@@ -129,11 +129,11 @@ export async function rejectOffer(token: string, reason?: string): Promise<void>
 
 ### 3. Server action — `rejectBookingByAdmin` extension
 
-Extend [iter-25](iteration-25-booking-domain.md)'s `rejectBooking` to allow `offered → rejected` in addition to `created → rejected`. Sends `bookingRejected` to the customer.
+Extend [iter-25](iterations/done/iteration-25-booking-domain.md)'s `rejectBooking` to allow `offered → rejected` in addition to `created → rejected`. Sends `bookingRejected` to the customer.
 
 ### 4. Server action — `cancelBooking` extension
 
-[iter-25](iteration-25-booking-domain.md) already lands `cancelBooking` for `accepted → cancelled`. This iteration:
+[iter-25](iterations/done/iteration-25-booking-domain.md) already lands `cancelBooking` for `accepted → cancelled`. This iteration:
 
 - Verifies the squad-notification fan-out: iterate `booking_assignments` rows with status in (`assigned`, `confirmed`) and call `notifyUser('bookingCancelled', { recipient: 'squad', ... })`.
 - Adds a confirmation modal on the admin UI listing the squad members about to be notified.
@@ -148,7 +148,7 @@ Extend [iter-25](iteration-25-booking-domain.md)'s `rejectBooking` to allow `off
 ### 6. Customer offer page
 
 - `status === 'offered'`:
-  - Accept form (existing from [iter-27](iteration-27-offer-flow.md)).
+  - Accept form (existing from [iter-27](iterations/done/iteration-27-offer-flow.md)).
   - **New**: "Decline this offer" link → small modal with optional reason textarea + "Decline" button → posts to `rejectOffer`.
   - Re-revision banner: when `offerVersion > 1` AND the booking was previously `accepted` (detect via the most recent `booking.offer.revised` audit entry's `wasAccepted: true`), show a prominent banner: "This offer was updated since you accepted. Please review and re-confirm."
 - `status === 'rejected'`: terminal banner.
@@ -159,7 +159,7 @@ Add:
 
 - **`offerRevised`** (customer; email only). Subject and copy explicit that this updates a prior offer; CTA to `/offer/<token>`. Branch on `wasAccepted` to include the re-confirm prompt.
 - **`offerRejected`** (admins; push + email). Notifies admins of customer decline; includes optional reason.
-- **`bookingCancelled`** — variants already landed in [iter-25](iteration-25-booking-domain.md); verify all three (`customer`, `squad`, `admin`) render correctly and have push payloads where applicable (squad + admin only).
+- **`bookingCancelled`** — variants already landed in [iter-25](iterations/done/iteration-25-booking-domain.md); verify all three (`customer`, `squad`, `admin`) render correctly and have push payloads where applicable (squad + admin only).
 
 ### 8. Audit logging
 

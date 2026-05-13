@@ -19,7 +19,7 @@ Splitting iter-7 into 7a + 7b is deliberate: the verify gate is most valuable *b
 
 ## Target architecture (this iteration)
 
-```
+```text
 apps/
   marketing/        # Next.js, output: "export"
 packages/           # created empty here, populated in 7b
@@ -33,7 +33,7 @@ wardrobe-assistants.pen   # stays at root
 
 **Marketing serving path** (set up once, then read-only at runtime):
 
-```
+```text
 next build (output: "export")
    └─> apps/marketing/out/   (static HTML/CSS/JS/assets)
          └─> uploaded by CI to:  bunny Storage Zone

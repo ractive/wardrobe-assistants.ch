@@ -24,7 +24,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [x] [iter-25](iteration-25-booking-domain.md) merged on `main` and deployed; new schema columns live in prod DB.
+- [x] [iter-25](iterations/done/iteration-25-booking-domain.md) merged on `main` and deployed; new schema columns live in prod DB.
 - [ ] Verify `services` table has at least one non-archived row in prod — otherwise the form has nothing to render. Coordinate with operator if empty. *(Not verified during autonomous run — homepage form degrades gracefully to an email fallback when the catalog is empty.)*
 - [x] No in-flight branches touching `apps/homepage/src/app/` or `apps/admin/src/app/api/`.
 - [x] `npm run verify` green on `main`.
@@ -128,7 +128,7 @@ export async function notifyAdmins<K extends NotifiableTemplateKey>(
 }
 ```
 
-- Reuses `notifyUser` from [iter-23](iteration-23-admin-pwa-web-push.md) — fires both push and email per admin.
+- Reuses `notifyUser` from [iter-23](iterations/done/iteration-23-admin-pwa-web-push.md) — fires both push and email per admin.
 - `Promise.allSettled` so one bad recipient doesn't drop notifications for the rest.
 
 ### 7. Notification templates

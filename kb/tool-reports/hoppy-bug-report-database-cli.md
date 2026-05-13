@@ -47,6 +47,7 @@ curl -sS -X POST -H "AccessKey: $BUNNY_API_KEY" -H "Content-Type: application/js
 ```
 
 Returns:
+
 ```json
 {
   "database": {

@@ -38,7 +38,7 @@ Implemented autonomously by `/ralph-loop` where possible; must leave the system 
 
 2. **Remove the "Needs completion" badge.** Grep `Needs completion` in `apps/admin/src/`. Verify the booking-detail page no longer needs it (the iter-37 schema changes made the fields required at app-layer; legacy rows should have been backfilled or, if any remain, surface the missing data inline rather than via a badge). Delete the badge component file if it has no other consumers; otherwise just delete the usage.
 
-3. **Booking Edit form revisit.** Open the form that the **Edit** button on /bookings/<id> opens. Inspect; report what's specifically wrong (Notes.md just flags "the form that opens when editing" without a precise issue). Likely candidates from inspection: missing validation messages per field, layout shift on open, no autofocus on first field, missing keyboard close (Esc). Fix what's broken; document what was changed.
+3. **Booking Edit form revisit.** Open the form that the **Edit** button on `/bookings/<id>` opens. Inspect; report what's specifically wrong (Notes.md just flags "the form that opens when editing" without a precise issue). Likely candidates from inspection: missing validation messages per field, layout shift on open, no autofocus on first field, missing keyboard close (Esc). Fix what's broken; document what was changed.
 
 4. **Left-align line-item amounts.** `apps/admin/src/features/bookings/components/LineItemsTable.tsx` (or equivalent). Read-only and edit views both move the amount column from `text-right` to `text-left`. Add `tabular-nums` so the digits still line up. Keep a small right padding before the per-row action column so the amount doesn't crash into the kebab/delete button.
 

@@ -17,7 +17,7 @@ The first real feature on top of the iter-14 foundation. Admins can invite users
 
 ## Scope — feature scaffold [4/4]
 
-- [x] Create `apps/admin/src/features/users/` with the layout from [folder-structure.md](../admin-architecture/folder-structure.md):
+- [x] Create `apps/admin/src/features/users/` with the layout from [folder-structure.md](../../admin-architecture/folder-structure.md):
   - `schema.ts` (Zod input + output schemas)
   - `server/queries.ts`
   - `server/actions.ts` (`"use server"`)
@@ -44,7 +44,7 @@ The first real feature on top of the iter-14 foundation. Admins can invite users
   - Returns `{ error: false, message: "Invitation sent." }` or surfaces the parse / DB error.
 - [x] `<InviteUserDialog>` client component:
   - shadcn `<Dialog>` triggered by an `<InviteUserButton>` placed in the page.
-  - Form via the canonical RHF + zodResolver + `<Form>` shadcn pattern (see [ui-stack.md](../admin-architecture/ui-stack.md)).
+  - Form via the canonical RHF + zodResolver + `<Form>` shadcn pattern (see [ui-stack.md](../../admin-architecture/ui-stack.md)).
   - On success: `toast.success`, close dialog, `router.refresh()` to reload the list.
 - [x] Decide and document the "set password" landing route. **Implemented as option (1):** Better Auth's `requestPasswordReset` flow drives the invite email; the link points at `/set-password?token=…` (a client page that calls `authClient.resetPassword`). Middleware excludes `/set-password` from the auth gate.
 - [x] On the seeded admin's first sign-in (or first iter-15 deploy), backfill `user_profile` for the existing seeded user with `role: "ADMIN"`, `status: "verified"`, `verifiedAt: now`. Idempotent. **Implemented in `apps/admin/scripts/seed-admin.ts`.**

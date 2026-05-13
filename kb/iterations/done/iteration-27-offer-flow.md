@@ -22,12 +22,12 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 - **Accept requires a T&C checkbox.** Server rejects accept without it.
 - **"I have questions" is a plain `mailto:` link** with prefilled subject + body containing the booking ID and offer version. No in-app message thread.
 - **English only.** German deferred.
-- **Admin manual-accept (`adminAcceptOffer`)** already exists from [iter-25](iteration-25-booking-domain.md); this iteration extends it to also handle `offered → accepted`, and ensures the email template `offerAcceptedAdmin` is wired.
-- **Snapshot on admin manual-accept too** — already implemented in [iter-25](iteration-25-booking-domain.md) for the `created → accepted` case. The `offered → accepted` case re-uses the existing snapshot (do nothing).
+- **Admin manual-accept (`adminAcceptOffer`)** already exists from [iter-25](iterations/done/iteration-25-booking-domain.md); this iteration extends it to also handle `offered → accepted`, and ensures the email template `offerAcceptedAdmin` is wired.
+- **Snapshot on admin manual-accept too** — already implemented in [iter-25](iterations/done/iteration-25-booking-domain.md) for the `created → accepted` case. The `offered → accepted` case re-uses the existing snapshot (do nothing).
 
 ## Pre-flight
 
-- [x] [iter-26](iteration-26-public-booking-request.md) merged on `main` and deployed; customer submissions flow into `bookings`.
+- [x] [iter-26](iterations/done/iteration-26-public-booking-request.md) merged on `main` and deployed; customer submissions flow into `bookings`.
 - [x] At least one `bookings` row in status `created` exists in dev for end-to-end testing (submit via the public form, or seed).
 - [x] No in-flight branches touching `features/bookings/` or `app/api/public/`.
 - [x] `npm run verify` green on `main`.
@@ -173,7 +173,7 @@ Plain HTML anchor. No JS. Subject and body include booking ID + offer version fo
 
 ### 6. Admin manual-accept extension
 
-- `adminAcceptOffer(bookingId)` from [iter-25](iteration-25-booking-domain.md): extend to handle the `offered → accepted` branch. In this branch, snapshot already exists (was created when `sendOffer` ran); no new snapshot needed.
+- `adminAcceptOffer(bookingId)` from [iter-25](iterations/done/iteration-25-booking-domain.md): extend to handle the `offered → accepted` branch. In this branch, snapshot already exists (was created when `sendOffer` ran); no new snapshot needed.
 - Continues to send `offerAcceptedAdmin` email to the customer.
 - Admin UI: when `status === 'offered'`, expose a secondary "Accept on customer's behalf" button gated by `BOOKING_ACCEPT_MANUAL`. Confirmation modal noting that this skips the customer-facing accept step.
 
@@ -184,7 +184,7 @@ Add:
 - **`offerSent`** (customer; email only). English. Summary block: date + time, venue name + city, total in CHF. Body: short reassurance + CTA button linking to `/offer/<token>`.
 - **`offerAccepted`** (admins; push + email). Confirmation that the customer accepted; CTA to the admin booking-detail page.
 
-`offerAcceptedAdmin` already shipped in [iter-25](iteration-25-booking-domain.md).
+`offerAcceptedAdmin` already shipped in [iter-25](iterations/done/iteration-25-booking-domain.md).
 
 ### 8. Audit logging
 

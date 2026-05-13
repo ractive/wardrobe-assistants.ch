@@ -246,7 +246,7 @@ Plus `assertPermission` at page-route tops for guarded pages.
 
 **Status:** accepted | **Date:** 2026-05-11
 
-**Decision:** One `bookings` table covers the full lifecycle from public request through completion. Status: `created | offered | accepted | rejected | cancelled`. `invoicedAt` is a parallel field, not a status. Customer-created and admin-created bookings traverse identical states, distinguished only by `createdBy` (nullable FK; null = customer-created via public form). See [iter-25](../iterations/iteration-25-booking-domain.md).
+**Decision:** One `bookings` table covers the full lifecycle from public request through completion. Status: `created | offered | accepted | rejected | cancelled`. `invoicedAt` is a parallel field, not a status. Customer-created and admin-created bookings traverse identical states, distinguished only by `createdBy` (nullable FK; null = customer-created via public form). See [iter-25](../iterations/done/iteration-25-booking-domain.md).
 
 **Alternatives considered:**
 - Separate `booking_request` + `event` tables (rejected: request and event can't exist without each other — textbook signal of one entity with a state machine, not two; doubles the schema and forces awkward joins for shared fields like date/venue/services).
@@ -277,7 +277,7 @@ Plus `assertPermission` at page-route tops for guarded pages.
 
 **Status:** accepted | **Date:** 2026-05-11
 
-**Decision:** Customer-facing booking-request form on the homepage (`wardrobe-assistants.ch/booking-request`) browser-POSTs to `admin.wardrobe-assistants.ch/api/public/booking-requests`. The admin route lives outside the `(dashboard)` group so it bypasses auth. CORS `Access-Control-Allow-Origin` is matched against a hardcoded list (`https://wardrobe-assistants.ch`, `https://www.wardrobe-assistants.ch`, plus `http://localhost:*` when `NODE_ENV !== 'production'`). No env var. Spam defense stack: honeypot field + 2s minimum time-on-form + JS-injected token + rate limit (3/hr + 10/day per IP, 3/day per email). No Turnstile/captcha in v1. See [iter-26](../iterations/iteration-26-public-booking-request.md).
+**Decision:** Customer-facing booking-request form on the homepage (`wardrobe-assistants.ch/booking-request`) browser-POSTs to `admin.wardrobe-assistants.ch/api/public/booking-requests`. The admin route lives outside the `(dashboard)` group so it bypasses auth. CORS `Access-Control-Allow-Origin` is matched against a hardcoded list (`https://wardrobe-assistants.ch`, `https://www.wardrobe-assistants.ch`, plus `http://localhost:*` when `NODE_ENV !== 'production'`). No env var. Spam defense stack: honeypot field + 2s minimum time-on-form + JS-injected token + rate limit (3/hr + 10/day per IP, 3/day per email). No Turnstile/captcha in v1. See [iter-26](../iterations/done/iteration-26-public-booking-request.md).
 
 **Alternatives considered:**
 - Form in admin app on a public route, homepage links there (rejected: subdomain crossover is acceptable but homepage form is preferred UX; fits the homepage's existing static-export deploy target).
@@ -293,7 +293,7 @@ Plus `assertPermission` at page-route tops for guarded pages.
 
 **Status:** accepted | **Date:** 2026-05-11
 
-**Decision:** Assignment-invitation emails contain Confirm + Decline buttons linking to `admin.wardrobe-assistants.ch/my-bookings/<bookingId>?action=confirm|decline`. The URLs are **login-gated** via the standard Better Auth redirect flow; the action prompt is only rendered after authentication. Anonymous link visits do NOT change state. The customer-facing `/offer/<token>` page is unauthenticated (the customer has no account), but **all state-mutating endpoints** still require an explicit POST with a T&C checkbox — no GET side-effects anywhere. See [iter-29](../iterations/iteration-29-squad-assignment-confirmation.md).
+**Decision:** Assignment-invitation emails contain Confirm + Decline buttons linking to `admin.wardrobe-assistants.ch/my-bookings/<bookingId>?action=confirm|decline`. The URLs are **login-gated** via the standard Better Auth redirect flow; the action prompt is only rendered after authentication. Anonymous link visits do NOT change state. The customer-facing `/offer/<token>` page is unauthenticated (the customer has no account), but **all state-mutating endpoints** still require an explicit POST with a T&C checkbox — no GET side-effects anywhere. See [iter-29](../iterations/done/iteration-29-squad-assignment-confirmation.md).
 
 **Alternatives considered:**
 - UUID-token one-click confirm/decline endpoints (rejected: email clients pre-fetch and unfurl links — Outlook Safe Links, Slack/Teams previews, antivirus scanners. Any action triggered by GET fires automatically before the human clicks. Real-world data loss waiting to happen).

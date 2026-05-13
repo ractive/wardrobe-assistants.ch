@@ -10,7 +10,7 @@ Inspired by the WebDevSimplified [feature-folder pattern](https://github.com/Web
 
 ## Layout
 
-```
+```text
 apps/admin/src/
   app/                              # Next.js routes — thin pages (≤30 lines)
     (dashboard)/

@@ -12,7 +12,7 @@ The canonical reference is iter-15's `apps/admin/src/features/users/`. Read that
 
 ## File layout
 
-```
+```text
 packages/db/src/schema/<f>.ts            # Drizzle table(s) for the feature
 apps/admin/src/features/<f>/
   schema.ts                              # Zod input schemas + ActionResult type
@@ -106,12 +106,15 @@ Server-side gate route segments with `<HasPermission perm="...">`. Client-side c
 Three tests per feature, in order of cost-to-write:
 
 ### 1. Schema test (`schema.test.ts`)
+
 Zod boundary cases: every required field rejected when missing, every constrained field rejected at the boundary, `optional()` fields accepted as undefined. Cheap and high-signal.
 
 ### 2. Action test (`server/actions.test.ts`)
+
 Mocks `@/lib/db`, `@/lib/auth`, `@/lib/permissions`, `@/lib/email`. Exercises action logic — branch coverage on validation paths, success path, partial-success messages. Fast (no DB).
 
-### 3. Smoke test (`server/<f>.smoke.test.ts`) — see [iter-15c's harness](../iterations/iteration-15c-smoke-harness.md)
+### 3. Smoke test (`server/<f>.smoke.test.ts`) — see [iter-15c's harness](../iterations/done/iteration-15c-smoke-harness.md)
+
 Real auth + real Drizzle + real `user_profile` permission lookup against a tmp libSQL. Catches the iter-15b class of bug where unit tests pass but the HTTP path 500s in prod.
 
 ```ts

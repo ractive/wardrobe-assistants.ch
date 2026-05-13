@@ -74,7 +74,7 @@ Then:
 
 The `EMAIL_FROM` environment variable for the admin app is injected via bunny Magic Container and must be:
 
-```
+```text
 Wardrobe Assistants <info@wardrobe-assistants.ch>
 ```
 

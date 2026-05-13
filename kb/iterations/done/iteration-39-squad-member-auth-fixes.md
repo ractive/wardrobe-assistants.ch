@@ -2,7 +2,7 @@
 title: Iteration 39 — Squad-member surface bugs + auth onboarding fixes
 type: iteration
 order: 40
-status: implemented
+status: done
 ---
 
 # Iteration 39 — Squad-member surface bugs + auth onboarding fixes

@@ -12,7 +12,7 @@ No tRPC. No REST API. Forms post via React Hook Form → server action; server c
 
 ## File pattern per feature
 
-```
+```text
 features/<f>/
   schema.ts                 # Zod input + output schemas
   server/
@@ -144,9 +144,10 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
 
 Each service has a sibling `__mocks__/<service>.ts` for shared default mocks:
 
-```
+```text
 apps/admin/src/lib/__mocks__/email.ts
 ```
+
 ```ts
 // __mocks__/email.ts
 import { vi } from "vitest"

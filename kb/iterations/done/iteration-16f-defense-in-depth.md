@@ -7,14 +7,14 @@ status: done
 
 # Iteration 16f — Defense-in-depth security
 
-The Group 2 / Medium-severity items from the [consolidated security audit](../audits/audit-2026-05-09-consolidated.md) — server-side hardening that's independent of the UI cleanup track. Could land in parallel with iter-16d/e but plan-ordered after them for clarity.
+The Group 2 / Medium-severity items from the [consolidated security audit](../../audits/audit-2026-05-09-consolidated.md) — server-side hardening that's independent of the UI cleanup track. Could land in parallel with iter-16d/e but plan-ordered after them for clarity.
 
 This is a server-only iteration. **No UI changes.** Touches: Better Auth, query layer, action error paths, smoke tests, runbooks, GitHub Actions security workflows.
 
 ## Pre-flight
 
 - [x] iter-16b (edge hardening) merged. The high-severity wave is in place; this iteration adds depth.
-- [x] [Consolidated security audit](../audits/audit-2026-05-09-consolidated.md) §7 Group 2 re-read.
+- [x] [Consolidated security audit](../../audits/audit-2026-05-09-consolidated.md) §7 Group 2 re-read.
 
 ## Scope — rate limiting [3/3]
 
@@ -29,11 +29,13 @@ Closes **C-SEC-02**. In-memory sliding window OK for the single-container deploy
 Closes **C-SEC-10**. Cheap, high-value compliance/IR primitive.
 
 - [x] New schema `packages/db/src/schema/audit_log.ts`:
+
   ```ts
   audit_log(id text pk, actor_user_id text not null, action text not null,
             target_id text, target_type text, metadata text /* json */,
             created_at integer)
   ```
+
 - [x] Drizzle migration + aggregator entry.
 - [x] Add an `auditLog(actor, action, target?, metadata?)` helper in `apps/admin/src/lib/audit-log.ts`. Emit from inside `withPermission` for any *mutating* action — pass through the verified userId. All current mutating actions (invite/delete/message user, create/update/delete event, assign/unassign, message assignees) get a one-liner.
 - [x] Smoke test: invite a user, assert `audit_log` row exists with the right `actor_user_id`, `action`, `target_id`.

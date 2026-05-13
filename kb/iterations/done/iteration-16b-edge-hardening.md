@@ -7,7 +7,7 @@ status: done
 
 # Iteration 16b — Edge & supply-chain hardening
 
-The 2026-05-09 three-reviewer audit ([consolidated](../audits/audit-2026-05-09-consolidated.md)) surfaced six **High**-severity issues plus one **Medium-High** CI gap. Five of them are at the HTTP edge / build pipeline / container — places no feature iteration touches by default — and they should land before iter-17 ships another feature behind the same admin surface. Iter-17/18 will inherit whatever security primitives this iteration sets up.
+The 2026-05-09 three-reviewer audit ([consolidated](../../audits/audit-2026-05-09-consolidated.md)) surfaced six **High**-severity issues plus one **Medium-High** CI gap. Five of them are at the HTTP edge / build pipeline / container — places no feature iteration touches by default — and they should land before iter-17 ships another feature behind the same admin surface. Iter-17/18 will inherit whatever security primitives this iteration sets up.
 
 This is **not** a feature iteration. No new user-visible behavior. The deliverables are: a hardened HTTP response surface, a CDN that can't accidentally cache an admin response, a CI workflow that catches architectural-isolation lint, a temp-admin script that can't be run in prod, and a container that doesn't run as root.
 
@@ -25,7 +25,7 @@ These don't compose into "ship feature N+1 first, harden later" — the longer t
 ## Pre-flight [3/3]
 
 - [x] iter-16 merged.
-- [x] [Consolidated audit](../audits/audit-2026-05-09-consolidated.md) re-read; Group 1 still matches the plan below.
+- [x] [Consolidated audit](../../audits/audit-2026-05-09-consolidated.md) re-read; Group 1 still matches the plan below.
 - [x] Group 2 + 3 items deferred to **iter-16f** (defense-in-depth: rate limiting, query-level authz, audit log, error sanitization, error/not-found boundaries, security scanning workflows). Iter-16c/d/e cover the parallel frontend cleanup track. Tracked in the consolidated audit's action plan and `kb/audits/findings-index.md`.
 
 ## Scope — CDN cache safety [3/3]

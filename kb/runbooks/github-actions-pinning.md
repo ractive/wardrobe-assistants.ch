@@ -54,5 +54,5 @@ The trailing comment is mandatory — it lets the next person bumping the pin se
 
 ## See also
 
-- [iteration-16b-edge-hardening.md](../iterations/iteration-16b-edge-hardening.md) — introduced this convention.
+- [iteration-16b-edge-hardening.md](../iterations/done/iteration-16b-edge-hardening.md) — introduced this convention.
 - [iac-runbook.md](iac-runbook.md) — sibling runbook for the OpenTofu side of the deploy pipeline.

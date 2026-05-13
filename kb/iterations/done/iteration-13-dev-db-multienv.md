@@ -65,11 +65,13 @@ User/password handling and MFA aren't this iteration's concern — they'll be re
 ## Scope — README + .env.example refresh [0/2]
 
 - [ ] Update root `README.md`'s "Getting started" section: a 3-line dev-quickstart for the admin app:
+
   ```bash
   npm install
   npm run db:reset:admin    # creates apps/admin/dev.db + seeds admin@localhost/dev-only-not-secure
   npm run dev:admin         # starts http://localhost:3000
   ```
+
 - [ ] Update `apps/admin/.env.example`: keep the existing comments; explicitly note that `ADMIN_EMAIL` / `ADMIN_PASSWORD` are only consulted by `seed:admin` and that `db:reset` defaults them in dev.
 
 ## Scope — email in dev (forward-looking, half-implemented) [0/2]

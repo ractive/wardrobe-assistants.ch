@@ -30,7 +30,7 @@ The doc is **not** on the public Next.js docs site nav at the time of writing �
 ## Pre-flight
 
 - [x] iter-20 (email senders) merged. Push is wired alongside the existing email send paths — both channels are dispatched from the same call site.
-- [x] Decide where the dispatcher lives: cross-cutting infra in `apps/admin/src/lib/notify.ts` (recommended — same layer as `lib/email.ts`), or feature-owned. See [`kb/admin-architecture/overview.md`](../admin-architecture/overview.md). → landed in `apps/admin/src/lib/notify.ts`.
+- [x] Decide where the dispatcher lives: cross-cutting infra in `apps/admin/src/lib/notify.ts` (recommended — same layer as `lib/email.ts`), or feature-owned. See [`kb/admin-architecture/overview.md`](../../admin-architecture/overview.md). → landed in `apps/admin/src/lib/notify.ts`.
 - [x] Verify production HTTPS chain end-to-end (already in place via bunny.net — admin.wardrobe-assistants.ch). Web Push **requires** HTTPS at every hop.
 
 ## Scope

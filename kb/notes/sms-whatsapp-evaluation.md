@@ -70,7 +70,7 @@ Rationale for a single column over a join table: the product question is "email 
 
 Back-of-envelope for 1 squad of 8 members × 4 events/month × 2 reminders/event:
 
-```
+```text
 8 members × 4 events × 2 reminders = 64 SMS/month
 64 × CHF 0.06 (ASPSMS) = CHF 3.84/month
 64 × CHF 0.07 (Twilio)  = CHF 4.48/month

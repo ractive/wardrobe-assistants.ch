@@ -35,7 +35,7 @@ Required env vars in `.env.local` (gitignored):
 
 ## Directory layout
 
-```
+```text
 infra/terraform/
   providers.tf               # required_providers + provider "bunnynet" + http backend
   variables.tf               # all input variables (bunny_api_key marked sensitive)
@@ -275,40 +275,52 @@ tofu import bunnynet_database.wa_admin_prod db_01KQV95KJ611YYT48VSZKHC495
 ## Provider quirks and workarounds
 
 ### DNS root record: `name = ""` not `name = "@"`
+
 The provider stores the apex record name as an empty string. `name = "@"` triggers a replacement.
 
 ### DNS record import format: `"zoneId|recordId"`
+
 Plain record IDs do not work — use the composite key.
 
 ### Pull zone hostname import format: `"pullzoneId|hostname"`
+
 Use `|` not `/` as the separator.
 
 ### Magic-Container pull zone: explicit `cache_enabled = true`, `strip_cookies = false`
+
 Live values diverge from the provider's defaults. Set them explicitly to avoid drift noise.
 
 ### Magic-Container pull zone: `ignore_changes = [origin]`
+
 The MC controller rotates `container_endpoint_id` on every container redeploy. Without `ignore_changes` every redeploy creates drift.
 
 ### Container registry: `ignore_changes = [token, registry]`
+
 - `registry` schema accepts `"GitHub"`; bunny API returns `"GitHub Packages ractive"`. Without ignore, force-replace.
 - `token` is a write-only secret.
 
 ### Container app: `ignore_changes = [container]`
+
 The whole inner block is owned by the deploy pipeline (env vars, image tag). OpenTofu tracks the app's identity (name, regions, autoscaling) but never reads or writes the container contents.
 
 ### Container app: `regions_max_allowed = 1` must be explicit
+
 Provider defaults to 0 on import.
 
 ### Database auth tokens: not OpenTofu-manageable
+
 Bunny doesn't expose a token-generation API in a way the provider can consume. Use `hoppy db token mint --id <db-id>` (CLI) or the dashboard. Token is injected via container env vars (managed by the deploy pipeline, not OpenTofu).
 
 ### Resend-managed DNS records: `ignore_changes = all`
+
 DKIM, SPF, MX, DMARC are owned by Resend. Imported for visibility; OpenTofu never modifies them.
 
 ### Generated config (`tofu plan -generate-config-out`) leaks env-var values
+
 The provider includes `env { name=… value=… }` blocks in the generated `.tf`. **Delete the generated file before commit** if it's been against the live container app. Our `.gitignore` blocks `infra/terraform/generated.tf` to make this harder to mis-commit.
 
 ### Provider is pre-1.0
+
 Pin tightly (`~> 0.14` currently). Don't auto-merge dependabot bumps — review changelog first, especially for schema changes.
 
 ---

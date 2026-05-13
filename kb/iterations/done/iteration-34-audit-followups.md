@@ -7,7 +7,7 @@ status: done
 
 # Iteration 34 — Audit follow-ups (coherence pass)
 
-Bundle the actionable coherence-level findings from [iter-33's monorepo audit](../audits/iter-33-monorepo-audit.md) into one scoped pass. Every change is **modernise an existing pattern** or **close a gap surfaced by the audit** — no new domain rules, no new features, no design-system edits.
+Bundle the actionable coherence-level findings from [iter-33's monorepo audit](../../audits/iter-33-monorepo-audit.md) into one scoped pass. Every change is **modernise an existing pattern** or **close a gap surfaced by the audit** — no new domain rules, no new features, no design-system edits.
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. After this, the audit's open coherence findings are closed and the React 19 / Next.js 16 idioms are applied consistently across forms, route segments, and the metadata surface.
 

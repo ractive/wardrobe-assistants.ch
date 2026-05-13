@@ -59,12 +59,12 @@ The findings flow into a six-iteration arc between iter-16 (events, merged) and 
 
 | Iter | Order | Theme |
 |---|---|---|
-| [16b](../iterations/iteration-16b-edge-hardening.md) | 17.3 | Security & edge hardening |
-| [16c](../iterations/iteration-16c-design-system-foundation.md) | 17.4 | Design system foundation (doc + responsive baseline + vendor primitives) |
-| [16d](../iterations/iteration-16d-ui-cleanup-nav-data.md) | 17.5 | UI cleanup pass 1 (sidebar, tables, quick wins) |
-| [16e](../iterations/iteration-16e-ui-cleanup-forms-boundaries.md) | 17.6 | UI cleanup pass 2 (forms, boundaries, first tests) |
-| [16f](../iterations/iteration-16f-defense-in-depth.md) | 17.7 | Defense-in-depth security |
-| [16g](../iterations/iteration-16g-login-redesign.md) | 17.8 | Login redesign + load-bearing component tests |
+| [16b](../iterations/done/iteration-16b-edge-hardening.md) | 17.3 | Security & edge hardening |
+| [16c](../iterations/done/iteration-16c-design-system-foundation.md) | 17.4 | Design system foundation (doc + responsive baseline + vendor primitives) |
+| [16d](../iterations/done/iteration-16d-ui-cleanup-nav-data.md) | 17.5 | UI cleanup pass 1 (sidebar, tables, quick wins) |
+| [16e](../iterations/done/iteration-16e-ui-cleanup-forms-boundaries.md) | 17.6 | UI cleanup pass 2 (forms, boundaries, first tests) |
+| [16f](../iterations/done/iteration-16f-defense-in-depth.md) | 17.7 | Defense-in-depth security |
+| [16g](../iterations/done/iteration-16g-login-redesign.md) | 17.8 | Login redesign + load-bearing component tests |
 
 Sequencing rationale: define → clean up → redesign. Mobile-responsive is woven into the design-system doc and applied as each cleanup iteration touches its components. iter-16f (server-only defense-in-depth) can run in parallel with the UI track but is plan-ordered after it for clarity. iter-17 inherits the design system, the cleaned-up sidebar/table primitives, the form-action hook, the boundary trio, and the security primitives.
 

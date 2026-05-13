@@ -7,26 +7,26 @@ status: done
 
 # Iteration 30 — Admin coherence pass
 
-Polish pass after the [iter-24](iteration-24-rename-event-to-booking.md) → [iter-29](iteration-29-squad-assignment-confirmation.md) sequence. The booking lifecycle is functionally complete, but the admin surface looks like six iterations stitched together — because it is. This iteration ties the pieces together: kill stale "iter-22" copy, turn passive dashboard counts into actionable links, give admins a "new requests" inbox, expose the offer-share URL on the booking detail page, fix dead-end disabled buttons, and harden the push-subscribe button so it stops looking inert when something is wrong.
+Polish pass after the [iter-24](iterations/done/iteration-24-rename-event-to-booking.md) → [iter-29](iterations/done/iteration-29-squad-assignment-confirmation.md) sequence. The booking lifecycle is functionally complete, but the admin surface looks like six iterations stitched together — because it is. This iteration ties the pieces together: kill stale "iter-22" copy, turn passive dashboard counts into actionable links, give admins a "new requests" inbox, expose the offer-share URL on the booking detail page, fix dead-end disabled buttons, and harden the push-subscribe button so it stops looking inert when something is wrong.
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. No new domain concepts — only wiring, copy, and discoverability.
 
-This file is a **living scope** for the iteration. The "Scope" section below is the agreed-on set as of [project_iteration_status](../../.claude/projects/-Users-james-devel-wardrobe-assistants-ch/memory/project_iteration_status.md); the user may add further small polish items in §"Pickup list" before launch.
+This file is a **living scope** for the iteration. The "Scope" section below is the agreed-on set as of [project_iteration_status](../../../.claude/projects/-Users-james-devel-wardrobe-assistants-ch/memory/project_iteration_status.md); the user may add further small polish items in §"Pickup list" before launch.
 
 ## Decisions
 
 - **No new tables, no new columns.** Everything in this iteration reads existing state and adjusts presentation/affordance.
 - **No domain rules change.** Permission catalog stays as-is; server actions stay as-is. Terminal-state guards on `updateBooking` (already enforced) are mirrored at the UI affordance level only — the server is still authoritative.
-- **The dashboard becomes the admin's home for the booking lifecycle.** Every count is a link; every "new request" is reachable in one click. Stuff that's not actionable yet ([iter-22](iteration-22-invoice-flow.md) invoices / charts) gets honest copy or is hidden until the work lands — no more "lands in iter-22" leaking to users.
+- **The dashboard becomes the admin's home for the booking lifecycle.** Every count is a link; every "new request" is reachable in one click. Stuff that's not actionable yet ([iter-22](iterations/deferred/iteration-22-invoice-flow.md) invoices / charts) gets honest copy or is hidden until the work lands — no more "lands in iter-22" leaking to users.
 - **`/bookings` gets URL-driven status tabs.** State on `?status=…` so dashboard cards can deep-link in. Mobile-first: tabs collapse to a select on narrow viewports.
 - **Offer-token surfaces are admin-only.** "Copy offer link" + "View as customer" buttons appear on the booking detail page once an offer has been sent (i.e. `offerToken` is non-null). Gated on `BOOKING_OFFER_SEND` — same gate as "Send offer".
 - **Push-subscribe button fails loudly.** Silent `console.error` paths in `PushSubscribeToggle.tsx` are converted to toasts; the component renders `null` when `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is absent (no inert CTA).
-- **No customer-side copy changes beyond fixing the one stale "Event details" string** on `/offer/[token]` (carry-over from the [iter-24](iteration-24-rename-event-to-booking.md) rename).
+- **No customer-side copy changes beyond fixing the one stale "Event details" string** on `/offer/[token]` (carry-over from the [iter-24](iterations/done/iteration-24-rename-event-to-booking.md) rename).
 - **Manual smoke uses ff-rdp.** Browser inspection of the new dashboard cards, `/bookings` tabs, offer-URL controls, and push-toast paths goes through `ff-rdp` per the rule in `CLAUDE.md`. Append a dogfooding session report at `../ff-rdp/kb/dogfooding/dogfooding-session-<next>.md` recording what worked, what didn't, bugs, quirks, improvement ideas.
 
 ## Pre-flight
 
-- [x] [iter-29](iteration-29-squad-assignment-confirmation.md) merged on `main` and deployed.
+- [x] [iter-29](iterations/done/iteration-29-squad-assignment-confirmation.md) merged on `main` and deployed.
 - [x] Branch `fix/admin-vapid-and-csp-nonce` and `fix/vapid-build-time-inlining` already on main; production admin is serving the rebuilt image with VAPID public key baked in.
 - [x] No in-flight branches touching `apps/admin/src/app/(dashboard)/page.tsx`, `apps/admin/src/app/(dashboard)/bookings/`, `apps/admin/src/features/bookings/components/BookingDetailActions.tsx`, or `apps/admin/src/components/PushSubscribeToggle.tsx`.
 - [x] `npm run verify` green on `main`.
@@ -37,7 +37,7 @@ This file is a **living scope** for the iteration. The "Scope" section below is 
 
 `apps/admin/src/app/(dashboard)/page.tsx`:
 
-- **Remove all "iter-22" references** in user-visible copy (currently lines ~166, 175, 188, 190). The two invoice-related cards ("Open invoices", "Pending invites") and the activity-charts placeholder either need honest copy ("Coming soon" with no iteration number) or should be hidden until [iter-22](iteration-22-invoice-flow.md) ships. Decision: **hide** them — placeholders signal incompleteness even with honest copy.
+- **Remove all "iter-22" references** in user-visible copy (currently lines ~166, 175, 188, 190). The two invoice-related cards ("Open invoices", "Pending invites") and the activity-charts placeholder either need honest copy ("Coming soon" with no iteration number) or should be hidden until [iter-22](iterations/deferred/iteration-22-invoice-flow.md) ships. Decision: **hide** them — placeholders signal incompleteness even with honest copy.
 - **Add a "New requests" card** at the top of the KPI grid. Reads `count(*) FROM bookings WHERE status = 'created' AND createdBy IS NULL`. Badge styling when count > 0; muted when count = 0. Links to `/bookings?status=new-requests`.
 - **Make surviving KPI cards links.** "Upcoming bookings" → `/bookings?status=upcoming` (i.e. `status=accepted` filtered to `date >= today`). "Active squad" → `/squads`. Wrap each `KpiCard` in a `<Link>` (or accept an `href` prop and have the card render as an anchor); preserve hover/focus styles.
 - **Empty-state guidance** when zero bookings exist: instead of empty cards, show a single "Welcome" panel with the next two actions: create a booking, or share the public booking-request URL.
@@ -146,7 +146,7 @@ Smaller polish items discovered after iter-29; tackle these inside iter-30 if th
 
 ## Out of scope
 
-- Invoice flow, invoice tracking, activity charts. Still [iter-22](iteration-22-invoice-flow.md), still deferred.
+- Invoice flow, invoice tracking, activity charts. Still [iter-22](iterations/deferred/iteration-22-invoice-flow.md), still deferred.
 - Customer message threading / notification preferences.
 - New permission keys; the permission catalog is stable.
 - Notification-channel preferences (per-template push vs email opt-in).

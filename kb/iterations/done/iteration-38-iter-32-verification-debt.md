@@ -7,7 +7,7 @@ status: done
 
 # Iteration 38 — iter-32 verification debt + iter-31 deploy smokes
 
-Close the verification gap left by [iter-32](iteration-32-admin-bordeaux-theme.md) — the bordeaux theme landed but every visual / contrast / focus-ring / baseline-screenshot item in §"Done when" was deferred per the `844b741` doc commit. Also picks up the three [iter-31](iteration-31-booking-request-polish.md) post-deployment smokes that depend on a deployed admin (proxy curl-check, build-time catalog non-empty, end-to-end customer flow).
+Close the verification gap left by [iter-32](iterations/done/iteration-32-admin-bordeaux-theme.md) — the bordeaux theme landed but every visual / contrast / focus-ring / baseline-screenshot item in §"Done when" was deferred per the `844b741` doc commit. Also picks up the three [iter-31](iterations/done/iteration-31-booking-request-polish.md) post-deployment smokes that depend on a deployed admin (proxy curl-check, build-time catalog non-empty, end-to-end customer flow).
 
 Implemented autonomously by `/ralph-loop` where possible; **§E is an explicitly-human checklist** the user runs post-merge because the autonomous loop can't make visual judgement calls. Must leave the system fully working at the iteration boundary.
 

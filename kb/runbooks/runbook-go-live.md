@@ -247,7 +247,7 @@ The script prints a bootstrap TOTP enrollment URL/QR — save it locally (1Passw
 
 Output:
 
-```
+```text
 TODO: note "seed completed" and that QR was saved to local 1Password entry "wardrobe-assistants admin bootstrap TOTP"
 ```
 
@@ -273,7 +273,7 @@ Configure env vars on the container template (via `hoppy container app update` o
 - `DATABASE_AUTH_TOKEN` (the full token)
 - `BETTER_AUTH_SECRET` — generate with `openssl rand -base64 32`. 32+ bytes of secure randomness; rotation invalidates all sessions, so capture it once into 1Password before pasting it in.
 - `BETTER_AUTH_URL=https://admin.wardrobe-assistants.ch`
-- `RESEND_API_KEY` — mint at https://resend.com/api-keys, scope to the admin app's domain.
+- `RESEND_API_KEY` — mint at <https://resend.com/api-keys>, scope to the admin app's domain.
 - `EMAIL_FROM="Wardrobe Assistants <info@wardrobe-assistants.ch>"` — rotate via `hoppy template env --update` (see `kb/runbooks/runbook-email-dns.md`).
 
 Output:
@@ -388,10 +388,12 @@ TODO: paste delete responses
 If TLS does not issue within 15 min, or the new Pull Zone returns errors:
 
 1. Re-attach hostnames to the old auto Pull Zone:
+
    ```bash
    hoppy pull-zone hostname add --id 5719318 --hostname wardrobe-assistants.ch --yes
    hoppy pull-zone hostname add --id 5719318 --hostname www.wardrobe-assistants.ch --yes
    ```
+
 2. Revert DNS records 16538536 and 16538537 back to `mc-tug74k9naa.b-cdn.net` (values captured in `runbook-go-live-pre-state.json`).
 3. The old Magic Container is still running — no restart needed. Site should resolve within DNS TTL (records use TTL 0 → auto, in practice a few minutes).
 4. Leave the new Storage Zone and Pull Zone in place; debug at leisure. Delete only after confirming root cause is unrelated to the new resources.

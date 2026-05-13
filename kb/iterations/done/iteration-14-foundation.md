@@ -7,7 +7,7 @@ status: done
 
 # Iteration 14 — Architecture foundation for the admin app
 
-Land the architecture decided across [ADR-001…ADR-015](../admin-architecture/decision-log.md). Zero feature code — this iteration sets up the patterns that iter-15..iter-18 fill in. Two outcomes when this lands: (1) `lib/permissions.ts` exists with the catalog and helpers, and (2) `npx shadcn add button` produces a working themed button. The next iteration starts on the users feature with no foundation work to redo.
+Land the architecture decided across [ADR-001…ADR-015](../../admin-architecture/decision-log.md). Zero feature code — this iteration sets up the patterns that iter-15..iter-18 fill in. Two outcomes when this lands: (1) `lib/permissions.ts` exists with the catalog and helpers, and (2) `npx shadcn add button` produces a working themed button. The next iteration starts on the users feature with no foundation work to redo.
 
 ## Context — why a separate iteration
 
@@ -16,25 +16,25 @@ Cramming the foundation into iter-15's "add a users page" would mix architectura
 ## Pre-flight
 
 - [ ] Confirm the architecture docs in `kb/admin-architecture/` reflect intent (overview + 6 detail docs + decision log). Re-read once before coding.
-- [ ] Read [folder-structure.md](../admin-architecture/folder-structure.md) and [auth-and-permissions.md](../admin-architecture/auth-and-permissions.md) end-to-end — they're the spec for this iteration.
+- [ ] Read [folder-structure.md](../../admin-architecture/folder-structure.md) and [auth-and-permissions.md](../../admin-architecture/auth-and-permissions.md) end-to-end — they're the spec for this iteration.
 
 > _Pre-flight reads aren't visible in the merged diff; left unchecked per "verify against the diff" policy, but the implementation that landed is consistent with having read them._
 
 ## Scope — TypeScript foundation [3/3]
 
-- [x] Create `tsconfig.base.json` at repo root with the strict-plus bundle (see [typescript-conventions.md](../admin-architecture/typescript-conventions.md)).
+- [x] Create `tsconfig.base.json` at repo root with the strict-plus bundle (see [typescript-conventions.md](../../admin-architecture/typescript-conventions.md)).
 - [x] Update `apps/admin/tsconfig.json`, `packages/db/tsconfig.json`, `apps/homepage/tsconfig.json` to `extends` the base. Bump homepage `target` from `ES2017` → `ES2022`.
 - [x] Run `npm run typecheck`. Fix surfaced issues from `noUncheckedIndexedAccess` and `verbatimModuleSyntax` (auto-fix `import type` via Biome's `useImportType` rule). Estimate: 15–30 min.
 
 ## Scope — Biome cross-feature isolation [1/2]
 
-- [x] Add per-feature override blocks to `biome.json` (see [folder-structure.md](../admin-architecture/folder-structure.md)). For now, just the `lib/`/`components/`/`hooks/` ⇏ `features/**` rule is meaningful (no features exist yet); per-feature overrides are added inside iter-15..iter-18 as features land.
+- [x] Add per-feature override blocks to `biome.json` (see [folder-structure.md](../../admin-architecture/folder-structure.md)). For now, just the `lib/`/`components/`/`hooks/` ⇏ `features/**` rule is meaningful (no features exist yet); per-feature overrides are added inside iter-15..iter-18 as features land.
 - [ ] Add a doc comment at the top of `biome.json` explaining the override pattern: "When adding a new feature, add an override block forbidding it from importing any other feature's `@/features/<other>/**`." _(Not landed — `biome.json` has the override blocks but no top-of-file explanatory comment.)_
 
 ## Scope — `packages/db` schema split [3/3]
 
 - [x] Create `packages/db/src/schema/auth.ts`. Move the current Better Auth tables (user, session, account, verification, twoFactor) into this file from `packages/db/src/schema.ts`.
-- [x] Create `packages/db/src/schema/users.ts` with the `userProfile` table (see [data-layer.md](../admin-architecture/data-layer.md) for the Drizzle definition).
+- [x] Create `packages/db/src/schema/users.ts` with the `userProfile` table (see [data-layer.md](../../admin-architecture/data-layer.md) for the Drizzle definition).
 - [x] Update `packages/db/src/schema.ts` to be the aggregator: `export * from "./schema/auth"; export * from "./schema/users"`. Run `npm run typecheck` to confirm imports across the codebase still resolve.
 
 ## Scope — Drizzle migration [2/2]
@@ -44,14 +44,14 @@ Cramming the foundation into iter-15's "add a users page" would mix architectura
 
 ## Scope — Better Auth session-customisation [2/2]
 
-- [x] Update `apps/admin/src/lib/auth.ts` to add `additionalFields` for `firstName`, `lastName`, `nickname`, `role`, `status` on the session. Configure the session-create hook that reads from `user_profile` by `userId` and merges these fields. Reference [auth-and-permissions.md](../admin-architecture/auth-and-permissions.md).
+- [x] Update `apps/admin/src/lib/auth.ts` to add `additionalFields` for `firstName`, `lastName`, `nickname`, `role`, `status` on the session. Configure the session-create hook that reads from `user_profile` by `userId` and merges these fields. Reference [auth-and-permissions.md](../../admin-architecture/auth-and-permissions.md).
 - [x] Add `getCurrentUserRole()` helper in `lib/auth.ts`: reads session, returns `Role | null`. This is the seam `lib/permissions.ts` uses (no cross-feature import).
 
 ## Scope — Permissions registry + helpers [4/4]
 
 - [x] Create `apps/admin/src/lib/permissions.ts` with:
   - `ROLES` const + `Role` type.
-  - `PERMISSIONS` const + `Permission` type (initial catalog from [auth-and-permissions.md](../admin-architecture/auth-and-permissions.md): users, events, squad).
+  - `PERMISSIONS` const + `Permission` type (initial catalog from [auth-and-permissions.md](../../admin-architecture/auth-and-permissions.md): users, events, squad).
   - `ROLE_PERMISSIONS` map (`ADMIN: new Set(PERMISSIONS)`, `SQUAD_MEMBER` whitelist).
   - Module-load self-check.
   - Custom error classes: `UnauthenticatedError`, `PermissionError`.
@@ -66,7 +66,7 @@ Cramming the foundation into iter-15's "add a users page" would mix architectura
 
 ## Scope — shadcn/ui init + first components [3/3]
 
-- [x] Run `npx shadcn@latest init` in `apps/admin/`. Confirm `components.json` shape per [ui-stack.md](../admin-architecture/ui-stack.md). Verify `lib/utils.ts` (with `cn()` helper) is created — it shouldn't conflict with our existing files.
+- [x] Run `npx shadcn@latest init` in `apps/admin/`. Confirm `components.json` shape per [ui-stack.md](../../admin-architecture/ui-stack.md). Verify `lib/utils.ts` (with `cn()` helper) is created — it shouldn't conflict with our existing files.
 - [x] Install initial primitives: `npx shadcn add button input label form dialog table dropdown-menu select textarea checkbox sonner card`. Each lands in `components/ui/`.
 - [x] Wire `<Toaster />` from `sonner` into `app/(dashboard)/layout.tsx` so toasts render globally.
 

@@ -1,8 +1,8 @@
 # iter-32 bordeaux baseline screenshots
 
 Visual baseline for the bordeaux admin theme that landed in
-[iter-32](../../iterations/iteration-32-admin-bordeaux-theme.md). Captured as
-part of [iter-38 §C](../../iterations/iteration-38-iter-32-verification-debt.md)
+[iter-32](../../iterations/done/iteration-32-admin-bordeaux-theme.md). Captured as
+part of [iter-38 §C](../../iterations/done/iteration-38-iter-32-verification-debt.md)
 verification debt.
 
 ## Status

@@ -17,9 +17,9 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 - **One entity, `booking`.** No separate `booking_request`. The status state machine handles the lifecycle. `createdBy` is the nullable FK that distinguishes customer-created (null) from admin-created (user.id).
 - **No `customer` table.** Contact fields embed on `booking` (`customerName`, `customerEmail`, `customerPhone`). Trade-off accepted: no customer history aggregation in v1.
-- **Status enum**: `created | offered | accepted | rejected | cancelled`. Backfill: `draft → created`, `published → accepted`, `done → accepted` (also set `invoicedAt = bookings.date` as a best-effort heuristic — [iter-22](iteration-22-invoice-flow.md) refines), `cancelled → cancelled`.
-- **`invoicedAt` is a parallel timestamp**, not a status. Populated by [iter-22](iteration-22-invoice-flow.md) work.
-- **Snapshot table `booking_service_item`** follows the [iter-17](iteration-17-services-feature.md) + [iter-22](iteration-22-invoice-flow.md) contract: nullable `serviceId` FK (ON DELETE SET NULL), snapshot of `name/description/priceType/unitPrice`, `quantity`, `hoursInMinutes`, computed-and-stored `total`. Prices are whole-CHF integers (matches `services.price`; no centimes). Snapshot is created/replaced at every "send offer" action ([iter-27](iteration-27-offer-flow.md), [iter-28](iteration-28-offer-revisions-cancellation.md)).
+- **Status enum**: `created | offered | accepted | rejected | cancelled`. Backfill: `draft → created`, `published → accepted`, `done → accepted` (also set `invoicedAt = bookings.date` as a best-effort heuristic — [iter-22](iterations/deferred/iteration-22-invoice-flow.md) refines), `cancelled → cancelled`.
+- **`invoicedAt` is a parallel timestamp**, not a status. Populated by [iter-22](iterations/deferred/iteration-22-invoice-flow.md) work.
+- **Snapshot table `booking_service_item`** follows the [iter-17](iterations/done/iteration-17-services-feature.md) + [iter-22](iterations/deferred/iteration-22-invoice-flow.md) contract: nullable `serviceId` FK (ON DELETE SET NULL), snapshot of `name/description/priceType/unitPrice`, `quantity`, `hoursInMinutes`, computed-and-stored `total`. Prices are whole-CHF integers (matches `services.price`; no centimes). Snapshot is created/replaced at every "send offer" action ([iter-27](iteration-27-offer-flow.md), [iter-28](iteration-28-offer-revisions-cancellation.md)).
 - **Pre-offer selections live in `booking_service_selection`** — a separate, mutable table. Keeps `booking_service_item` strictly immutable.
 - **`services.description` becomes nullable** (per Notes line 4).
 - **`booking_assignments.status` enum widens** to `assigned | requested | confirmed | rejected | withdrawn`. `requested` reserved for later; `confirmed` and `withdrawn` exposed in [iter-29](iteration-29-squad-assignment-confirmation.md).
@@ -29,7 +29,7 @@ Implemented autonomously by `/ralph-loop`; must leave the system fully working a
 
 ## Pre-flight
 
-- [x] [iter-24](iteration-24-rename-event-to-booking.md) merged on `main` and deployed; no `EVENT_*` / `features/events` strings remain.
+- [x] [iter-24](iterations/done/iteration-24-rename-event-to-booking.md) merged on `main` and deployed; no `EVENT_*` / `features/events` strings remain.
 - [x] DB backup taken — the status backfill is destructive of the old enum semantics.
 - [x] No in-flight branches touching `packages/db/src/schema/bookings.ts` or `features/bookings/`.
 - [x] `npm run verify` green on `main`.
@@ -136,7 +136,7 @@ status: text("status", {
 
 ### 6. Permissions (`apps/admin/src/lib/permissions.ts`)
 
-Add (the `BOOKING_*` core keys already exist post-[iter-24](iteration-24-rename-event-to-booking.md)):
+Add (the `BOOKING_*` core keys already exist post-[iter-24](iterations/done/iteration-24-rename-event-to-booking.md)):
 
 - `BOOKING_OFFER_SEND` — admin only. Reserved for [iter-27](iteration-27-offer-flow.md) / [iter-28](iteration-28-offer-revisions-cancellation.md); add the key now so the permission catalog is stable.
 - `BOOKING_ACCEPT_MANUAL` — admin only. Used by this iteration's manual-accept action.
@@ -164,12 +164,12 @@ Role mapping: all four assigned to `ADMIN`. No squad/customer-side surfaces.
 - `replaceBookingSelections(bookingId, selections: Array<{ serviceId, quantity }>)` — wholesale replace of `booking_service_selection` rows for the booking. Allowed only when `status === 'created'`. Permission: `BOOKING_UPDATE`.
 - `adminAcceptOffer(bookingId)` — `created → accepted` directly (manual offline-agreed path), OR `offered → accepted` (admin acting on customer's behalf — the `offered` branch becomes useful in [iter-27](iteration-27-offer-flow.md)). Sets `acceptedAt`. Sends `offerAcceptedAdmin` email to customer. Permission: `BOOKING_ACCEPT_MANUAL`.
 
-  Note: in this iteration `created → accepted` skips snapshot creation (no offer was ever sent). To keep the invariant "an accepted booking has a current `booking_service_item` snapshot" we **snapshot at admin-accept too**: read `booking_service_selection` rows, write `booking_service_item` rows at `offerVersion = 1`, set `offerVersion = 1`. This makes [iter-22](iteration-22-invoice-flow.md)'s invoicing path uniform regardless of whether the offer flow was used.
+  Note: in this iteration `created → accepted` skips snapshot creation (no offer was ever sent). To keep the invariant "an accepted booking has a current `booking_service_item` snapshot" we **snapshot at admin-accept too**: read `booking_service_selection` rows, write `booking_service_item` rows at `offerVersion = 1`, set `offerVersion = 1`. This makes [iter-22](iterations/deferred/iteration-22-invoice-flow.md)'s invoicing path uniform regardless of whether the offer flow was used.
 
 - `rejectBooking(bookingId, reason?)` — `created → rejected`. Permission: `BOOKING_REJECT`. Sends `bookingRejected` email to customer (if `customerEmail` set). [iter-28](iteration-28-offer-revisions-cancellation.md) extends to `offered → rejected`.
 - `cancelBooking(bookingId, reason?)` — `accepted → cancelled`. Permission: `BOOKING_CANCEL`. Notifies any squad members assigned to the booking (status `assigned` or `confirmed`) via `notifyUser('bookingCancelled', ...)`. Notifies customer via email (`bookingCancelled` customer variant).
 
-All server actions are smoke-tested per the [feature-slice template](../admin-architecture/feature-slice-template.md).
+All server actions are smoke-tested per the [feature-slice template](../../admin-architecture/feature-slice-template.md).
 
 ### 10. Notification templates
 
@@ -179,7 +179,7 @@ Add (in `apps/admin/src/email-templates/`):
 - `bookingCancelled` — variants for `recipient: 'customer' | 'squad' | 'admin'`. Used by both `cancelBooking` (this iteration) and [iter-28](iteration-28-offer-revisions-cancellation.md).
 - `offerAcceptedAdmin` — customer-only email, sent when an admin manually accepts. Includes booking summary.
 
-Each template colocates its `pushPayloadFor` export per the [iter-23](iteration-23-admin-pwa-web-push.md) convention. The squad-side `bookingCancelled` variant is push-eligible (squad member is an authed user).
+Each template colocates its `pushPayloadFor` export per the [iter-23](iterations/done/iteration-23-admin-pwa-web-push.md) convention. The squad-side `bookingCancelled` variant is push-eligible (squad member is an authed user).
 
 ### 11. Audit logging
 

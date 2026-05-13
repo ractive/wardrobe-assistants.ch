@@ -7,7 +7,7 @@ status: done
 
 # Iteration 37 — iter-30 pickup-list debt
 
-Ship the 17 polish items that lived under `## Pickup list` in [iter-30](iteration-30-admin-coherence.md) and never landed because the autonomous loop interpreted "tackle if it fits cleanly, otherwise spin off iter-30b" as "skip". This iteration is the iter-30b that never happened.
+Ship the 17 polish items that lived under `## Pickup list` in [iter-30](iterations/done/iteration-30-admin-coherence.md) and never landed because the autonomous loop interpreted "tackle if it fits cleanly, otherwise spin off iter-30b" as "skip". This iteration is the iter-30b that never happened.
 
 Implemented autonomously by `/ralph-loop`; must leave the system fully working at the iteration boundary. All items are UX polish on existing flows — no new domain rules, no new permissions, no new tables (one drop column + one rename in §F).
 

@@ -19,7 +19,7 @@ This iteration deliberately ships only foundations — auth, dashboard shell, se
 
 ## Target architecture additions (over iter-7a)
 
-```
+```text
 apps/
   admin/            # Next.js 16, output: "standalone"
 packages/

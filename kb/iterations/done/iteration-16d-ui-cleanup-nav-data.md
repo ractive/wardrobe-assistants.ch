@@ -38,12 +38,14 @@ Closes **F-FE-03** (TanStack overkill, ~20-30 KB unnecessary client JS). Both ta
 Closes **F-FE-21** (5 files call `auth.api.getSession()`). Use React's `cache()` to dedupe per-request, regardless of Better Auth's internal behavior.
 
 - [x] In `apps/admin/src/lib/auth.ts`, add:
+
   ```ts
   import { cache } from "react";
   export const getCachedSession = cache(async () => {
     return auth.api.getSession({ headers: await headers() });
   });
   ```
+
 - [x] Migrate the 5 call sites: `(dashboard)/layout.tsx`, `(dashboard)/page.tsx`, `(dashboard)/users/page.tsx`, `(dashboard)/events/page.tsx`, `(dashboard)/events/[id]/page.tsx`. Within a single request, identical calls now resolve from React's request-scoped cache.
 
 ## Scope — quick wins (single PR or split as convenient) [9/9]

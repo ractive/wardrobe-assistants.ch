@@ -164,7 +164,7 @@ When in doubt, list and don't delete.
 
 `kb/audits/iter-33-monorepo-audit.md`:
 
-```
+```yaml
 ---
 title: iter-33 monorepo audit
 type: audit

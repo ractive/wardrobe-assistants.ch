@@ -7,7 +7,7 @@ status: done
 
 # Iteration 16c — Design system foundation
 
-The 2026-05-09 frontend audit ([consolidated](../audits/audit-2026-05-09-frontend-consolidated.md)) showed three reviewers converging on the same observation: the admin app has reasonable bones but no written contract for *how* UI should be built. iter-15/16 settled conventions implicitly; iter-17/18/19 will copy from them. Without a doc, "implicit" becomes "drifting".
+The 2026-05-09 frontend audit ([consolidated](../../audits/audit-2026-05-09-frontend-consolidated.md)) showed three reviewers converging on the same observation: the admin app has reasonable bones but no written contract for *how* UI should be built. iter-15/16 settled conventions implicitly; iter-17/18/19 will copy from them. Without a doc, "implicit" becomes "drifting".
 
 This iteration writes the contract — and only the contract. **No application code changes.** Deliverables: the design-system reference doc, the vendored primitives that the cleanup iterations will need (`Sidebar`, `Sheet`, `Skeleton`), the dev-deps for component testing (`vitest-axe`), and the `kb/admin-architecture/feature-slice-template.md` cross-link.
 
@@ -16,7 +16,7 @@ The design-system doc must treat **mobile/responsive as a first-class concern**:
 ## Pre-flight
 
 - [x] iter-16b (edge hardening) merged. Security headers in place; CSP shape known so the doc can recommend CSS approaches that don't fight it.
-- [x] [Frontend audit consolidated](../audits/audit-2026-05-09-frontend-consolidated.md) re-read.
+- [x] [Frontend audit consolidated](../../audits/audit-2026-05-09-frontend-consolidated.md) re-read.
 - [x] Confirm: stay on stock shadcn/ui; do not adopt community shadcn extensions (Origin UI, Cult UI, Aceternity, etc.). Reference research in §6 of the consolidated audit.
 
 ## Scope — `kb/admin-architecture/design-system/README.md` [14/14]
@@ -57,7 +57,7 @@ Sets up the tooling iter-16e/g need. No tests written here.
 ## Scope — cross-links [3/3]
 
 - [x] Update `kb/admin-architecture/overview.md` "Start here" table to add a "Design system" row pointing at the new doc.
-- [x] Update `kb/admin-architecture/feature-slice-template.md` to say "UI conventions: see [`design-system/README.md`](design-system/README.md)" — that line replaces any previously inline UI guidance.
+- [x] Update `kb/admin-architecture/feature-slice-template.md` to say "UI conventions: see [`design-system/README.md`](../design-system/README.md)" — that line replaces any previously inline UI guidance.
 - [x] Update `CLAUDE.md` (admin section) to point at `design-system/README.md` alongside the slice template.
 
 ## Verify [4/4]

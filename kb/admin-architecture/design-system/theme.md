@@ -29,6 +29,7 @@ The admin ships **light / dark / system** mode toggle:
     </body>
   </html>
   ```
+
 - `suppressHydrationWarning` on `<html>` prevents React from complaining about the class mismatch between server (no theme class) and client (theme class injected by `next-themes`).
 - **No custom inline pre-hydration script** — `next-themes` injects its own when `attribute="class"`, and the `nonce` prop above is what keeps that script alive under the admin's strict CSP.
 - **Client-only persistence** — theme is stored in `localStorage`; no server round-trip, no cookie.

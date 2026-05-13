@@ -23,6 +23,7 @@ Mobile responsiveness applied to the boundary surfaces (loading skeletons, error
 Closes **F-FE-15** (4-form duplicated submit pattern). Lands before iter-17 (services) so the new feature inherits the pattern.
 
 - [x] Add `apps/admin/src/hooks/use-form-action.ts`:
+
   ```ts
   type ActionResult = { error?: string; message?: string };
   export function useFormAction<I, R extends ActionResult>(
@@ -30,6 +31,7 @@ Closes **F-FE-15** (4-form duplicated submit pattern). Lands before iter-17 (ser
     opts?: { onSuccess?: (result: R) => void; refresh?: boolean },
   ): (input: I) => Promise<void>;
   ```
+
   Behavior: `try { result = await action(input) }`; on `result.error`, `toast.error(result.message ?? "...")`; on success, `toast.success(result.message)`, `opts.onSuccess?.(result)`, `router.refresh()` if `opts.refresh ?? true`. `catch (err)` → generic `toast.error`. (Also added `fallbackErrorMessage` opt during PR review so each form keeps action-specific copy.)
 - [x] Migrate `EventForm.tsx`. Remove ~20 lines of try/catch/toast.
 - [x] Migrate `InviteUserForm.tsx`.

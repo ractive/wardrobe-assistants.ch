@@ -115,7 +115,8 @@ re-generate), redeploy. Safe when:
 # 2. Regenerate the migration:
 npm -w @wardrobe-assistants/db run db:generate -- --name <descriptive-name>
 # 3. Hand-edit the generated SQL if needed (e.g. drop the half-applied
-#    column before recreating).
+# column before recreating).
+
 # 4. Commit + deploy. MIGRATE_ON_BOOT can stay on.
 ```
 
