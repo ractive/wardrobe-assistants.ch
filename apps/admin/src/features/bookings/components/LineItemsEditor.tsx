@@ -52,6 +52,17 @@ function formatSubtotal(
   return `CHF ${total}.-`;
 }
 
+function formatLineAmount(
+  item: BookingSelectionItem,
+  durationHours: number | null,
+): string {
+  if (item.priceType === "hourly") {
+    if (durationHours === null) return "—";
+    return `CHF ${item.unitPrice * item.quantity * durationHours}.-`;
+  }
+  return `CHF ${item.unitPrice * item.quantity}.-`;
+}
+
 // ---------------------------------------------------------------------------
 // Add-service popover
 // ---------------------------------------------------------------------------
@@ -159,11 +170,13 @@ function AddServicePopover({
 function LineItemRow({
   bookingId,
   item,
+  durationHours,
   onDeleted,
   onQuantityChanged,
 }: {
   bookingId: string;
   item: BookingSelectionItem;
+  durationHours: number | null;
   onDeleted: (selectionId: string) => void;
   onQuantityChanged: (selectionId: string, quantity: number) => void;
 }) {
@@ -251,6 +264,10 @@ function LineItemRow({
             /hr
           </span>
         )}
+      </span>
+      {/* Amount — md+ only, left-aligned, immediately after description */}
+      <span className="hidden md:inline-block w-28 text-left text-sm tabular-nums text-[var(--muted-foreground)]">
+        {formatLineAmount(item, durationHours)}
       </span>
       <Input
         type="number"
@@ -345,6 +362,7 @@ export function LineItemsEditor({
               key={item.id}
               bookingId={bookingId}
               item={item}
+              durationHours={durationHours}
               onDeleted={handleDeleted}
               onQuantityChanged={handleQuantityChanged}
             />
@@ -380,26 +398,60 @@ export function LineItemsEditor({
 // Read-only display when booking is past the 'created' status
 export function LineItemsReadOnly({
   selections,
+  durationHours,
 }: {
   selections: BookingSelectionItem[];
+  durationHours: number | null;
 }) {
   if (selections.length === 0) return null;
 
+  // If any hourly line lacks a duration, the per-line amount renders as "—"
+  // (see formatLineAmount) — so the total must match instead of silently
+  // treating the missing duration as zero.
+  const hasUnpricedHourly = selections.some(
+    (s) => s.priceType === "hourly" && durationHours === null,
+  );
+  const total = hasUnpricedHourly
+    ? null
+    : selections.reduce((sum, s) => {
+        if (s.priceType === "hourly") {
+          return sum + s.unitPrice * s.quantity * (durationHours ?? 0);
+        }
+        return sum + s.unitPrice * s.quantity;
+      }, 0);
+
   return (
-    <ul className="space-y-1 text-sm">
-      {selections.map((s) => (
-        <li key={s.id} className="flex items-center gap-4">
-          <span
-            className={`flex-1 ${s.serviceArchived ? "line-through opacity-60" : ""}`}
-          >
-            {s.serviceName}
-          </span>
-          {/* tabular-nums keeps digit columns aligned when scanning multiple rows */}
-          <span className="tabular-nums text-[var(--muted-foreground)] pr-1">
-            &times;{s.quantity}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-1 text-sm">
+      <ul className="space-y-1">
+        {selections.map((s) => (
+          <li key={s.id} className="flex items-center gap-4">
+            <span
+              className={`flex-1 ${s.serviceArchived ? "line-through opacity-60" : ""}`}
+            >
+              {s.serviceName}
+              {s.priceType === "hourly" && (
+                <span className="ml-1 text-[var(--muted-foreground)] text-xs">
+                  /hr
+                </span>
+              )}
+            </span>
+            {/* Amount — md+ only, left-aligned, immediately after description */}
+            <span className="hidden md:inline-block w-28 text-left tabular-nums text-[var(--muted-foreground)]">
+              {formatLineAmount(s, durationHours)}
+            </span>
+            {/* tabular-nums keeps digit columns aligned when scanning multiple rows */}
+            <span className="tabular-nums text-[var(--muted-foreground)]">
+              &times;{s.quantity}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {/* Total row — right-aligned to anchor the column visually as a footer */}
+      <div className="mt-2 flex justify-end border-t border-[var(--border)] pt-1">
+        <span className="tabular-nums font-medium">
+          Total: {total === null ? "—" : `CHF ${total}.-`}
+        </span>
+      </div>
+    </div>
   );
 }

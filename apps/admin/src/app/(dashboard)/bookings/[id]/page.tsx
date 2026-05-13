@@ -283,7 +283,10 @@ export default async function BookingDetailPage({
                 durationHours={booking.durationHours}
               />
             ) : (
-              <LineItemsReadOnly selections={booking.selections} />
+              <LineItemsReadOnly
+                selections={booking.selections}
+                durationHours={booking.durationHours}
+              />
             )}
           </div>
         </div>

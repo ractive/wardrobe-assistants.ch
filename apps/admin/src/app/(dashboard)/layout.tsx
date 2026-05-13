@@ -10,6 +10,7 @@ import {
 } from "@/components/DashboardSidebar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { PushSubscribeToggle } from "@/components/PushSubscribeToggle";
+import { UnreadBookingsBell } from "@/components/UnreadBookingsBell";
 import {
   SidebarInset,
   SidebarProvider,
@@ -37,6 +38,10 @@ export default async function DashboardLayout({
   // are theirs. iter-39 §B.1.
   const role = await roleForUserId(session.user.id);
   const isAdmin = role === "ADMIN";
+  // iter-42 §C: only render the bell for users whose role actually has a
+  // bell query defined. Users without a user_profile row would otherwise
+  // poll /api/bell every 60 s for an empty-list response.
+  const showBell = role === "ADMIN" || role === "SQUAD_MEMBER";
   return (
     <SidebarProvider>
       <DashboardSidebar userEmail={session.user.email}>
@@ -60,7 +65,8 @@ export default async function DashboardLayout({
           <span className="font-semibold text-sm md:text-base">
             Wardrobe Assistants — Admin
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            {showBell && <UnreadBookingsBell />}
             <PushSubscribeToggle />
           </div>
         </header>

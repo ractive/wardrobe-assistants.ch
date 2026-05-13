@@ -1,6 +1,7 @@
 import { schema, userProfile } from "@wardrobe-assistants/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, isAPIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { and, eq } from "drizzle-orm";
@@ -10,6 +11,17 @@ import { db } from "./db";
 import { sendTemplated } from "./email";
 import { env } from "./env";
 import type { Role } from "./permissions";
+
+// SHA-256 hex of the lowercased email — used to correlate repeated login
+// failures in logs without persisting raw addresses (iter-42 §B). Edge and
+// Node both expose Web Crypto via globalThis.crypto.subtle.
+async function hashEmail(email: string): Promise<string> {
+  const data = new TextEncoder().encode(email.toLowerCase());
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
@@ -31,6 +43,57 @@ export const auth = betterAuth({
       sameSite: "lax",
       httpOnly: true,
     },
+  },
+  // iter-42 §B: after-hooks to log login failures and sign-outs.
+  //
+  // hooks.after fires after every Better Auth route completes — including
+  // routes that returned an error response. ctx.context.returned holds the
+  // resolved response body (an APIError when the route threw) and ctx.path
+  // is the route path. We use createAuthMiddleware so TypeScript accepts the
+  // MiddlewareContext shape (which includes `returned` and `path`).
+  //
+  // Login failures: Better Auth returns INVALID_EMAIL_OR_PASSWORD for both
+  // bad password and unknown-user attempts (enumeration defence), so we log
+  // the category only, not the underlying reason.
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      const returned = ctx.context.returned;
+      const path = ctx.path;
+
+      // Sign-out: successful response is { success: true }.
+      if (path === "/sign-out") {
+        if (
+          returned &&
+          typeof returned === "object" &&
+          !isAPIError(returned) &&
+          "success" in returned &&
+          (returned as Record<string, unknown>).success === true
+        ) {
+          console.log("auth: signout ok");
+        }
+        return;
+      }
+
+      // Login fail: any non-success APIError on /sign-in/email — UNAUTHORIZED
+      // covers bad password / unknown user, TOO_MANY_REQUESTS covers rate
+      // limiting, etc. Logging every status keeps operators from being blind
+      // to rate-limit-driven failures (iter-42 §B). We log the status and a
+      // hashed email (not the raw address) — operators can correlate repeated
+      // failures from the same address without leaking PII into bunny logs.
+      if (path === "/sign-in/email" && isAPIError(returned)) {
+        const rawEmail =
+          ctx.body &&
+          typeof ctx.body === "object" &&
+          "email" in (ctx.body as Record<string, unknown>) &&
+          typeof (ctx.body as Record<string, unknown>).email === "string"
+            ? ((ctx.body as Record<string, unknown>).email as string)
+            : null;
+        const emailHash = rawEmail
+          ? `email#${(await hashEmail(rawEmail)).slice(0, 12)}`
+          : "email#unknown";
+        console.warn(`auth: login fail status=${returned.status} ${emailHash}`);
+      }
+    }),
   },
   emailAndPassword: {
     enabled: true,
@@ -60,15 +123,23 @@ export const auth = betterAuth({
         .limit(1);
       const profile = rows[0];
       if (profile?.status === "invited") {
+        // iter-42 §B: log invite dispatch (not the accept — that fires at
+        // first sign-in via session.create.before → invited→verified flip).
+        console.log(`auth: invite sent userId=${user.id}`);
         await sendTemplated("welcomeInvite", user.email, {
           activateUrl: url,
           firstName: profile.firstName ?? null,
         });
         return;
       }
-      // §C: log password-reset request. userId is privacy-safe; email omitted.
-      console.log(`[evt=auth.password_reset.requested userId=${user.id}]`);
+      // §B: log password-reset request.
+      console.log(`auth: password-reset requested userId=${user.id}`);
       await sendTemplated("passwordReset", user.email, { resetUrl: url });
+    },
+    // iter-42 §B: fired by Better Auth after a successful /reset-password POST.
+    // The token is already consumed at this point; logging here is safe.
+    onPasswordReset: async ({ user }) => {
+      console.log(`auth: password-reset complete userId=${user.id}`);
     },
   },
   emailVerification: {
@@ -97,8 +168,9 @@ export const auth = betterAuth({
           // first successful sign-in. The `status = invited` predicate makes
           // this idempotent and prevents `verifiedAt` being overwritten on
           // every subsequent sign-in. Failures must not block sign-in.
+          let wasInvited = false;
           try {
-            await db
+            const result = await db
               .update(userProfile)
               .set({ status: "verified", verifiedAt: new Date() })
               .where(
@@ -106,15 +178,22 @@ export const auth = betterAuth({
                   eq(userProfile.userId, session.userId),
                   eq(userProfile.status, "invited"),
                 ),
-              );
+              )
+              .returning({ userId: userProfile.userId });
+            wasInvited = result.length > 0;
           } catch (err) {
             console.error(
               "session.create: failed to flip status invited→verified",
               err,
             );
           }
-          // §C: log successful sign-in. Session creation == sign-in success.
-          console.log(`[evt=auth.signin.ok userId=${session.userId}]`);
+          // iter-42 §B: log login. Distinguish first-time invite accept from
+          // subsequent logins so the log is useful without DB queries.
+          if (wasInvited) {
+            console.log(`auth: invite accept userId=${session.userId}`);
+          } else {
+            console.log(`auth: login ok userId=${session.userId}`);
+          }
           return { data: session };
         },
       },
@@ -122,8 +201,8 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          // §C: log successful sign-up (new user row created by Better Auth).
-          console.log(`[evt=auth.signup.ok userId=${user.id}]`);
+          // iter-42 §B: log new user account creation.
+          console.log(`auth: signup ok userId=${user.id}`);
         },
       },
     },

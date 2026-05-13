@@ -342,6 +342,15 @@ export const withdrawAssignmentInput = z.object({
 });
 export type WithdrawAssignmentInput = z.infer<typeof withdrawAssignmentInput>;
 
+// iter-42 §C: Bell badge item — minimal shape returned by the bell queries.
+export const bellItem = z.object({
+  id: z.string(),
+  name: z.string(),
+  date: z.date(),
+  venue: z.string(),
+});
+export type BellItem = z.infer<typeof bellItem>;
+
 export const actionResult = z.discriminatedUnion("error", [
   z.object({ error: z.literal(false), message: z.string() }),
   z.object({ error: z.literal(true), message: z.string() }),
