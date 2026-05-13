@@ -34,9 +34,14 @@ fi
 
 # Extract the first chunk URL that points at the static-asset host. Pull
 # zones append a trailing query/space, so stop at the first quote.
+# Escape regex metacharacters in the base URL (mostly `.`) so a slightly
+# different hostname can't accidentally match. `|| true` keeps the script
+# from hard-exiting under `set -e` when grep finds no match — we want the
+# helpful failure message below to print.
+escaped_base=$(printf '%s' "$ADMIN_STATIC_BASE_URL" | sed 's/[.]/\\./g')
 chunk_url=$(printf '%s' "$html" \
-  | grep -oE "${ADMIN_STATIC_BASE_URL}/_next/static/[^\"'<> ]+\.js" \
-  | head -1)
+  | grep -oE "${escaped_base}/_next/static/[^\"'<> ]+\.js" \
+  | head -1 || true)
 
 if [[ -z "$chunk_url" ]]; then
   echo "FAIL  no chunk URL referencing $ADMIN_STATIC_BASE_URL found in $ADMIN_BASE_URL/login"
@@ -50,7 +55,7 @@ else
       -w "%{http_code} %{content_type}\n" "$chunk_url" || echo "000 -"
   )
 
-  if [[ "$code" == "200" && "$ctype" == application/javascript* || "$ctype" == text/javascript* ]]; then
+  if [[ "$code" == "200" && ( "$ctype" == application/javascript* || "$ctype" == text/javascript* ) ]]; then
     echo "PASS  GET chunk -> $code ($ctype)"
   else
     echo "FAIL  GET chunk -> $code ($ctype)"
