@@ -38,7 +38,8 @@ function isBellItem(value: unknown): value is BellItemResponse {
     typeof v.date === "string" &&
     typeof v.venue === "string" &&
     typeof v.href === "string" &&
-    v.href.startsWith("/")
+    v.href.startsWith("/") &&
+    !v.href.startsWith("//")
   );
 }
 
