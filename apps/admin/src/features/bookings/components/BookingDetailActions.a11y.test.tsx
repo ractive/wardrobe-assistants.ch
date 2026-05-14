@@ -67,6 +67,7 @@ describe("BookingDetailActions a11y", () => {
     const { container } = render(
       <BookingDetailActions
         booking={baseBooking}
+        canEdit={true}
         canDelete={true}
         canMessage={true}
       />,
@@ -83,6 +84,7 @@ describe("BookingDetailActions a11y", () => {
     const { container } = render(
       <BookingDetailActions
         booking={cancelledBooking}
+        canEdit={true}
         canDelete={true}
         canMessage={false}
       />,
@@ -95,6 +97,7 @@ describe("BookingDetailActions a11y", () => {
     const { queryByRole } = render(
       <BookingDetailActions
         booking={{ ...baseBooking, status: "rejected" }}
+        canEdit={true}
         canDelete={true}
         canMessage={true}
       />,
@@ -109,6 +112,7 @@ describe("BookingDetailActions a11y", () => {
     const { getAllByTitle } = render(
       <BookingDetailActions
         booking={baseBooking}
+        canEdit={false}
         canDelete={false}
         canMessage={false}
       />,

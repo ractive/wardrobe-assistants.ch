@@ -24,6 +24,7 @@ interface BellItemResponse {
   name: string;
   date: string; // ISO string from the API
   venue: string;
+  href: string;
 }
 
 const POLL_INTERVAL_MS = 60_000;
@@ -35,7 +36,9 @@ function isBellItem(value: unknown): value is BellItemResponse {
     typeof v.id === "string" &&
     typeof v.name === "string" &&
     typeof v.date === "string" &&
-    typeof v.venue === "string"
+    typeof v.venue === "string" &&
+    typeof v.href === "string" &&
+    v.href.startsWith("/")
   );
 }
 
@@ -146,7 +149,7 @@ export function UnreadBookingsBell() {
               return (
                 <li key={item.id}>
                   <Link
-                    href={`/bookings/${item.id}`}
+                    href={item.href}
                     className="flex flex-col gap-0.5 px-4 py-3 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                     onClick={() => setOpen(false)}
                   >

@@ -348,6 +348,7 @@ export const bellItem = z.object({
   name: z.string(),
   date: z.date(),
   venue: z.string(),
+  href: z.string(),
 });
 export type BellItem = z.infer<typeof bellItem>;
 

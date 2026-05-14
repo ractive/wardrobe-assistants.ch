@@ -66,12 +66,14 @@ describe("UnreadBookingsBell (real timers)", () => {
         name: "Spring Kickoff",
         date: "2026-06-01T00:00:00.000Z",
         venue: "Studio A",
+        href: "/bookings/abc",
       },
       {
         id: "def",
         name: "Summer Gig",
         date: "2026-07-01T00:00:00.000Z",
         venue: "Studio B",
+        href: "/bookings/def",
       },
     ]);
     const { getByRole } = render(<UnreadBookingsBell />);
@@ -93,6 +95,7 @@ describe("UnreadBookingsBell (real timers)", () => {
         name: "Spring Kickoff",
         date: "2026-06-01T00:00:00.000Z",
         venue: "Studio A",
+        href: "/bookings/bk1",
       },
     ]);
     const { getByRole, findByRole } = render(<UnreadBookingsBell />);
@@ -147,6 +150,7 @@ describe("UnreadBookingsBell (real timers)", () => {
         name: "Axe booking",
         date: "2026-06-01T00:00:00.000Z",
         venue: "Venue X",
+        href: "/bookings/ax1",
       },
     ]);
     const { container } = render(<UnreadBookingsBell />);
