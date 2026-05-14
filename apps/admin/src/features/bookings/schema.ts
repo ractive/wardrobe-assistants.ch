@@ -348,6 +348,9 @@ export const bellItem = z.object({
   name: z.string(),
   date: z.date(),
   venue: z.string(),
+  // Internal relative path only — must start with a single "/" so the
+  // client-side Link never resolves to an off-origin URL.
+  href: z.string().regex(/^\/(?!\/)/),
 });
 export type BellItem = z.infer<typeof bellItem>;
 

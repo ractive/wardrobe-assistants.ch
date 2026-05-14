@@ -130,6 +130,7 @@ export default async function BookingDetailPage({
         </div>
         <BookingDetailActions
           booking={booking}
+          canEdit={canCreate}
           canDelete={canDelete}
           canMessage={canMessage}
         />

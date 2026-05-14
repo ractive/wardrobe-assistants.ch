@@ -1,8 +1,11 @@
 import { bookingAssignments, bookings } from "@wardrobe-assistants/db/schema";
 import { format } from "date-fns";
 import { and, eq } from "drizzle-orm";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AssignmentActionPrompt } from "@/features/bookings/components/AssignmentActionPrompt";
 import { AssignmentInlineActions } from "@/features/bookings/components/AssignmentInlineActions";
@@ -17,6 +20,18 @@ type SearchParams = { action?: string };
 function parseAction(raw: string | undefined): "confirm" | "decline" | null {
   if (raw === "confirm" || raw === "decline") return raw;
   return null;
+}
+
+function BackLink() {
+  return (
+    <div>
+      <Button asChild variant="ghost" size="sm" className="-ml-3">
+        <Link href="/my-bookings">
+          <ArrowLeft className="size-4" aria-hidden="true" /> My bookings
+        </Link>
+      </Button>
+    </div>
+  );
 }
 
 export default async function MyBookingDetailPage({
@@ -50,6 +65,7 @@ export default async function MyBookingDetailPage({
   if (!assignment) {
     return (
       <section className="mx-auto flex max-w-2xl flex-col gap-4">
+        <BackLink />
         <h1 className="font-semibold text-2xl md:text-3xl">Booking</h1>
         <Card className="border-amber-300 bg-amber-50 p-6 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
           <p className="font-medium">
@@ -75,6 +91,7 @@ export default async function MyBookingDetailPage({
     // window).
     return (
       <section className="mx-auto flex max-w-2xl flex-col gap-4">
+        <BackLink />
         <h1 className="font-semibold text-2xl md:text-3xl">Booking</h1>
         <Card className="p-6 text-sm">
           This booking is no longer available.
@@ -97,6 +114,7 @@ export default async function MyBookingDetailPage({
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-6">
+      <BackLink />
       <header className="flex flex-col gap-2">
         <h1 className="font-semibold text-2xl md:text-3xl">{booking.name}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm">

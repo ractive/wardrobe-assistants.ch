@@ -38,7 +38,9 @@ export type Permission = (typeof PERMISSIONS)[number];
 export const ROLE_PERMISSIONS = {
   ADMIN: new Set<Permission>(PERMISSIONS),
   SQUAD_MEMBER: new Set<Permission>([
-    "BOOKING_VIEW",
+    // BOOKING_VIEW intentionally NOT granted: it gates the admin-tier
+    // /bookings and /bookings/{id} surfaces. Squad members get their own
+    // view via /my-bookings, gated on SQUAD_VIEW_ASSIGNED.
     "SQUAD_VIEW_ASSIGNED",
     "SQUAD_REQUEST_PARTICIPATION",
     "SQUAD_CONFIRM_ASSIGNMENT",

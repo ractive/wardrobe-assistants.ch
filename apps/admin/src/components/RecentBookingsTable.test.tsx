@@ -42,7 +42,7 @@ describe("RecentBookingsTable", () => {
       const link = screen.getByRole("link", {
         name: /create your first booking/i,
       });
-      expect(link).toHaveAttribute("href", "/bookings/new");
+      expect(link).toHaveAttribute("href", "/bookings");
     });
 
     it("is axe-clean in empty state", async () => {

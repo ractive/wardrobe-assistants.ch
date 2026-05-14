@@ -45,7 +45,7 @@ export function RecentBookingsTable({ bookings }: RecentBookingsTableProps) {
         <EmptyHeader>
           <EmptyTitle>No bookings yet</EmptyTitle>
           <EmptyDescription>
-            <Link href="/bookings/new">Create your first booking</Link> to get
+            <Link href="/bookings">Create your first booking</Link> to get
             started.
           </EmptyDescription>
         </EmptyHeader>

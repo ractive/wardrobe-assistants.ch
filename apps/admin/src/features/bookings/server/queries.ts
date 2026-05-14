@@ -425,7 +425,7 @@ export async function listBellItems(
         ),
       )
       .orderBy(asc(bookings.date));
-    return rows.map((r) => bellItem.parse(r));
+    return rows.map((r) => bellItem.parse({ ...r, href: `/bookings/${r.id}` }));
   }
 
   // Squad member: bookings assigned to me awaiting my confirmation.
@@ -446,7 +446,9 @@ export async function listBellItems(
       ),
     )
     .orderBy(asc(bookings.date));
-  return rows.map((r) => bellItem.parse(r));
+  return rows.map((r) =>
+    bellItem.parse({ ...r, href: `/my-bookings/${r.id}` }),
+  );
 }
 
 export async function listPendingRequestsCountByBooking(): Promise<

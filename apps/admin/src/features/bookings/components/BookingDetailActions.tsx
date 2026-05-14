@@ -11,10 +11,12 @@ import { MessageAssigneesDialog } from "./MessageAssigneesDialog";
 
 export function BookingDetailActions({
   booking,
+  canEdit,
   canDelete,
   canMessage,
 }: {
   booking: BookingDetail;
+  canEdit: boolean;
   canDelete: boolean;
   canMessage: boolean;
 }) {
@@ -43,7 +45,7 @@ export function BookingDetailActions({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         {/* A.1: Edit and Message hidden on terminal status */}
-        {!isClosed && (
+        {canEdit && !isClosed && (
           <Button
             type="button"
             variant="outline"
