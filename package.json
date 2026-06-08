@@ -31,21 +31,21 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.14",
+    "@biomejs/biome": "^2.4.16",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^25.7.0",
+    "@types/node": "^25.9.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^6.0.2",
     "culori": "^4.0.2",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^20.10.2",
     "lighthouse": "^13.2.0",
-    "shadcn": "^4.7.0",
+    "shadcn": "^4.10.0",
     "sharp": "0.34.5",
     "typescript": "^6.0.3",
-    "vite": "^8.0.12",
-    "vitest": "^4.1.6"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
   }
 }
