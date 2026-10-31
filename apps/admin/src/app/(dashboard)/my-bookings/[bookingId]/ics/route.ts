@@ -106,7 +106,7 @@ export async function GET(
     .limit(1);
 
   const row = rows[0];
-  if (!row || row.assignmentStatus !== "confirmed") {
+  if (row?.assignmentStatus !== "confirmed") {
     return new NextResponse("Not found", { status: 404 });
   }
 
