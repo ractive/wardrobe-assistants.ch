@@ -3,7 +3,7 @@
 # Build admin Next.js app from workspace root. `output: "standalone"` packs
 # server.js + minimal node_modules so the runtime stage stays small.
 
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /repo
 COPY package.json package-lock.json ./
 COPY apps/admin/package.json apps/admin/package.json
@@ -11,7 +11,7 @@ COPY apps/homepage/package.json apps/homepage/package.json
 COPY packages/db/package.json packages/db/package.json
 RUN npm ci -w apps/admin --include-workspace-root
 
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/admin/node_modules ./apps/admin/node_modules
@@ -55,9 +55,11 @@ RUN npm -w apps/admin run build
 # flagged 1× CRITICAL + 4× HIGH OpenSSL CVEs (CVE-2026-31789/28387/28388/
 # 28389/28390). debian13 ships OpenSSL 3.5.x and tracks current Debian
 # stable, so OS-level findings clear without the rebuild-lag tax. Equivalent
-# to `gcr.io/distroless/nodejs24` — both tags currently point to the same
+# to `gcr.io/distroless/nodejs26` — both tags currently point to the same
 # digest, but naming the OS makes future bumps (debian14) obvious in diffs.
-FROM gcr.io/distroless/nodejs24-debian13 AS runner
+# Node major must match the `node:<major>-alpine` builder stages above and
+# `.nvmrc` / `engines.node` / `setup-node` in deploy.yml.
+FROM gcr.io/distroless/nodejs26-debian13 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
