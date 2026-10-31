@@ -14,7 +14,8 @@
 // state without destroying it, and two data sources read the container and its
 // CDN endpoint. They store only ids, names, the public host and the endpoint's
 // pull zone id. The plan fails if the app, the container or the endpoint is
-// gone, so the daily drift check notices a deleted app.
+// gone, so the daily drift check fails (a red run, not a drift issue) when the
+// app is deleted.
 //
 // Owned elsewhere:
 //   - the running image: .github/workflows/deploy.yml;
@@ -75,8 +76,8 @@ resource "bunnynet_compute_container_imageregistry" "ghcr_ractive" {
 // included, in plain text. Run that apply on the laptop *before* pushing the
 // branch that adds this block; otherwise terraform-plan.yml publishes every
 // secret in the PR comment, the Actions log and the plan artefact. Once the
-// app is out of the state, the plan is "No changes" and safe to publish. Keep this block until that apply has run
-// on the laptop: without it (and without the resource) OpenTofu would plan to
+// app is out of the state, the plan is "No changes" and safe to publish.
+// Keep this block until that apply has run on the laptop: without it (and without the resource) OpenTofu would plan to
 // destroy the running app, and prevent_destroy no longer guards it.
 removed {
   from = bunnynet_compute_container_app.admin

@@ -304,7 +304,7 @@ The MC controller rotates `container_endpoint_id` on every container redeploy. W
 
 `bunnynet_compute_container_app` reads every container env var, value included and not marked sensitive, into the state on import and on every refresh. `ignore_changes = [container]` (what we had until 2026-10-31) only stops OpenTofu from *changing* the block; the values were still in the state, and any plan diff on the block would print them into the PR comment and the Actions log of this public repo.
 
-Since 2026-10-31 the app is out of the state: a `removed { … lifecycle { destroy = false } }` block in `containers.tf` makes the next apply forget it without touching the running app, and the data sources `bunnynet_compute_container_app_container.admin` + `bunnynet_compute_container_app_container_endpoint.admin_cdn` read the container and endpoint (ids, names, public host, pull-zone id only). The plan fails if the app, the container or the endpoint disappears, so the daily drift check notices a deleted app. Keep the `removed` block until that apply has run on the laptop.
+Since 2026-10-31 the app is out of the state: a `removed { … lifecycle { destroy = false } }` block in `containers.tf` makes the next apply forget it without touching the running app, and the data sources `bunnynet_compute_container_app_container.admin` + `bunnynet_compute_container_app_container_endpoint.admin_cdn` read the container and endpoint (ids, names, public host, pull-zone id only). The plan fails if the app, the container or the endpoint disappears, so the daily drift check fails when the app is deleted: a red run (exit 1) and the workflow's failure email, not a `drift` issue, which it opens only for exit 2. Keep the `removed` block until that apply has run on the laptop.
 
 **The forget plan prints secrets.** `tofu plan` for the `removed` block shows the whole resource, every env value in plain text. Apply it on the laptop (per [Apply](#apply)) *before* pushing the branch, so the PR plan comment, the Actions log and the `tofu-plan` artefact only ever see "No changes". The same holds for any future `removed` block or replacement of a resource whose state holds secrets. See ADR-025 in [[admin-architecture/decision-log]].
 
@@ -414,8 +414,11 @@ hoppy container app region-settings-update --id <app> \
   --required-region DE --allowed-region DE --max-allowed-regions 1
 
 # 3. Env, one variable at a time, values pasted from the password manager.
-#    Prefix the line with a space so zsh (HIST_IGNORE_SPACE) keeps it out of history.
- hoppy container template env --app-id <app> --container-id <container> --add BETTER_AUTH_SECRET=…
+#    read -rs keeps each value off the screen and out of the shell history
+#    (a leading space only helps with setopt HIST_IGNORE_SPACE, off by default).
+read -rs VAL   # paste the value, then Enter
+hoppy container template env --app-id <app> --container-id <container> --add "BETTER_AUTH_SECRET=$VAL"
+unset VAL
 #    … repeat for every variable in containers.tf.
 
 # 4. CDN endpoint on the existing admin pull zone, so admin.wardrobe-assistants.ch keeps working.
