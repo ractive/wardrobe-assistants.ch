@@ -71,4 +71,10 @@ export const twoFactor = sqliteTable("two_factor", {
   secret: text("secret").notNull(),
   backupCodes: text("backup_codes").notNull(),
   verified: integer("verified", { mode: "boolean" }).notNull().default(true),
+  // Better Auth 1.7 per-account 2FA lockout (NIST SP 800-63B §5.2.2):
+  // consecutive failed TOTP/backup-code verifications and the lock expiry.
+  // Nullable to match the plugin schema (`required: false`) — Better Auth's
+  // increment is unguarded, so rows predating the column work as-is.
+  failedVerificationCount: integer("failed_verification_count").default(0),
+  lockedUntil: integer("locked_until", { mode: "timestamp_ms" }),
 });
