@@ -87,6 +87,10 @@ removed {
   }
 }
 
+// Existence checks only: nothing references these two data sources, and that is
+// deliberate. OpenTofu reads every data source on each plan (also with
+// -refresh=false), so the plan fails when the app, the container or the CDN
+// endpoint is gone. Keep them.
 data "bunnynet_compute_container_app_container" "admin" {
   app  = var.admin_container_app_id
   name = "wardrobe-assistants-admin"
