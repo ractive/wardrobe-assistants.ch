@@ -43,7 +43,7 @@ infra/terraform/
   dns.tf                     # bunnynet_dns_zone + 7 records (4 Resend-managed = ignore_changes)
   storage.tf                 # bunnynet_storage_zone × 2 (homepage, terraform_state)
   pullzones.tf               # bunnynet_pullzone × 2 + 3 hostnames
-  containers.tf              # bunnynet_compute_container_app + image registry
+  containers.tf              # image registry; admin app read via data sources (not in state)
   database.tf                # bunnynet_database wa-admin-prod
 ```
 
@@ -257,12 +257,13 @@ tofu import 'bunnynet_pullzone_hostname.homepage_www'  '5798479|www.wardrobe-ass
 tofu import 'bunnynet_pullzone_hostname.admin_cdn'     '5798594|admin.wardrobe-assistants.ch'
 ```
 
-### 4 — Container registry + app
+### 4 — Container registry
 
 ```bash
 tofu import bunnynet_compute_container_imageregistry.ghcr_ractive 5602
-tofu import bunnynet_compute_container_app.admin                  h4vme6Uhod4W3Yu
 ```
+
+Do **not** import the admin container app: it is out of the state on purpose (see [Container app: not in the state](#container-app-not-in-the-state)). OpenTofu reads it through data sources.
 
 ### 5 — Database
 
@@ -299,13 +300,15 @@ The MC controller rotates `container_endpoint_id` on every container redeploy. W
 - `registry` schema accepts `"GitHub"`; bunny API returns `"GitHub Packages ractive"`. Without ignore, force-replace.
 - `token` is a write-only secret.
 
-### Container app: `ignore_changes = [container]`
+### Container app: not in the state
 
-The whole inner block is owned by the deploy pipeline (env vars, image tag). OpenTofu tracks the app's identity (name, regions, autoscaling) but never reads or writes the container contents.
+`bunnynet_compute_container_app` reads every container env var, value included and not marked sensitive, into the state on import and on every refresh. `ignore_changes = [container]` (what we had until 2026-10-31) only stops OpenTofu from *changing* the block; the values were still in the state, and any plan diff on the block would print them into the PR comment and the Actions log of this public repo.
 
-### Container app: `regions_max_allowed = 1` must be explicit
+Since 2026-10-31 the app is out of the state: a `removed { … lifecycle { destroy = false } }` block in `containers.tf` makes the next apply forget it without touching the running app, and the data sources `bunnynet_compute_container_app_container.admin` + `bunnynet_compute_container_app_container_endpoint.admin_cdn` read the container and endpoint (ids, names, public host, pull-zone id only). The plan fails if the app, the container or the endpoint disappears, so the daily drift check fails when the app is deleted: a red run (exit 1) and the workflow's failure email, not a `drift` issue, which it opens only for exit 2. Keep the `removed` block until that apply has run on the laptop.
 
-Provider defaults to 0 on import.
+**The forget plan prints secrets.** `tofu plan` for the `removed` block shows the whole resource, every env value in plain text. Apply it on the laptop (per [Apply](#apply)) *before* pushing the branch, so the PR plan comment, the Actions log and the `tofu-plan` artefact only ever see "No changes". The same holds for any future `removed` block or replacement of a resource whose state holds secrets. See ADR-025 in [[admin-architecture/decision-log]].
+
+The state written before that apply (and any `terraform.tfstate.backup` on the laptop) contained the env values. Rotate them after the apply if the state file was ever readable by anyone but the owner.
 
 ### Database auth tokens: not OpenTofu-manageable
 
@@ -359,7 +362,7 @@ This is the project's primary DR primitive — no external `.dump` script needed
 | Hostname `www.wardrobe-assistants.ch` | `bunnynet_pullzone_hostname.homepage_www` | — |
 | Hostname `admin.wardrobe-assistants.ch` | `bunnynet_pullzone_hostname.admin_cdn` | — |
 | Container registry GHCR | `bunnynet_compute_container_imageregistry.ghcr_ractive` | `5602` |
-| Container app admin | `bunnynet_compute_container_app.admin` | `h4vme6Uhod4W3Yu` |
+| Container app admin | not in state (data sources `…app_container.admin`, `…app_container_endpoint.admin_cdn`) | `h4vme6Uhod4W3Yu` |
 | Database wa-admin-prod | `bunnynet_database.wa_admin_prod` | `db_01KQV95KJ611YYT48VSZKHC495` |
 
 ---
@@ -371,14 +374,63 @@ This is the project's primary DR primitive — no external `.dump` script needed
 | 2026-05-07 | Snapshot of all live resources captured at `kb/bunny-snapshot-2026-05-07/`. |
 | 2026-05-07 | `wardrobe-assistants-terraform-state` storage zone (id `1503083`) created via `hoppy`. |
 | 2026-05-07 | All 18 resources imported via `tofu apply` after a clean plan. `tofu plan -detailed-exitcode` = 0. |
+| 2026-10-31 | Admin container app removed from the state (`removed` block, `destroy = false`) so its env secrets leave the state. |
 
 ---
 
 ## What's deliberately *not* in OpenTofu
 
 - **Edge scripts, shield zones** — none configured today; will land via dedicated iterations when needed.
-- **Secret values** — env vars on the admin app, image registry token, storage-zone passwords. All flow through `.env.local` / GitHub Actions secrets / dashboard, never state.
+- **Admin container app** — out of the state since 2026-10-31 (see [Container app: not in the state](#container-app-not-in-the-state)); recreated with hoppy, see [Recreating the admin container app](#recreating-the-admin-container-app).
+- **Secret values** — env vars on the admin app, image registry token, storage-zone passwords. All flow through `.env.local` / GitHub Actions secrets / dashboard, never state. The admin app's env values must also be in the owner's password manager: bunny is the only other copy, so losing the app loses them.
 - **DB auth tokens** — minted via `hoppy db token mint`, not via the provider.
 - **DB schema / migrations** — Drizzle migrations in `packages/db`, run by the admin runtime on boot. See [`migration-recovery.md`](migration-recovery.md) when a boot-time migration fails.
 - **Storage zone *contents*** — the homepage build is uploaded by the deploy workflow.
-- **Image build/push** — built and pushed by GitHub Actions; the container app's `ignore_changes = [container]` keeps OpenTofu out of image-tag rotation.
+- **Image build/push** — built and pushed by GitHub Actions; OpenTofu doesn't manage the app, so image-tag rotation never shows up as drift.
+
+---
+
+## Recreating the admin container app
+
+For a total loss (app deleted, account lost). The app is not in OpenTofu, so `tofu apply` won't recreate it. Prerequisite: every env value from the list in `infra/terraform/containers.tf` is in the owner's password manager. Bunny holds the only other copy, so without the password manager you have to rotate everything (new `BETTER_AUTH_SECRET` logs everyone out; new VAPID keys break every push subscription; a new `DATABASE_AUTH_TOKEN` comes from `hoppy db token mint`; a new `RESEND_API_KEY` from the Resend dashboard).
+
+Live shape on 2026-10-31: runtime `shared`, autoscaling min 1 / max 1, region `DE` only (required + allowed, max 1), one container `wardrobe-assistants-admin` from registry `5602`, image `ractive/wardrobe-assistants-admin:<git-sha>`, one CDN endpoint `admin-cdn` on container port 3000 attached to pull zone `5798594`.
+
+```bash
+export BUNNY_API_KEY=…   # account key, from the Keychain / password manager
+
+# 1. Registry (only if 5602 is gone too). Needs a GitHub PAT with read:packages.
+#    Recreating it through OpenTofu would send the placeholder token, so use hoppy
+#    and then re-import: tofu import bunnynet_compute_container_imageregistry.ghcr_ractive <new-id>
+hoppy container registry create --name "GitHub Packages ractive" --registry-type GitHub \
+  --username ractive --password "$GHCR_PAT"   # PAT from the password manager, via env var
+
+# 2. App + container, from the last image the deploy workflow pushed.
+hoppy container app create --name wardrobe-assistants-admin \
+  --runtime-type Shared --min 1 --max 1 --region DE \
+  --registry-id <5602 or the new registry id> --image-namespace ractive \
+  --image-name wardrobe-assistants-admin --image-tag <git-sha of main>
+hoppy container app region-settings-update --id <app> \
+  --required-region DE --allowed-region DE --max-allowed-regions 1
+
+# 3. Env, one variable at a time, values pasted from the password manager.
+#    read -rs keeps each value off the screen and out of the shell history
+#    (a leading space only helps with setopt HIST_IGNORE_SPACE, off by default).
+read -rs VAL   # paste the value, then Enter
+hoppy container template env --app-id <app> --container-id <container> --add "BETTER_AUTH_SECRET=$VAL"
+unset VAL
+#    … repeat for every variable in containers.tf.
+
+# 4. CDN endpoint on the existing admin pull zone, so admin.wardrobe-assistants.ch keeps working.
+hoppy container endpoint add --app-id <app> --container-id <container> \
+  --name admin-cdn --cdn --container-port 3000 --pull-zone-id 5798594
+
+hoppy container app deploy <app>
+```
+
+Then point everything at the new app id:
+
+- `infra/terraform/variables.tf`: `admin_container_app_id` default; the plan's data sources must resolve.
+- `infra/terraform/pullzones.tf`: nothing (the origin block is `ignore_changes`), but check the pull zone's origin in the dashboard points at the new endpoint.
+- GitHub Actions variable `APP_ID` (used by `deploy.yml`), then run the deploy workflow once.
+- If pull zone `5798594` is gone too: omit `--pull-zone-id`, let bunny create one, then update `bunnynet_dns_record.admin_cname` and re-import the new pull zone.

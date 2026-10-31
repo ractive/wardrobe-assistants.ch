@@ -1,15 +1,30 @@
 // Magic Container app + image registry.
 //
-// Secret hygiene:
-//   - Container env vars (BETTER_AUTH_SECRET, DATABASE_AUTH_TOKEN, ...)
-//     are set out-of-band and **must never** end up in OpenTofu state.
-//   - The whole `container { }` block is excluded via ignore_changes,
-//     so OpenTofu tracks the app's identity (name, regions, autoscaling)
-//     but neither reads nor writes its inner contents.
-//   - Image registry token is write-only and managed via GitHub Actions.
+// The app `wardrobe-assistants-admin` (id var.admin_container_app_id) is
+// deliberately NOT a resource here. The provider (bunnynet_compute_container_app,
+// 0.14.0) reads every environment variable of the container, value included
+// and not marked sensitive, into the state on import and on every refresh.
+// `lifecycle { ignore_changes = [container] }` only stops OpenTofu from
+// changing the block; it does not keep the values out of the state, and a
+// plan diff on the block prints them. This repo is public, so the plan output
+// in PR comments and Actions logs is public too. ADR-025 in
+// kb/admin-architecture/decision-log.md has the reasoning.
 //
-// Required container env (set via `scripts/set-app-env.sh` or directly via
-// `hoppy container template env --add`):
+// What OpenTofu does instead: the `removed` block below drops the app from the
+// state without destroying it, and two data sources read the container and its
+// CDN endpoint. They store only ids, names, the public host and the endpoint's
+// pull zone id. The plan fails if the app, the container or the endpoint is
+// gone, so the daily drift check fails (a red run, not a drift issue) when the
+// app is deleted.
+//
+// Owned elsewhere:
+//   - the running image: .github/workflows/deploy.yml;
+//   - the environment: `hoppy container template env --add KEY=VALUE`; the
+//     values live in the owner's password manager and nowhere else;
+//   - recreating the app after a total loss: kb/runbooks/iac-runbook.md,
+//     "Recreating the admin container app".
+//
+// Required container env (set via `hoppy container template env --add`):
 //   BETTER_AUTH_SECRET    64-hex; rotate via hoppy when length != 64
 //   BETTER_AUTH_URL       https://admin.wardrobe-assistants.ch
 //   DATABASE_URL          libsql://<…>.turso.io (also output by database.tf)
@@ -47,46 +62,42 @@ resource "bunnynet_compute_container_imageregistry" "ghcr_ractive" {
     // The literal "managed-out-of-band" token below is harmless on the
     // current already-imported resource (ignore_changes covers updates),
     // but it would be sent on a fresh create — see prevent_destroy.
+    //
+    // The state holds `token = ""` (marked sensitive), never the GitHub PAT.
     ignore_changes  = [token, registry]
     prevent_destroy = true
   }
 }
 
-resource "bunnynet_compute_container_app" "admin" {
-  name                = "wardrobe-assistants-admin"
-  version             = 2
-  regions_required    = ["DE"]
-  regions_allowed     = ["DE"]
-  regions_max_allowed = 1
-
-  container {
-    name            = "wardrobe-assistants-admin"
-    image_registry  = bunnynet_compute_container_imageregistry.ghcr_ractive.id
-    image_namespace = "ractive"
-    image_name      = "wardrobe-assistants-admin"
-    image_tag       = "latest"
-
-    endpoint {
-      name = "admin-cdn"
-      type = "CDN"
-
-      cdn {
-        origin_ssl = false
-      }
-
-      port {
-        container = 3000
-      }
-    }
-
-    // env blocks deliberately omitted — see ignore_changes below.
-  }
+// Forget the app; never destroy it. After the next `tofu apply` the state no
+// longer holds the container env.
+//
+// WARNING: the plan for this forget prints the whole resource, all env values
+// included, in plain text. Run that apply on the laptop *before* pushing the
+// branch that adds this block; otherwise terraform-plan.yml publishes every
+// secret in the PR comment, the Actions log and the plan artefact. Once the
+// app is out of the state, the plan is "No changes" and safe to publish.
+// Keep this block until that apply has run on the laptop: without it (and without the resource) OpenTofu would plan to
+// destroy the running app, and prevent_destroy no longer guards it.
+removed {
+  from = bunnynet_compute_container_app.admin
 
   lifecycle {
-    // The whole container sub-block is owned by the deploy pipeline:
-    //   - env vars (secrets) are injected via dashboard/CI
-    //   - image_tag is bumped by the deploy workflow on every release
-    ignore_changes  = [container]
-    prevent_destroy = true
+    destroy = false
   }
+}
+
+// Existence checks only: nothing references these two data sources, and that is
+// deliberate. OpenTofu reads every data source on each plan (also with
+// -refresh=false), so the plan fails when the app, the container or the CDN
+// endpoint is gone. Keep them.
+data "bunnynet_compute_container_app_container" "admin" {
+  app  = var.admin_container_app_id
+  name = "wardrobe-assistants-admin"
+}
+
+data "bunnynet_compute_container_app_container_endpoint" "admin_cdn" {
+  app       = var.admin_container_app_id
+  container = data.bunnynet_compute_container_app_container.admin.id
+  name      = "admin-cdn"
 }

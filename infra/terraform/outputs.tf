@@ -28,9 +28,11 @@ output "homepage_storage_endpoint" {
   value       = "https://storage.bunnycdn.com/wardrobe-assistants-ch-homepage/"
 }
 
+// A pass-through of the variable since the app left the state (ADR-025); kept
+// so scripts that read the output keep working.
 output "admin_container_app_id" {
   description = "Magic Container app id for the admin runtime"
-  value       = bunnynet_compute_container_app.admin.id
+  value       = var.admin_container_app_id
 }
 
 output "database_url" {
