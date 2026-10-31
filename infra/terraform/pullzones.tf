@@ -11,6 +11,10 @@ resource "bunnynet_pullzone" "homepage" {
   cache_enabled         = false
   cache_chunked         = true
   cache_expiration_time = 2592000
+  // Owner decision 2026-10-31: no IP addresses in bunny's access logs
+  // The privacy policy (/datenschutz, "Server logs") relies on this.
+  log_anonymized       = true
+  log_anonymized_style = "Drop"
 
   origin {
     type        = "StorageZone"
@@ -76,6 +80,10 @@ resource "bunnynet_pullzone" "admin_cdn" {
   // self-heals in seconds rather than pinning for a year against an
   // `immutable` Cache-Control.
   cache_errors = false
+  // Owner decision 2026-10-31: no IP addresses in bunny's access logs
+  // The privacy policy (/datenschutz, "Server logs") relies on this.
+  log_anonymized       = true
+  log_anonymized_style = "Drop"
 
   origin {
     type                  = "ComputeContainer"
@@ -189,6 +197,10 @@ resource "bunnynet_pullzone" "admin_static" {
   cache_expiration_time = 2592000 // 30 days
   strip_cookies         = true
   cache_errors          = false
+  // Owner decision 2026-10-31: no IP addresses in bunny's access logs
+  // The privacy policy (/datenschutz, "Server logs") relies on this.
+  log_anonymized       = true
+  log_anonymized_style = "Drop"
 
   origin {
     type        = "StorageZone"
