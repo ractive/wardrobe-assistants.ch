@@ -17,6 +17,9 @@
 
 resource "bunnynet_dns_zone" "wardrobe_assistants_ch" {
   domain = "wardrobe-assistants.ch"
+  // DNSSEC is on live. Turning it off while the DS record is published at
+  // the registry makes validating resolvers reject the whole domain.
+  dnssec_enabled = true
 
   lifecycle {
     prevent_destroy = true
@@ -131,6 +134,9 @@ resource "bunnynet_dns_record" "improvmx_mx_1" {
   value    = "mx1.improvmx.com"
   priority = 10
   ttl      = 0
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "bunnynet_dns_record" "improvmx_mx_2" {
@@ -140,6 +146,9 @@ resource "bunnynet_dns_record" "improvmx_mx_2" {
   value    = "mx2.improvmx.com"
   priority = 20
   ttl      = 0
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Apex SPF for ImprovMX (inbound). Only one apex SPF record is allowed per
@@ -152,4 +161,7 @@ resource "bunnynet_dns_record" "apex_spf_txt" {
   name  = ""
   value = "v=spf1 include:spf.improvmx.com ~all"
   ttl   = 0
+  lifecycle {
+    prevent_destroy = true
+  }
 }

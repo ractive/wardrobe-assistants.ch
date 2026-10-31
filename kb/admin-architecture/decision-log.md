@@ -350,6 +350,21 @@ The GH variable `ADMIN_ASSET_PREFIX` was deleted post-pivot.
 
 ---
 
+## ADR-024 — bunny.net access logs drop the client IP address
+
+**Status:** accepted | **Date:** 2026-10-31
+
+**Decision:** Every pull zone (`homepage`, `admin_cdn`, `admin_static`) keeps logging enabled but with IP anonymization set to **Drop** — bunny writes no IP address into its access logs. Set by the owner in the dashboard on 2026-10-31 and codified in `infra/terraform/pullzones.tf` (`log_anonymized = true`, `log_anonymized_style = "Drop"`), so a dashboard revert shows up as drift. The privacy policy (`/datenschutz`, "Server logs", "Categories of personal data", "Retention") says the logs keep no IP address and, under "Abuse protection", that the admin app's rate limiter holds IPs in memory; `legalLastUpdated` bumped to 2026-10-31.
+
+**Alternatives considered:**
+- **`OneDigit`** (rejected: a truncated IP is still a quasi-identifier and still personal data under revFADP; it would keep the "IP address" line in the policy).
+- **Disable logging** (rejected: request time, URL, status code, referrer and user agent are still needed to debug errors and spot abuse).
+- **Dashboard only, not in OpenTofu** (rejected: nothing would catch a silent revert, and the privacy policy depends on the setting).
+
+**Rationale:** No feature needs the client IP from bunny's logs, so not storing it is the cheapest way to shrink the personal data held and the policy text that describes it. The app still sees the IP, and not only transiently: the in-memory rate limiter (`apps/admin/src/lib/rate-limit.ts`) keys the booking-request, services, offer and auth endpoints by it (`clientIpFromHeaders`). Entries live in process memory only, never on disk or in logs; the longest window is 24 h (`bookingRequestPerIpDay`), but `sweepExpired` only runs once the map holds 4096 keys, so stale entries can stay until the container restarts. The policy says exactly that ("Abuse protection", "Categories of personal data", "Retention"; legal basis legitimate interest) rather than claiming IPs are processed only transiently. Separately, Better Auth stores an IP on each admin login session (`session.ip_address`, `packages/db/src/schema/auth.ts`); that concerns staff accounts, not site visitors, and is out of scope here.
+
+---
+
 ## How to add an ADR
 
 When making a new architectural decision:

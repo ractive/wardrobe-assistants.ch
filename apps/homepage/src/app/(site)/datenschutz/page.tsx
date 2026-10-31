@@ -92,11 +92,23 @@ export default function DatenschutzPage() {
         <h3 className={subHeading}>Server logs</h3>
         <p className={paragraph}>
           When you visit this site, our hosting provider (Bunny.net) records
-          technical request data automatically: IP address, request timestamp,
-          requested URL, HTTP status code, referrer, browser user-agent string.
-          These logs are used to operate the site, diagnose errors and detect
-          abuse. Legal basis: legitimate interest in keeping the service running
-          and secure (revFADP Art. 31).
+          technical request data automatically: request timestamp, requested
+          URL, HTTP status code, referrer, browser user-agent string. The access
+          logs keep no IP address: your IP address is needed to deliver each
+          response, but it is dropped before the log entry is written. These
+          logs are used to operate the site, diagnose errors and detect abuse.
+          Legal basis: legitimate interest in keeping the service running and
+          secure (revFADP Art. 31).
+        </p>
+        <h3 className={subHeading}>Abuse protection</h3>
+        <p className={paragraph}>
+          To limit how often the booking-request form, offer links and other
+          public endpoints of our admin application can be called, the
+          application also keeps your IP address briefly in its working memory
+          as a request counter. It is never written to disk or to logs. Each
+          entry is used for at most 24 hours, but may stay in memory until the
+          server next restarts. Legal basis: legitimate interest in preventing
+          abuse of the service (revFADP Art. 31).
         </p>
         <h3 className={subHeading}>Email enquiries</h3>
         <p className={paragraph}>
@@ -143,8 +155,10 @@ export default function DatenschutzPage() {
             Contact data: email address, phone number (where you provide it).
           </li>
           <li>
-            Technical data: IP address, browser/user-agent, request timestamps,
-            referring URL.
+            Technical data: browser/user-agent, request timestamps, requested
+            URL, referring URL; your IP address, to deliver the response and,
+            held briefly in memory, to limit requests (see “Abuse protection”) —
+            it is not written to logs.
           </li>
           <li>
             Project data: anything you choose to share about a production —
@@ -192,9 +206,14 @@ export default function DatenschutzPage() {
         <h2 className={sectionHeading}>6. Retention</h2>
         <ul className={listClass}>
           <li>
-            Server logs are retained by the hosting provider for a short period
-            (typically up to 30 days) for operational and security reasons, then
-            rotated.
+            Server logs (which contain no IP addresses) are retained by the
+            hosting provider for a short period (typically up to 30 days) for
+            operational and security reasons, then rotated.
+          </li>
+          <li>
+            IP addresses used for abuse protection exist only in the admin
+            application&apos;s working memory: each is used for at most 24 hours
+            and is gone at the latest when the server restarts.
           </li>
           <li>
             Email correspondence is kept for as long as needed to handle the

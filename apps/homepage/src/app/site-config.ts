@@ -59,4 +59,4 @@ assertOperatorReady(operator);
 
 // Date of last legal-text update. Bump whenever Impressum or
 // privacy policy content changes.
-export const legalLastUpdated = "2026-05-04";
+export const legalLastUpdated = "2026-10-31";
