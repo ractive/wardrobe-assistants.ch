@@ -365,6 +365,21 @@ The GH variable `ADMIN_ASSET_PREFIX` was deleted post-pivot.
 
 ---
 
+## ADR-025 — The admin container app is not in the OpenTofu state
+
+**Status:** accepted | **Date:** 2026-10-31
+
+**Decision:** `bunnynet_compute_container_app.admin` leaves the state via a `removed` block with `lifecycle { destroy = false }`: the next apply forgets the app and never touches it. `infra/terraform/containers.tf` reads it through the data sources `bunnynet_compute_container_app_container.admin` and `bunnynet_compute_container_app_container_endpoint.admin_cdn`, which store only ids, names, the public host and the endpoint's pull-zone id. The image registry stays a resource; its state holds `token = ""` (marked sensitive), not the PAT. Recreating the app after a total loss is a hoppy procedure in [[runbooks/iac-runbook]], and the env values must be in the owner's password manager.
+
+**Alternatives considered:**
+- **Keep `ignore_changes = [container]`** (rejected: it only stops OpenTofu from changing the block. The provider still reads all 12 env values, unmarked, into the state on every refresh, and a plan diff on the block prints them. The repo is public, so PR plan comments and Actions logs are public).
+- **`tofu state rm`** (rejected: an imperative, unreviewed state write; the `removed` block goes through the PR plan like any other change).
+- **Mark the values sensitive / wait for the provider** (rejected: not in our control; sensitive values are still stored in plain text in the state file).
+
+**Rationale:** The app's identity (name, regions, autoscaling) is cheap to recreate by hand and rarely changes; its secrets must never sit in a state file or a public log. The data sources keep the daily drift check useful: the plan fails if the app, the container or the endpoint is gone. Same approach as study2go.ch's `container.tf`.
+
+---
+
 ## How to add an ADR
 
 When making a new architectural decision:
