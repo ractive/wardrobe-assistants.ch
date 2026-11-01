@@ -15,6 +15,11 @@ resource "bunnynet_pullzone" "homepage" {
   // The privacy policy (/datenschutz, "Server logs") relies on this.
   log_anonymized       = true
   log_anonymized_style = "Drop"
+  // Owner decision 2026-11-01: TLS 1.2 and 1.3 only. They are always on;
+  // this list only adds the legacy versions. Left out, the provider defaults
+  // to ["TLSv1.0", "TLSv1.1"] (what every zone here had until then), so the
+  // empty list is pinned on all three zones.
+  tls_support = []
 
   origin {
     type        = "StorageZone"
@@ -84,6 +89,10 @@ resource "bunnynet_pullzone" "admin_cdn" {
   // The privacy policy (/datenschutz, "Server logs") relies on this.
   log_anonymized       = true
   log_anonymized_style = "Drop"
+  // TLS 1.2/1.3 only, as on the homepage zone. Managed here: ignore_changes
+  // below covers only the origin. If the MC controller ever resets it on a
+  // redeploy, the drift check shows it.
+  tls_support = []
 
   origin {
     type                  = "ComputeContainer"
@@ -201,6 +210,8 @@ resource "bunnynet_pullzone" "admin_static" {
   // The privacy policy (/datenschutz, "Server logs") relies on this.
   log_anonymized       = true
   log_anonymized_style = "Drop"
+  // TLS 1.2/1.3 only, as on the homepage zone.
+  tls_support = []
 
   origin {
     type        = "StorageZone"
