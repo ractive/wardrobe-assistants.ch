@@ -1,6 +1,6 @@
 // iter-34 §6: shared Zod schema for the public services catalog response.
 // Both the admin route handler (`apps/admin/src/app/api/public/services/route.ts`)
-// and the homepage build-time fetch (`apps/homepage/src/app/(site)/booking-request/page.tsx`)
+// and the homepage build-time fetch (`apps/homepage/src/app/(site)/booking-request/_services.ts`)
 // import from here so they agree on the wire shape at runtime.
 //
 // `price` is a whole-CHF integer matching `services.price` in the DB — no
