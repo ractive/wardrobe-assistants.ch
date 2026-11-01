@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchServices, isCatalogRequired } from "./_services";
 
@@ -152,5 +153,21 @@ describe("fetchServices", () => {
         timeoutMs: 10,
       }),
     ).rejects.toThrow(/could not load the services catalog/);
+  });
+});
+
+describe("homepage build script", () => {
+  it("clears Next's persisted fetch cache before building", () => {
+    // Otherwise a cached catalog response is reused for up to a year and an
+    // unreachable admin no longer fails the build (see _services.ts).
+    const pkg = JSON.parse(
+      readFileSync(
+        new URL("../../../../package.json", import.meta.url),
+        "utf8",
+      ),
+    ) as { scripts: Record<string, string> };
+    expect(pkg.scripts.build).toMatch(
+      /rm -rf \.next\/cache\/fetch-cache && next build/,
+    );
   });
 });

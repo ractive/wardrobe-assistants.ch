@@ -9,7 +9,8 @@
 #   \"services\":[]                       (empty)
 # A bare `"id"` grep can't work: it never matches the escaped payload, and
 # the escaped form `\"id\"` also matches unrelated nav elements
-# (`nav-toggle`, `nav-menu`). So match the `services` prop itself, with the
+# (`nav-toggle`, `nav-menu`). So match the `services` prop itself (an array
+# that opens with an object vs. an empty array), with the
 # backslash optional in case the payload is ever emitted unescaped.
 #
 # Usage: HOMEPAGE_BASE_URL=https://wardrobe-assistants.ch \
@@ -45,7 +46,9 @@ else
 fi
 
 # \\? = optional literal backslash before each quote.
-non_empty='\\?"services\\?":\[\{\\?"id\\?":'
+# Only anchor on `[{`, not on the first key, so a change in the admin's key
+# order can't turn a healthy catalog into a false failure.
+non_empty='\\?"services\\?":\[\{'
 empty='\\?"services\\?":\[\]'
 
 # Here-strings, not `printf | grep -q`: with pipefail, grep -q exiting on the

@@ -66,7 +66,7 @@ Push and email both fire for every notifying trigger — push for immediacy, ema
 - `npm run dev` — start the homepage dev server
 - `npm run dev:admin` — start the admin dev server (Next.js, port 3000)
 - `npm run db:reset:admin` — wipe + remigrate + reseed `apps/admin/dev.db` (dev only)
-- `npm run build` — production build (static export to `apps/homepage/out/`). Fetches the `/booking-request` service catalog from the prod admin (`NEXT_PUBLIC_ADMIN_ORIGIN` overrides) and **fails** if it can't; set `HOMEPAGE_ALLOW_EMPTY_CATALOG=1` to build offline with an empty catalog. `next dev` just logs the error and renders the empty-catalog fallback.
+- `npm run build` — production build (static export to `apps/homepage/out/`). Fetches the `/booking-request` service catalog from the prod admin (`NEXT_PUBLIC_ADMIN_ORIGIN` overrides) and **fails** if it can't; set `HOMEPAGE_ALLOW_EMPTY_CATALOG=1` to build offline with an empty catalog. `next dev` just logs the error and renders the empty-catalog fallback. The build script deletes `.next/cache/fetch-cache` first so a cached catalog response from an earlier build can't mask an outage or stale data; don't persist `.next/cache` in CI.
 - `npm run typecheck` — workspace-wide TypeScript check
 - `npm test` — run Vitest across the workspace
 - `npm run test:watch` — Vitest in watch mode

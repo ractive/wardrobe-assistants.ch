@@ -17,6 +17,14 @@
 //    `HOMEPAGE_ALLOW_EMPTY_CATALOG=1` to force a production build through
 //    anyway (e.g. an offline local build).
 //
+// 3. Without a cache option, Next stores the build-time response in
+//    `.next/cache/fetch-cache` with a one-year lifetime and reuses it on the
+//    next build in the same checkout: no network call, so neither catalog
+//    changes nor an admin outage would be noticed. The homepage `build`
+//    script deletes that directory before `next build` for that reason (the
+//    export worker ignores `experimental.isrFlushToDisk`). Never persist
+//    `.next/cache` between builds (e.g. actions/cache) for this app.
+//
 // A *valid* empty list (admin has no active services) is not an error: the
 // form renders its email-fallback message.
 

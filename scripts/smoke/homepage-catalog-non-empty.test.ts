@@ -51,6 +51,15 @@ describe("homepage-catalog-non-empty.sh", () => {
     expect(status).toBe(0);
   });
 
+  it("does not depend on the key order of catalog entries", () => {
+    const { status } = run(
+      page(
+        String.raw`[{\"name\":\"Steaming\",\"id\":\"a\",\"priceType\":\"fixed\"}]`,
+      ),
+    );
+    expect(status).toBe(0);
+  });
+
   it("fails for an empty catalog even though nav ids are present", () => {
     const { status, stdout } = run(page("[]"));
     expect(stdout).toContain("services catalog is empty");
