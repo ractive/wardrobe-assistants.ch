@@ -1,13 +1,14 @@
-import { publicServicesResponseSchema } from "@wardrobe-assistants/shared/public-services-schema";
 import type { Metadata } from "next";
 import { contactEmail, siteName, siteUrl } from "@/app/site-config";
 import { EyebrowBadge } from "@/components/EyebrowBadge";
-import { BookingRequestForm, type ServiceEntry } from "./_form";
+import { BookingRequestForm } from "./_form";
+import { fetchServices } from "./_services";
 
 // iter-26: customer-facing booking-request page. Static-export friendly — the
 // services catalog is fetched at build time from the admin app. There is NO
 // `revalidate` and NO route-handler escape hatch; the snapshot is stale until
-// the next deploy. Accepted trade-off for v1.
+// the next deploy. Accepted trade-off for v1. A production build fails if the
+// catalog can't be fetched; see `./_services.ts`.
 
 const pageTitle = "Request a booking — Wardrobe Assistants";
 const pageDescription =
@@ -49,50 +50,8 @@ const ADMIN_ORIGIN =
   process.env.NEXT_PUBLIC_ADMIN_ORIGIN ??
   "https://admin.wardrobe-assistants.ch";
 
-async function fetchServices(): Promise<ServiceEntry[]> {
-  // 8s ceiling so an unresponsive admin never stalls the static build.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  try {
-    const res = await fetch(`${ADMIN_ORIGIN}/api/public/services`, {
-      signal: controller.signal,
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      console.error(
-        "[booking-request] services fetch failed",
-        res.status,
-        res.statusText,
-      );
-      return [];
-    }
-    // iter-34 §6: runtime-validate the response against the shared schema so a
-    // malformed admin response can't break the static build. On parse failure
-    // we log and fall through to the empty-services path below (which already
-    // ships valid UX — the form renders with an email fallback message).
-    const json: unknown = await res.json();
-    const parsed = publicServicesResponseSchema.safeParse(json);
-    if (!parsed.success) {
-      console.error(
-        "[booking-request] services response failed schema validation",
-        parsed.error.flatten(),
-      );
-      return [];
-    }
-    return parsed.data.services satisfies ServiceEntry[];
-  } catch (err) {
-    // Build-time fetch failures (e.g. admin not yet deployed, or timeout)
-    // should not break the static build. The form renders with an empty
-    // catalog + email fallback message.
-    console.error("[booking-request] services fetch threw", err);
-    return [];
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 export default async function BookingRequestPage() {
-  const services = await fetchServices();
+  const services = await fetchServices({ adminOrigin: ADMIN_ORIGIN });
   const submitUrl = `${ADMIN_ORIGIN}/api/public/booking-requests`;
   return (
     <article className="flex flex-col gap-10 px-6 py-12 md:px-10 lg:px-14 lg:py-20">

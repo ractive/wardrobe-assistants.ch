@@ -40,6 +40,14 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "scripts",
+          environment: "node",
+          include: ["scripts/**/*.{test,spec}.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "db",
           environment: "node",
           include: ["packages/db/src/**/*.{test,spec}.ts"],

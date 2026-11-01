@@ -66,7 +66,7 @@ Push and email both fire for every notifying trigger — push for immediacy, ema
 - `npm run dev` — start the homepage dev server
 - `npm run dev:admin` — start the admin dev server (Next.js, port 3000)
 - `npm run db:reset:admin` — wipe + remigrate + reseed `apps/admin/dev.db` (dev only)
-- `npm run build` — production build (static export to `apps/homepage/out/`)
+- `npm run build` — production build (static export to `apps/homepage/out/`). Fetches the `/booking-request` service catalog from the prod admin (`NEXT_PUBLIC_ADMIN_ORIGIN` overrides) and **fails** if it can't; set `HOMEPAGE_ALLOW_EMPTY_CATALOG=1` to build offline with an empty catalog. `next dev` just logs the error and renders the empty-catalog fallback.
 - `npm run typecheck` — workspace-wide TypeScript check
 - `npm test` — run Vitest across the workspace
 - `npm run test:watch` — Vitest in watch mode
@@ -74,6 +74,7 @@ Push and email both fire for every notifying trigger — push for immediacy, ema
 - `npm run format` — `biome format --write`
 - `npm run verify` — quality gate: `lint && typecheck && test`. Run before any commit.
 - `npm run verify:tf` — Terraform gate: `tofu fmt -check && tofu validate` (requires `tofu init` first; only relevant when `infra/terraform/**` changed)
+- `npm run smoke:public` — post-deploy smokes against prod (admin public paths + non-empty `/booking-request` catalog). The catalog check also runs offline against a built page: `HOMEPAGE_HTML_FILE=apps/homepage/out/booking-request/index.html scripts/smoke/homepage-catalog-non-empty.sh`
 - `npm run lighthouse:homepage` / `npm run lighthouse:services` — headless Lighthouse audit (see [Performance auditing](#performance-auditing))
 
 Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly with `npm -w @wardrobe-assistants/homepage run <script>`.
@@ -104,7 +105,7 @@ Scripts are mirrored as workspace scripts in `apps/homepage/`; run them directly
 
 Pushes to `main` first run `verify` (typecheck + Vitest + both Next builds). Only on green do the deploy jobs run:
 
-- `build-homepage` — builds the static export, uploads `apps/homepage/out/` to the bunny Storage Zone, and purges the Pull Zone. Public origin: `wardrobe-assistants.ch` / `www.wardrobe-assistants.ch`.
+- `build-homepage` — builds the static export, uploads `apps/homepage/out/` to the bunny Storage Zone, and purges the Pull Zone. Public origin: `wardrobe-assistants.ch` / `www.wardrobe-assistants.ch`. If the admin's `/api/public/services` is unreachable or returns a bad response, the build fails before upload and the previous homepage stays live (the `verify` job's homepage build fails the same way on PRs). Re-run once the admin is healthy.
 - `build-admin` — builds the admin Next.js app as a Docker image, pushes to bunny's container registry, and rolls the Magic Container deployment. Public origin: `admin.wardrobe-assistants.ch`.
 
 Markdown, design source, and `.claude/` changes are skipped from the deploy steps via paths-filter (verify still runs).
