@@ -380,6 +380,20 @@ The GH variable `ADMIN_ASSET_PREFIX` was deleted post-pivot.
 
 ---
 
+## ADR-026 — Pull zones accept TLS 1.2 and 1.3 only
+
+**Status:** accepted | **Date:** 2026-11-01
+
+**Decision:** Every pull zone (`homepage`, `admin_cdn`, `admin_static`) sets `tls_support = []` in `infra/terraform/pullzones.tf`: TLS 1.0 and 1.1 are off, 1.2 and 1.3 stay on (bunny always enables them; the list only adds the legacy versions). Until then all three zones accepted 1.0 and 1.1 (probed 2026-11-01), the value the provider sets when the attribute is left out (`["TLSv1.0", "TLSv1.1"]`), so it is pinned explicitly. On `admin_cdn` it is managed like any other attribute: its `ignore_changes` covers only `origin`.
+
+**Alternatives considered:**
+- **Keep TLS 1.1 as a fallback** (rejected: every browser that runs the admin app or the homepage speaks TLS 1.2; 1.0 and 1.1 are deprecated by RFC 8996).
+- **Dashboard only, not in OpenTofu** (rejected: the provider default would undo it on any recreate, and a silent revert would go unnoticed).
+
+**Rationale:** Smaller attack surface for no compatibility cost. One internal client is affected: the `admin_static_assets` edge rule fetches `https://wardrobe-assistants-admin-static.b-cdn.net` from bunny's edge. After the apply, check that the admin still loads its `/_next/static/` chunks (a 200 on one of them, not a 502).
+
+---
+
 ## How to add an ADR
 
 When making a new architectural decision:

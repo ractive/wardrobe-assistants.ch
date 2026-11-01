@@ -295,6 +295,10 @@ Live values diverge from the provider's defaults. Set them explicitly to avoid d
 
 The MC controller rotates `container_endpoint_id` on every container redeploy. Without `ignore_changes` every redeploy creates drift.
 
+### Pull zones: `tls_support = []` (TLS 1.2/1.3 only)
+
+`tls_support` lists only the legacy versions enabled on top of TLS 1.2 and 1.3, which are always on. Left out, the provider defaults to `["TLSv1.0", "TLSv1.1"]`, so all three zones set `[]` (ADR-026 in [[admin-architecture/decision-log]]). Check after an apply: `openssl s_client -tls1_1 -cipher 'DEFAULT:@SECLEVEL=0' -connect admin.wardrobe-assistants.ch:443 -servername admin.wardrobe-assistants.ch </dev/null` must fail with `alert protocol version`. Without `@SECLEVEL=0`, OpenSSL 3+ refuses TLS 1.1 on the client side and the check proves nothing.
+
 ### Container registry: `ignore_changes = [token, registry]`
 
 - `registry` schema accepts `"GitHub"`; bunny API returns `"GitHub Packages ractive"`. Without ignore, force-replace.
