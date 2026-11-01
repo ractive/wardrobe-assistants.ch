@@ -297,7 +297,24 @@ The MC controller rotates `container_endpoint_id` on every container redeploy. W
 
 ### Pull zones: `tls_support = []` (TLS 1.2/1.3 only)
 
-`tls_support` lists only the legacy versions enabled on top of TLS 1.2 and 1.3, which are always on. Left out, the provider defaults to `["TLSv1.0", "TLSv1.1"]`, so all three zones set `[]` (ADR-026 in [[admin-architecture/decision-log]]). Check after an apply: `openssl s_client -tls1_1 -cipher 'DEFAULT:@SECLEVEL=0' -connect admin.wardrobe-assistants.ch:443 -servername admin.wardrobe-assistants.ch </dev/null` must fail with `alert protocol version`. Without `@SECLEVEL=0`, OpenSSL 3+ refuses TLS 1.1 on the client side and the check proves nothing.
+`tls_support` lists only the legacy versions enabled on top of TLS 1.2 and 1.3, which are always on. Left out, the provider defaults to `["TLSv1.0", "TLSv1.1"]`, so all three zones set `[]` (ADR-026 in [[admin-architecture/decision-log]]).
+
+Check after an apply, every hostname of all three zones: `tls1` and `tls1_1` must print `refused`, `tls1_2` `ok`. Use Homebrew's OpenSSL (macOS's `/usr/bin/openssl` is LibreSSL). `@SECLEVEL=0` is needed because OpenSSL 3+ otherwise refuses 1.0/1.1 itself and the check proves nothing. Then check that the admin still gets its `/_next/static/` chunks through the `admin_static_assets` edge rule (expect `200`):
+
+```bash
+for h in wardrobe-assistants.ch www.wardrobe-assistants.ch admin.wardrobe-assistants.ch \
+         wardrobe-assistants-ch.b-cdn.net mc-r6f39iacv2.b-cdn.net wardrobe-assistants-admin-static.b-cdn.net; do
+  for v in tls1 tls1_1 tls1_2; do
+    if /opt/homebrew/bin/openssl s_client -$v -cipher 'DEFAULT:@SECLEVEL=0' \
+        -connect "$h:443" -servername "$h" </dev/null 2>&1 | grep -q '^New, TLS'; then
+      echo "$h $v ok"; else echo "$h $v refused"; fi
+  done
+done
+chunk=$(curl -s https://admin.wardrobe-assistants.ch/login | grep -o '/_next/static/[^"]*\.js' | head -1)
+curl -s -o /dev/null -w '%{http_code}\n' "https://admin.wardrobe-assistants.ch$chunk"
+```
+
+`mc-r6f39iacv2.b-cdn.net` is `admin_cdn`'s system hostname; if the MC controller renames the zone, take the name from `bunnynet_pullzone.admin_cdn`.
 
 ### Container registry: `ignore_changes = [token, registry]`
 
