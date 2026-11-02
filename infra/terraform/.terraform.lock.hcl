@@ -3,9 +3,26 @@
 
 provider "registry.opentofu.org/bunnyway/bunnynet" {
   version     = "0.14.0"
-  constraints = "~> 0.13"
+  constraints = "~> 0.14.0"
   hashes = [
+    "h1:5dK81yu2D9pLqhUJfT7iyzewDbxwdXGUuN2w7jurmKc=",
+    "h1:83Ro2f+3bHY79xUx/YXDsR1lPUoln3PRQFWsdvw1/xo=",
+    "h1:E8TqDL4A+Y7W1uI6zykNEfvJAmqkX1ZiRuAik90CZ3c=",
+    "h1:HLWBmzinzvwVUUJVCPb49/XUalWfkcgaP8w86dFYthw=",
+    "h1:JqlHrtekdtco6352QgPeIBtonmgtu4BppT6oCmzClKw=",
+    "h1:MSJldIkNDRjBwI4oag4s7RWXR9SwXcLHlnhPEl5XMb4=",
+    "h1:NWoevYv4hokmc8NPa1IJy1IoR49m26eBaX/x9IxKz94=",
+    "h1:UpGqBA0Tp2FaS4VVRlZpftL/mOlVhzqeoNdCdMJW/wI=",
     "h1:YIYCwHDMtpWGWrGDn0ldaNB7Mn/Y9lFXbBBDEaZ8giw=",
+    "h1:YsusA72rg1RfVY+wssc2fjb3KM51zqoCh6zW3kIx9qA=",
+    "h1:eCJXYI6wMiIy1tie3vojTOAOJ0iUhy7KIvvZhImhrMM=",
+    "h1:fbwy3KSnZ57C+oNZiAwMq54QcGypkMWmBGQnJsYm2dM=",
+    "h1:ibwDPsYngqGf1NfQJ4RNG2JrMcUbtorJp0dz3QSK4ec=",
+    "h1:lV0MOJX23+sJJgRZPvgMe4aTwqVoK944gvmqpgJNUE4=",
+    "h1:naTBOoQEpSMZdxnrv6YPELsWkGXdlUZUpPUoPsTwZnQ=",
+    "h1:pEo7AkMij4CywNUzEL/gnrj2XakCLCaCXsHF5cQdBTo=",
+    "h1:qnDXOmPovQciqHjxbkyf9FK2IeqO0g+nMO6vT1pf/JA=",
+    "h1:zdYkIRTrC34OmnFmyGOyvUfDNpfN6wkXLHluGxzC4Ts=",
     "zh:0e9b51ed64d17a65a9af9225fcaf93087698ba7b24f1aba4d789961b4d6b6e3b",
     "zh:1ac06087182262069c5d9273e6ae346873f55c15aab4434a4f82c422cd99fda9",
     "zh:251fc057494944f4c08b87f42960a7c1bb643c3df078aa1cc0debb99fca08d0d",
