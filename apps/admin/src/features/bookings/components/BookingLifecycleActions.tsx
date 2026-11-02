@@ -1,9 +1,9 @@
 "use client";
 
-import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { InfoHint } from "@/components/InfoHint";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,11 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import {
   adminAcceptOffer,
@@ -38,36 +33,14 @@ const STATUS_HELPER: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// A.1 / §E: (i) icon rendered as a standalone focusable button beside the
-// action button. Click/tap opens a Popover with the hint — Popover (not
-// Tooltip) so mobile taps work; Radix Tooltip is hover/focus-only and does
-// not reliably open on touch.
+// A.1 / §E: each action button has a standalone (i) InfoHint beside it. The
+// hint opens from the icon only (hover on desktop, click/tap anywhere), not
+// from the action button, so the button's own hover/focus styles are
+// unaffected and a disabled button still has a reachable hint.
 // ---------------------------------------------------------------------------
 
-function InfoPopover({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={label}
-          className="ml-1.5 inline-flex shrink-0 items-center opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-        >
-          <Info aria-hidden="true" className="size-3.5" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent side="top" className="max-w-xs text-xs">
-        {children}
-      </PopoverContent>
-    </Popover>
-  );
-}
+const INFO_TRIGGER_CLASS =
+  "ml-1.5 inline-flex shrink-0 items-center opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
 
 // ---------------------------------------------------------------------------
 // Send offer dialog
@@ -669,8 +642,8 @@ export function BookingLifecycleButtons({
     <>
       <div className="flex flex-col gap-2">
         {/* Action buttons — 2-col grid on narrow screens, wrapping row on wider.
-            Each button has an inline (i) icon; clicking/tapping the icon opens
-            a Popover with the hint. The action button itself is unaffected
+            Each button has an inline (i) InfoHint: hover on desktop, or
+            click/tap, shows the hint. The action button itself is unaffected
             (the icon is a separate sibling button). */}
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {showSendOffer && (
@@ -685,11 +658,15 @@ export function BookingLifecycleButtons({
               >
                 Send offer
               </Button>
-              <InfoPopover label="Info: Send offer">
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Send offer"
+              >
                 {selectionCount === 0
                   ? "Add line items before sending the offer."
                   : "Snapshots the current line items and emails the offer to the customer. The booking moves to 'offered' status."}
-              </InfoPopover>
+              </InfoHint>
             </span>
           )}
           {showSendRevised && (
@@ -701,11 +678,15 @@ export function BookingLifecycleButtons({
               >
                 Send revised offer
               </Button>
-              <InfoPopover label="Info: Send revised offer">
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Send revised offer"
+              >
                 Emails an updated quote to the customer. If the booking is
                 already accepted, the customer must re-confirm. Status returns
                 to &apos;offered&apos;.
-              </InfoPopover>
+              </InfoHint>
             </span>
           )}
           {showAccept && (
@@ -719,7 +700,9 @@ export function BookingLifecycleButtons({
                   ? "Accept on customer's behalf"
                   : "Accept booking"}
               </Button>
-              <InfoPopover
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
                 label={
                   status === "offered"
                     ? "Info: Accept on customer's behalf"
@@ -729,7 +712,7 @@ export function BookingLifecycleButtons({
                 Marks the booking as accepted. Use when the customer confirms
                 outside the offer link (e.g. by phone). Status moves to
                 &apos;accepted&apos;.
-              </InfoPopover>
+              </InfoHint>
             </span>
           )}
           {showReject && (
@@ -741,10 +724,14 @@ export function BookingLifecycleButtons({
               >
                 Reject booking
               </Button>
-              <InfoPopover label="Info: Reject booking">
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Reject booking"
+              >
                 Declines the booking request and emails the customer. This is a
                 terminal action and cannot be undone.
-              </InfoPopover>
+              </InfoHint>
             </span>
           )}
           {showCancel && (
@@ -756,11 +743,15 @@ export function BookingLifecycleButtons({
               >
                 Cancel booking
               </Button>
-              <InfoPopover label="Info: Cancel booking">
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Cancel booking"
+              >
                 Cancels the accepted booking, notifies all assigned squad
                 members via push + email, and emails the customer. This is a
                 terminal action and cannot be undone.
-              </InfoPopover>
+              </InfoHint>
             </span>
           )}
         </div>

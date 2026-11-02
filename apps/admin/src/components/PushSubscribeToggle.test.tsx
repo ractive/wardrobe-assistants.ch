@@ -224,4 +224,19 @@ describe("PushSubscribeToggle", () => {
     });
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it("opens the notifications hint on click (works on touch)", async () => {
+    setupServiceWorkerEnv();
+    const { baseElement, container } = render(<PushSubscribeToggle />);
+    const info = await within(container).findByRole("button", {
+      name: "About notifications",
+    });
+    fireEvent.click(info);
+    expect(
+      await within(baseElement).findByText(/Get a browser notification/),
+    ).toBeInTheDocument();
+    expect(
+      await axe(baseElement, { rules: { region: { enabled: false } } }),
+    ).toHaveNoViolations();
+  });
 });

@@ -1,5 +1,5 @@
 // A.6 / A.1 a11y smoke test — verifies the lifecycle buttons with inline (i)
-// icon + Tooltip are axe-clean in both closed and open states.
+// icon + Popover are axe-clean in both closed and open states.
 //
 // All server actions are mocked; this is a pure rendering test.
 
@@ -38,7 +38,7 @@ const BASE_PROPS = {
   squadMemberNames: ["Alice", "Bob"],
 };
 
-describe("BookingLifecycleButtons a11y — inline (i) icon + Tooltip", () => {
+describe("BookingLifecycleButtons a11y — inline (i) icon + Popover", () => {
   it("renders created status without axe violations (buttons closed)", async () => {
     const { container } = render(
       <BookingLifecycleButtons
@@ -95,13 +95,13 @@ describe("BookingLifecycleButtons a11y — inline (i) icon + Tooltip", () => {
     // The action button is present (exact match to avoid hitting the info button).
     const sendBtn = screen.getByRole("button", { name: "Send offer" });
     expect(sendBtn).toBeDefined();
-    // §E: the (i) icon is now a separate focusable button — tooltip triggers
-    // from it only, not from the action button.
+    // §E: the (i) icon is a separate focusable button — the hint popover
+    // opens from it only, not from the action button.
     const infoBtn = screen.getByRole("button", { name: "Info: Send offer" });
     expect(infoBtn).toBeDefined();
   });
 
-  it("tooltip is axe-clean when the Send offer button is focused", async () => {
+  it("opens the hint popover on click of the (i) button and is axe-clean", async () => {
     const user = userEvent.setup();
     const { baseElement } = render(
       <BookingLifecycleButtons
@@ -113,8 +113,11 @@ describe("BookingLifecycleButtons a11y — inline (i) icon + Tooltip", () => {
         canCancel={false}
       />,
     );
-    // Tab to the button so the tooltip becomes visible.
-    await user.tab();
+    // Click (tap on touch devices) opens the hint; a Tooltip never opened on tap.
+    await user.click(screen.getByRole("button", { name: "Info: Send offer" }));
+    expect(
+      await screen.findByText(/Snapshots the current line items/),
+    ).toBeInTheDocument();
     expect(
       await axe(baseElement, {
         rules: {
