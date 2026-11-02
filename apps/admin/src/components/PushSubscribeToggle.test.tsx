@@ -233,8 +233,10 @@ describe("PushSubscribeToggle", () => {
     });
     fireEvent.click(info);
     expect(
-      await within(baseElement).findByText(/Get a browser notification/),
-    ).toBeInTheDocument();
+      await within(baseElement).findByRole("dialog", {
+        name: "About notifications",
+      }),
+    ).toHaveTextContent(/Get a browser notification/);
     expect(
       await axe(baseElement, { rules: { region: { enabled: false } } }),
     ).toHaveNoViolations();

@@ -116,8 +116,8 @@ describe("BookingLifecycleButtons a11y — inline (i) icon + Popover", () => {
     // Click (tap on touch devices) opens the hint; a Tooltip never opened on tap.
     await user.click(screen.getByRole("button", { name: "Info: Send offer" }));
     expect(
-      await screen.findByText(/Snapshots the current line items/),
-    ).toBeInTheDocument();
+      await screen.findByRole("dialog", { name: "Info: Send offer" }),
+    ).toHaveTextContent(/Snapshots the current line items/);
     expect(
       await axe(baseElement, {
         rules: {
