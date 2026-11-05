@@ -1,9 +1,9 @@
 "use client";
 
-import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { InfoHint } from "@/components/InfoHint";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,12 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   adminAcceptOffer,
   cancelBooking,
@@ -39,26 +33,14 @@ const STATUS_HELPER: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// A.1 / §E: (i) icon rendered as a standalone focusable button beside the
-// action button. The Tooltip is triggered from this icon only — not from the
-// whole action button — so the action button's own hover/focus styles are
-// unaffected. The icon button carries an aria-label; the action button copy
-// is not duplicated here.
+// A.1 / §E: each action button has a standalone (i) InfoHint beside it. The
+// hint opens from the icon only (hover on desktop, click/tap anywhere), not
+// from the action button, so the button's own hover/focus styles are
+// unaffected and a disabled button still has a reachable hint.
 // ---------------------------------------------------------------------------
 
-function InfoTrigger({ label }: { label: string }) {
-  return (
-    <TooltipTrigger asChild>
-      <button
-        type="button"
-        aria-label={label}
-        className="ml-1.5 inline-flex shrink-0 cursor-default items-center opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-      >
-        <Info aria-hidden="true" className="size-3.5" />
-      </button>
-    </TooltipTrigger>
-  );
-}
+const INFO_TRIGGER_CLASS =
+  "ml-1.5 inline-flex shrink-0 items-center opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
 
 // ---------------------------------------------------------------------------
 // Send offer dialog
@@ -660,121 +642,119 @@ export function BookingLifecycleButtons({
     <>
       <div className="flex flex-col gap-2">
         {/* Action buttons — 2-col grid on narrow screens, wrapping row on wider.
-            Each button has an inline (i) icon; a Tooltip reveals the hint on
-            hover and keyboard focus. Clicking the button opens the action
-            dialog — the icon is decorative and does not intercept clicks. */}
-        <TooltipProvider>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            {showSendOffer && (
-              <Tooltip>
-                {/* §E: button and (i) icon are siblings. TooltipTrigger wraps
-                    only the icon so the tooltip fires from the icon, not the
-                    full button. */}
-                <span className="inline-flex items-center">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={() => {
-                      setSendOfferOpen(true);
-                    }}
-                    disabled={selectionCount === 0}
-                  >
-                    Send offer
-                  </Button>
-                  <InfoTrigger label="Info: Send offer" />
-                </span>
-                <TooltipContent side="top" className="max-w-xs">
-                  {selectionCount === 0
-                    ? "Add line items before sending the offer."
-                    : "Snapshots the current line items and emails the offer to the customer. The booking moves to 'offered' status."}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {showSendRevised && (
-              <Tooltip>
-                <span className="inline-flex items-center">
-                  <Button
-                    type="button"
-                    variant={status === "accepted" ? "destructive" : "default"}
-                    onClick={() => setSendRevisedOpen(true)}
-                  >
-                    Send revised offer
-                  </Button>
-                  <InfoTrigger label="Info: Send revised offer" />
-                </span>
-                <TooltipContent side="top" className="max-w-xs">
-                  Emails an updated quote to the customer. If the booking is
-                  already accepted, the customer must re-confirm. Status returns
-                  to &apos;offered&apos;.
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {showAccept && (
-              <Tooltip>
-                <span className="inline-flex items-center">
-                  <Button
-                    type="button"
-                    variant={status === "offered" ? "outline" : "default"}
-                    onClick={() => setAcceptOpen(true)}
-                  >
-                    {status === "offered"
-                      ? "Accept on customer's behalf"
-                      : "Accept booking"}
-                  </Button>
-                  <InfoTrigger
-                    label={
-                      status === "offered"
-                        ? "Info: Accept on customer's behalf"
-                        : "Info: Accept booking"
-                    }
-                  />
-                </span>
-                <TooltipContent side="top" className="max-w-xs">
-                  Marks the booking as accepted. Use when the customer confirms
-                  outside the offer link (e.g. by phone). Status moves to
-                  &apos;accepted&apos;.
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {showReject && (
-              <Tooltip>
-                <span className="inline-flex items-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setRejectOpen(true)}
-                  >
-                    Reject booking
-                  </Button>
-                  <InfoTrigger label="Info: Reject booking" />
-                </span>
-                <TooltipContent side="top" className="max-w-xs">
-                  Declines the booking request and emails the customer. This is
-                  a terminal action and cannot be undone.
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {showCancel && (
-              <Tooltip>
-                <span className="inline-flex items-center">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => setCancelOpen(true)}
-                  >
-                    Cancel booking
-                  </Button>
-                  <InfoTrigger label="Info: Cancel booking" />
-                </span>
-                <TooltipContent side="top" className="max-w-xs">
-                  Cancels the accepted booking, notifies all assigned squad
-                  members via push + email, and emails the customer. This is a
-                  terminal action and cannot be undone.
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </TooltipProvider>
+            Each button has an inline (i) InfoHint: hover on desktop, or
+            click/tap, shows the hint. The action button itself is unaffected
+            (the icon is a separate sibling button). */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {showSendOffer && (
+            <span className="inline-flex items-center">
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => {
+                  setSendOfferOpen(true);
+                }}
+                disabled={selectionCount === 0}
+              >
+                Send offer
+              </Button>
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Send offer"
+              >
+                {selectionCount === 0
+                  ? "Add line items before sending the offer."
+                  : "Snapshots the current line items and emails the offer to the customer. The booking moves to 'offered' status."}
+              </InfoHint>
+            </span>
+          )}
+          {showSendRevised && (
+            <span className="inline-flex items-center">
+              <Button
+                type="button"
+                variant={status === "accepted" ? "destructive" : "default"}
+                onClick={() => setSendRevisedOpen(true)}
+              >
+                Send revised offer
+              </Button>
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Send revised offer"
+              >
+                Emails an updated quote to the customer. If the booking is
+                already accepted, the customer must re-confirm. Status returns
+                to &apos;offered&apos;.
+              </InfoHint>
+            </span>
+          )}
+          {showAccept && (
+            <span className="inline-flex items-center">
+              <Button
+                type="button"
+                variant={status === "offered" ? "outline" : "default"}
+                onClick={() => setAcceptOpen(true)}
+              >
+                {status === "offered"
+                  ? "Accept on customer's behalf"
+                  : "Accept booking"}
+              </Button>
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label={
+                  status === "offered"
+                    ? "Info: Accept on customer's behalf"
+                    : "Info: Accept booking"
+                }
+              >
+                Marks the booking as accepted. Use when the customer confirms
+                outside the offer link (e.g. by phone). Status moves to
+                &apos;accepted&apos;.
+              </InfoHint>
+            </span>
+          )}
+          {showReject && (
+            <span className="inline-flex items-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRejectOpen(true)}
+              >
+                Reject booking
+              </Button>
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Reject booking"
+              >
+                Declines the booking request and emails the customer. This is a
+                terminal action and cannot be undone.
+              </InfoHint>
+            </span>
+          )}
+          {showCancel && (
+            <span className="inline-flex items-center">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setCancelOpen(true)}
+              >
+                Cancel booking
+              </Button>
+              <InfoHint
+                triggerClassName={INFO_TRIGGER_CLASS}
+                contentClassName="text-xs"
+                label="Info: Cancel booking"
+              >
+                Cancels the accepted booking, notifies all assigned squad
+                members via push + email, and emails the customer. This is a
+                terminal action and cannot be undone.
+              </InfoHint>
+            </span>
+          )}
+        </div>
 
         {/* A.6: contextual helper line, one sentence per non-terminal status */}
         {helperText && (
